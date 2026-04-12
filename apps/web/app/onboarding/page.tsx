@@ -18,10 +18,10 @@ export default function OnboardingPage() {
             Connect your first database
           </h1>
           <p className="text-gray-400 mt-2">
-            Shawn will guide you through the setup.
+            Obi will guide you through the setup.
           </p>
         </div>
-        <ChatWindow agentName="shawn" onComplete={handleComplete} />
+        <ChatWindow agentName="obi" onComplete={handleComplete} />
       </div>
     </main>
   );

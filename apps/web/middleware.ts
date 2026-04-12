@@ -31,7 +31,7 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  // Protect dashboard routes — redirect unauthenticated users to login
+  // Protect dashboard and onboarding routes — redirect unauthenticated users to login
   if (pathname.startsWith("/dashboard") || pathname.startsWith("/onboarding")) {
     if (!user) {
       const url = request.nextUrl.clone();

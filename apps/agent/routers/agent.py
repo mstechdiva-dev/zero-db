@@ -7,7 +7,7 @@ from services.supabase_service import verify_jwt
 
 router = APIRouter()
 
-SUPPORTED_AGENTS = {"shawn", "taylor", "jordan"}
+SUPPORTED_AGENTS = {"obi", "sully", "sal"}
 HANDOFF_SIGNALS = ["HANDOFF:", "CREATE_TICKET", "CREATE_LEAD"]
 
 

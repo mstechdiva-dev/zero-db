@@ -17,7 +17,7 @@ export default function ChatWindow({ agentName, onComplete }: ChatWindowProps) {
     {
       role: "assistant",
       content:
-        "Hi! I'm Shawn. I'll help you connect your first database to SchemaZero. What type of database are you using?",
+        "Hi! I'm Obi. I'll help you connect your first database to SchemaZero. What type of database are you using?",
     },
   ]);
   const [input, setInput] = useState("");

@@ -4,7 +4,7 @@ if (!RAILWAY_API_URL) {
   throw new Error("RAILWAY_API_URL environment variable is not set");
 }
 
-export type AgentName = "shawn" | "taylor" | "jordan";
+export type AgentName = "obi" | "sully" | "sal";
 
 export interface ChatMessage {
   role: "user" | "assistant";

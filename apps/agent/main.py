@@ -1,3 +1,4 @@
+import asyncio
 import os
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
@@ -8,6 +9,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from routers import agent, databases, changes, alerts, health
+from routers.internal import router as internal_router
 
 AGENTS_DIR = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "..", "..", "agents")
@@ -30,17 +32,24 @@ def load_agent_prompts() -> dict[str, str]:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: load agent prompts
+    # Load all agent MD files
     app.state.agent_prompts = load_agent_prompts()
 
-    # Scout background task is started in Phase 3/8
-    # from scout.scout_runner import ScoutRunner
-    # app.state.scout = ScoutRunner()
-    # asyncio.create_task(app.state.scout.run())
+    # Start Scout background runner
+    from scout.scout_runner import ScoutRunner
+    scout = ScoutRunner()
+    app.state.scout = scout
+    scout_task = asyncio.create_task(scout.run())
 
     yield
 
-    # Shutdown: nothing to clean up in Phase 1
+    # Shutdown: stop Scout cleanly
+    await scout.stop()
+    scout_task.cancel()
+    try:
+        await scout_task
+    except asyncio.CancelledError:
+        pass
 
 
 app = FastAPI(
@@ -66,3 +75,4 @@ app.include_router(agent.router, prefix="/agent", tags=["Agent"])
 app.include_router(databases.router, prefix="/databases", tags=["Databases"])
 app.include_router(changes.router, prefix="/changes", tags=["Changes"])
 app.include_router(alerts.router, prefix="/alerts", tags=["Alerts"])
+app.include_router(internal_router, prefix="/internal", tags=["Internal"])
