@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SchemaZero — Database Schema Change Agent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green: #00e87a;
+    --green-dim: rgba(0,232,122,0.08);
+    --green-border: rgba(0,232,122,0.2);
+    --bg: #0a0a0a;
+    --bg-2: #111111;
+    --bg-3: #141414;
+    --bg-4: #0d0d0d;
+    --border: rgba(255,255,255,0.06);
+    --border-2: rgba(255,255,255,0.1);
+    --text: #f0f0f0;
+    --text-muted: rgba(255,255,255,0.45);
+    --text-dim: rgba(255,255,255,0.22);
+    --red: #e83232;
+    --amber: #ffb200;
+    --blue: #4a9eff;
+    --font: 'DM Sans', sans-serif;
+    --mono: 'Space Mono', monospace;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 16px;
+    line-height: 1.6;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── NAV ── */
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 40px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: rgba(10,10,10,0.96);
+    backdrop-filter: blur(12px);
+    z-index: 100;
+  }
+
+  .logo {
+    font-size: 20px;
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: -0.5px;
+    text-decoration: none;
+  }
+  .logo span { color: var(--green); }
+
+  .nav-tabs {
+    display: flex;
+    gap: 4px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 10px;
+    padding: 4px;
+  }
+
+  .tab-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 7px 15px;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: all 0.18s;
+    white-space: nowrap;
+  }
+  .tab-btn:hover { color: #fff; background: rgba(255,255,255,0.06); }
+  .tab-btn.active {
+    background: #1c1c1c;
+    color: #fff;
+    border: 1px solid var(--border-2);
+  }
+
+  .nav-cta {
+    background: var(--green);
+    color: #000;
+    border: none;
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 9px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: opacity 0.18s;
+    text-decoration: none;
+    display: inline-block;
+  }
+  .nav-cta:hover { opacity: 0.85; }
+
+  /* ── SECTION SWITCHING ── */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* ── HERO / DEMO ── */
+  .hero {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: calc(100vh - 61px);
+  }
+
+  .hero-left {
+    padding: 64px 52px 52px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-right: 1px solid var(--border);
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: var(--green-dim);
+    border: 1px solid var(--green-border);
+    color: var(--green);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    padding: 5px 11px;
+    border-radius: 20px;
+    margin-bottom: 28px;
+    width: fit-content;
+  }
+
+  .badge-dot {
+    width: 6px; height: 6px;
+    background: var(--green);
+    border-radius: 50%;
+    animation: blink 2.2s ease-in-out infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+  h1 {
+    font-size: 44px;
+    font-weight: 600;
+    line-height: 1.12;
+    letter-spacing: -1.8px;
+    color: #fff;
+    margin-bottom: 18px;
+  }
+  h1 .g { color: var(--green); }
+
+  .hero-sub {
+    font-size: 16px;
+    color: var(--text-muted);
+    line-height: 1.65;
+    max-width: 400px;
+    margin-bottom: 16px;
+  }
+
+  .auto-discovery {
+    font-size: 13px;
+    color: var(--green);
+    opacity: 0.75;
+    margin-bottom: 12px;
+    max-width: 380px;
+  }
+
+  .notify-channels {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-bottom: 20px;
+    max-width: 380px;
+  }
+  .notify-channels strong { color: var(--text-muted); font-weight: 500; }
+
+  .privacy-note {
+    font-size: 13px;
+    color: rgba(255,255,255,0.6);
+    margin-bottom: 36px;
+    max-width: 380px;
+    border-left: 2px solid var(--green);
+    padding-left: 12px;
+  }
+
+  .hero-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 40px; }
+
+  .btn-primary {
+    background: var(--green);
+    color: #000;
+    border: none;
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 600;
+    padding: 13px 24px;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: opacity 0.18s;
+    text-decoration: none;
+  }
+  .btn-primary:hover { opacity: 0.85; }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border-2);
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 500;
+    padding: 13px 24px;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: all 0.18s;
+    text-decoration: none;
+  }
+  .btn-ghost:hover { color: #fff; border-color: rgba(255,255,255,0.22); }
+
+  /* Engine logos strip */
+  .engines-strip {
+    border-top: 1px solid var(--border);
+    padding-top: 28px;
+  }
+
+  .engines-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 14px;
+    font-family: var(--mono);
+  }
+
+  .engines-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .engine-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+    transition: all 0.15s;
+  }
+  .engine-pill:hover { border-color: var(--green-border); color: #fff; }
+  .engine-pill .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--green);
+    opacity: 0.5;
+  }
+
+  /* ── DEMO PANEL ── */
+  .demo-panel {
+    background: var(--bg-4);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .demo-titlebar {
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .traffic { width: 11px; height: 11px; border-radius: 50%; }
+  .demo-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-left: 8px;
+    letter-spacing: 0.3px;
+  }
+
+  .demo-db-bar {
+    padding: 10px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--text-dim);
+    font-family: var(--mono);
+  }
+  .db-indicator {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--green);
+    animation: blink 3s ease-in-out infinite;
+  }
+  .db-name { color: var(--text-muted); }
+
+  .demo-feed {
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  .change-card {
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 15px 18px;
+    transition: border-color 0.2s;
+    animation: fadeIn 0.4s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  .change-card:hover { border-color: var(--green-border); }
+
+  .change-meta {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+
+  .tag {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 3px 8px;
+    border-radius: 5px;
+    text-transform: uppercase;
+  }
+  .tag-add { background: rgba(0,232,122,0.12); color: var(--green); }
+  .tag-mod { background: rgba(255,178,0,0.12); color: var(--amber); }
+  .tag-drop { background: rgba(232,50,50,0.12); color: var(--red); }
+
+  .risk-badge {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 3px 8px;
+    border-radius: 5px;
+    margin-left: auto;
+  }
+  .risk-low { background: rgba(0,232,122,0.08); color: rgba(0,232,122,0.65); }
+  .risk-medium { background: rgba(255,178,0,0.1); color: rgba(255,178,0,0.8); }
+  .risk-high { background: rgba(232,50,50,0.12); color: #e85858; }
+  .risk-critical { background: rgba(232,50,50,0.2); color: var(--red); border: 1px solid rgba(232,50,50,0.3); }
+
+  .change-table {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .change-table strong { color: #fff; }
+
+  .engine-tag {
+    font-size: 10px;
+    color: var(--text-dim);
+    background: rgba(255,255,255,0.04);
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-family: var(--mono);
+  }
+
+  .change-diff {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    background: rgba(0,0,0,0.3);
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin-bottom: 10px;
+    border-left: 2px solid rgba(255,255,255,0.08);
+  }
+  .change-diff em { color: #c8bfff; font-style: normal; }
+  .change-diff .added { color: var(--green); }
+  .change-diff .removed { color: var(--red); }
+
+  .impact {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.55;
+  }
+  .impact strong { color: var(--text); }
+  .impact code {
+    font-family: var(--mono);
+    font-size: 10px;
+    background: rgba(255,255,255,0.06);
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: var(--blue);
+  }
+  .danger { color: var(--red); font-weight: 600; }
+
+  .demo-connect {
+    text-align: center;
+    padding: 6px 0 4px;
+  }
+
+  .change-time {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text-dim);
+    margin-left: auto;
+  }
+
+  /* ── INNER LAYOUT ── */
+  .inner {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 80px 40px;
+  }
+
+  .section-eyebrow {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--green);
+    margin-bottom: 14px;
+  }
+
+  h2 {
+    font-size: 36px;
+    font-weight: 600;
+    letter-spacing: -1.2px;
+    line-height: 1.15;
+    color: #fff;
+    margin-bottom: 14px;
+  }
+
+  .section-desc {
+    font-size: 16px;
+    color: var(--text-muted);
+    max-width: 560px;
+    line-height: 1.65;
+    margin-bottom: 56px;
+  }
+
+  /* ── HOW IT WORKS ── */
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .step {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 32px;
+    padding: 36px 0;
+    border-bottom: 1px solid var(--border);
+    align-items: start;
+  }
+  .step:last-child { border-bottom: none; }
+
+  .step-num {
+    font-family: var(--mono);
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--text-dim);
+    padding-top: 4px;
+  }
+  .step-num.lit { color: var(--green); }
+
+  .step-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 8px;
+    letter-spacing: -0.3px;
+  }
+
+  .step-body {
+    font-size: 15px;
+    color: var(--text-muted);
+    line-height: 1.65;
+    margin-bottom: 16px;
+  }
+
+  .engine-support-note {
+    font-size: 13px;
+    color: var(--text-dim);
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    line-height: 1.55;
+    margin-top: 12px;
+  }
+  .engine-support-note strong { color: var(--text-muted); }
+
+  .code-block {
+    background: #0d0d0d;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 18px;
+    font-family: var(--mono);
+    font-size: 11px;
+    line-height: 1.8;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+  .code-block .kw { color: var(--green); }
+  .code-block .dim { color: var(--text-dim); }
+  .code-block .err { color: var(--red); }
+  .code-block .warn { color: var(--amber); }
+
+  /* ── AGENTS ── */
+  .agents-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 48px;
+  }
+
+  .agent-card {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    transition: border-color 0.2s;
+  }
+  .agent-card:hover { border-color: var(--green-border); }
+
+  .agent-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+
+  .agent-runs {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+  }
+
+  .agent-desc {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  .agent-icon {
+    font-size: 22px;
+    margin-bottom: 12px;
+  }
+
+  /* ── SECURITY ── */
+  .sec-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .sec-card {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    transition: border-color 0.2s;
+  }
+  .sec-card:hover { border-color: var(--green-border); }
+
+  .sec-icon { font-size: 22px; margin-bottom: 14px; }
+
+  .sec-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 8px;
+  }
+
+  .sec-body {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.65;
+  }
+
+  .sec-quote {
+    margin-top: 40px;
+    border: 1px solid var(--green-border);
+    background: var(--green-dim);
+    border-radius: 12px;
+    padding: 28px 32px;
+    font-size: 15px;
+    color: var(--green);
+    font-style: italic;
+    line-height: 1.6;
+    text-align: center;
+    letter-spacing: -0.1px;
+  }
+
+  /* ── PRICING ── */
+  .trial-note {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--green-dim);
+    border: 1px solid var(--green-border);
+    color: var(--green);
+    font-size: 13px;
+    font-family: var(--mono);
+    padding: 8px 16px;
+    border-radius: 8px;
+    margin-bottom: 40px;
+  }
+
+  .price-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+  }
+
+  .price-card {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 30px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .price-card.featured {
+    border-color: var(--green-border);
+    background: linear-gradient(160deg, rgba(0,232,122,0.04) 0%, var(--bg-2) 60%);
+  }
+
+  .popular-tag {
+    position: absolute;
+    top: -1px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--green);
+    color: #000;
+    font-size: 10px;
+    font-weight: 700;
+    font-family: var(--mono);
+    padding: 4px 14px;
+    border-radius: 0 0 8px 8px;
+    letter-spacing: 0.3px;
+  }
+
+  .plan-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    font-family: var(--mono);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .plan-price {
+    font-size: 38px;
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: -1.5px;
+    margin-bottom: 4px;
+    line-height: 1;
+  }
+  .plan-price sub {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--text-muted);
+    letter-spacing: 0;
+  }
+
+  .plan-desc {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-bottom: 24px;
+    line-height: 1.5;
+  }
+
+  .features {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    margin-bottom: 28px;
+    flex: 1;
+  }
+
+  .features li {
+    font-size: 13px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .features li::before {
+    content: '';
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--green);
+    opacity: 0.6;
+    flex-shrink: 0;
+  }
+  .price-card.featured .features li { color: rgba(255,255,255,0.7); }
+
+  .plan-btn {
+    width: 100%;
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: opacity 0.18s;
+    letter-spacing: -0.1px;
+  }
+  .plan-btn.outline {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.6);
+  }
+  .plan-btn.outline:hover { border-color: rgba(255,255,255,0.25); color: #fff; }
+  .plan-btn.solid {
+    background: var(--green);
+    border: none;
+    color: #000;
+  }
+  .plan-btn.solid:hover { opacity: 0.85; }
+
+  .pricing-footer {
+    margin-top: 32px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 960px) {
+    .agents-grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; }
+    .hero-left { border-right: none; border-bottom: 1px solid var(--border); padding: 48px 28px 40px; }
+    h1 { font-size: 34px; }
+    .demo-panel { min-height: 440px; }
+    .sec-grid { grid-template-columns: 1fr; }
+    .price-grid { grid-template-columns: 1fr; }
+    .agents-grid { grid-template-columns: 1fr; }
+    .inner { padding: 52px 24px; }
+    nav { padding: 14px 20px; }
+    .nav-tabs { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="#" class="logo">Schema<span>Zero</span></a>
+  <div class="nav-tabs">
+    <button class="tab-btn active" onclick="show('demo',this)">Live demo</button>
+    <button class="tab-btn" onclick="show('how',this)">How it works</button>
+    <button class="tab-btn" onclick="show('security',this)">Security</button>
+    <button class="tab-btn" onclick="show('pricing',this)">Pricing</button>
+  </div>
+  <a href="#" class="nav-cta">Get early access</a>
+</nav>
+
+<!-- ── DEMO ── -->
+<div id="demo" class="section active">
+  <div class="hero">
+    <div class="hero-left">
+      <div class="badge"><div class="badge-dot"></div>Database schema intelligence</div>
+      <h1>Stop investigating.<br><span class="g">Start knowing.</span></h1>
+      <p class="hero-sub">When your schema changes, SchemaZero tells your team exactly what it affects, why it matters, and what to review — before it becomes a production incident.</p>
+      <p class="auto-discovery">Connects to your database and reads your schema automatically — no setup, no declarations, no configuration.</p>
+      <p class="notify-channels">Alerts land in your own <strong>custom webhook</strong>, <strong>Slack</strong>, <strong>PagerDuty</strong>, or <strong>email</strong> — where your team already works.</p>
+      <p class="privacy-note"><strong>SchemaZero never sees your data. It only sees your structure.</strong></p>
+      <div class="hero-actions">
+        <a href="#" class="btn-primary">Start free trial</a>
+        <a href="#" class="btn-ghost" onclick="show('how', document.querySelector('[onclick*=\'how\']'));return false;">How it works</a>
+      </div>
+      <div class="engines-strip">
+        <div class="engines-label">Supported databases</div>
+        <div class="engines-list">
+          <span class="engine-pill"><span class="dot"></span>Postgres</span>
+          <span class="engine-pill"><span class="dot"></span>Supabase</span>
+          <span class="engine-pill"><span class="dot"></span>Neon</span>
+          <span class="engine-pill"><span class="dot"></span>MySQL</span>
+          <span class="engine-pill"><span class="dot"></span>MongoDB</span>
+          <span class="engine-pill"><span class="dot"></span>Redis</span>
+          <span class="engine-pill"><span class="dot"></span>CockroachDB</span>
+          <span class="engine-pill" style="opacity:0.4;cursor:default">SQL Server <span style="font-size:9px;margin-left:2px">soon</span></span>
+          <span class="engine-pill" style="opacity:0.4;cursor:default">Snowflake <span style="font-size:9px;margin-left:2px">soon</span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="demo-panel">
+      <div class="demo-titlebar">
+        <div class="traffic" style="background:#e83232"></div>
+        <div class="traffic" style="background:#ffb200"></div>
+        <div class="traffic" style="background:#00e87a"></div>
+        <span class="demo-label">change_events · live feed</span>
+      </div>
+      <div class="demo-db-bar">
+        <div class="db-indicator"></div>
+        <span class="db-name">prod-postgres</span>
+        <span style="margin:0 6px;opacity:0.3">·</span>
+        <span>Scout watching</span>
+      </div>
+      <div class="demo-feed">
+
+        <div class="change-card">
+          <div class="change-meta">
+            <span class="tag tag-add">ADDED</span>
+            <span class="change-table">public.<strong>users</strong></span>
+            <span class="engine-tag">postgres</span>
+            <span class="change-time">just now</span>
+          </div>
+          <div class="change-diff"><span class="added">+</span> column <em>verified_at</em> timestamptz DEFAULT null</div>
+          <div class="impact">
+            <strong>What to review:</strong> 3 queries in <code>auth-service</code> select all columns — they will now return this field. Check your serializers before deploying.
+            <span class="risk-badge risk-low" style="display:inline-block;margin-left:8px">LOW</span>
+          </div>
+        </div>
+
+        <div class="change-card">
+          <div class="change-meta">
+            <span class="tag tag-mod">MODIFIED</span>
+            <span class="change-table">public.<strong>orders</strong></span>
+            <span class="engine-tag">postgres</span>
+            <span class="change-time">2m ago</span>
+          </div>
+          <div class="change-diff"><em>status</em> varchar(20) → varchar(50)</div>
+          <div class="impact">
+            <strong>What to review:</strong> Column widened — no truncation possible, existing CHECK constraints remain valid. Safe to deploy.
+            <span class="risk-badge risk-low" style="display:inline-block;margin-left:8px">LOW</span>
+          </div>
+        </div>
+
+        <div class="change-card">
+          <div class="change-meta">
+            <span class="tag tag-drop">DROPPED</span>
+            <span class="change-table">public.<strong>sessions</strong></span>
+            <span class="engine-tag">postgres</span>
+            <span class="change-time">7m ago</span>
+          </div>
+          <div class="change-diff"><span class="removed">-</span> index <em>idx_sessions_token</em></div>
+          <div class="impact">
+            <span class="danger">Do not deploy.</span> This index covers 2 frequent queries in <code>api-gateway</code>. Expect full sequential scans until rebuilt. Rebuild the index before your next release.
+            <span class="risk-badge risk-high" style="display:inline-block;margin-left:8px">HIGH</span>
+          </div>
+        </div>
+
+        <div class="change-card">
+          <div class="change-meta">
+            <span class="tag tag-drop">DROPPED</span>
+            <span class="change-table">events.<strong>user_events</strong></span>
+            <span class="engine-tag">mongodb</span>
+            <span class="change-time">14m ago</span>
+          </div>
+          <div class="change-diff"><span class="removed">-</span> index <em>idx_user_events_session_id</em></div>
+          <div class="impact">
+            <strong>What to review:</strong> Aggregation pipeline in <code>analytics-service</code> will degrade without this index. Rebuild before traffic peaks or expect slow queries.
+            <span class="risk-badge risk-medium" style="display:inline-block;margin-left:8px">MEDIUM</span>
+          </div>
+        </div>
+
+        <div class="demo-connect">
+          <a href="#" class="btn-ghost" style="font-size:13px;padding:9px 18px;">Connect your database to see live changes →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── HOW IT WORKS ── -->
+<div id="how" class="section">
+  <div class="inner">
+    <div class="section-eyebrow">How it works</div>
+    <h2>From schema change to<br>clear answer in seconds</h2>
+    <p class="section-desc">Most tools stop at detection. SchemaZero goes further — it explains what changed, connects the dots to what it affects, and tells your team exactly what to review. No digging. No guessing.</p>
+
+    <div class="steps">
+
+      <div class="step">
+        <div class="step-num lit">01</div>
+        <div>
+          <div class="step-title">Connect any database</div>
+          <div class="step-body">Paste a read-only connection string. SchemaZero reads your entire schema automatically — every table, column, index, and constraint. Nothing to declare, nothing to configure. It just knows.</div>
+          <div class="code-block">
+            <span class="kw">GRANT</span> SELECT <span class="dim">ON ALL TABLES IN SCHEMA</span> public <span class="dim">TO</span> schemazero_reader;
+          </div>
+          <div class="engine-support-note">
+            <strong>Postgres / Supabase / Neon / CockroachDB:</strong> real-time via pg_notify &nbsp;·&nbsp;
+            <strong>MySQL:</strong> polling every 60s &nbsp;·&nbsp;
+            <strong>MongoDB:</strong> change streams &nbsp;·&nbsp;
+            <strong>Redis:</strong> keyspace notifications &nbsp;·&nbsp;
+            <strong style="opacity:0.5">SQL Server / Snowflake:</strong> <span style="opacity:0.5">coming soon</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num lit">02</div>
+        <div>
+          <div class="step-title">Scout watches continuously</div>
+          <div class="step-body">Scout runs always-on in the background. The moment a DDL event lands — migration script, manual ALTER TABLE, Supabase Studio, anything — Scout captures the before and after. Your team doesn't have to be watching.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num lit">03</div>
+        <div>
+          <div class="step-title">Agent Zero explains what it means</div>
+          <div class="step-body">This is where SchemaZero is different. Agent Zero doesn't just log the event — it reasons about it. What changed. What it touches. What your team needs to review before deploying. Risk scored, explained in plain English, no jargon.</div>
+          <div class="code-block">
+            <span class="err">HIGH </span> idx_sessions_token dropped — <span class="dim">2 queries in</span> api-gateway <span class="dim">will full-scan. Review before deploying.</span><br>
+            <span class="kw">LOW  </span> verified_at added nullable — <span class="dim">additive change, safe to deploy</span><br>
+            <span class="warn">MED  </span> status widened varchar(20)→(50) — <span class="dim">check enum serializers in</span> orders-service
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">04</div>
+        <div>
+          <div class="step-title">Your team gets answers, not just alerts</div>
+          <div class="step-body">The notification your team receives isn't a ping — it's a briefing. What changed, what's at risk, and what to check. Slack, PagerDuty, email, or your own webhook. Enough context to make the call without opening a single log file.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Agents -->
+    <div style="margin-top:64px">
+      <div class="section-eyebrow" style="margin-bottom:14px">Agents</div>
+      <h2 style="font-size:28px;margin-bottom:12px">Five agents. One continuous loop.</h2>
+      <p class="section-desc" style="margin-bottom:32px">Each agent has a single job and does it well. Together they cover detection, analysis, onboarding, support, and sales — without you managing any of it.</p>
+      <div class="agents-grid">
+        <div class="agent-card">
+          <div class="agent-icon">👁️</div>
+          <div class="agent-name">Scout</div>
+          <div class="agent-runs">Always-on background watcher</div>
+          <div class="agent-desc">Connects to your database and watches for schema changes using the right method for each engine. Updates a heartbeat every 30 seconds.</div>
+        </div>
+        <div class="agent-card">
+          <div class="agent-icon">⚡</div>
+          <div class="agent-name">Agent Zero</div>
+          <div class="agent-runs">Event-triggered impact analyzer</div>
+          <div class="agent-desc">Triggered by Scout on every change. Analyzes impact, scores risk, fires alerts to Slack and PagerDuty, and writes plain-English summaries.</div>
+        </div>
+        <div class="agent-card">
+          <div class="agent-icon">🧭</div>
+          <div class="agent-name">Onboarding Agent</div>
+          <div class="agent-runs">Database connection wizard</div>
+          <div class="agent-desc">Guides new users through connecting their first database. Validates the connection, confirms Scout is watching, and hands off on completion.</div>
+        </div>
+        <div class="agent-card">
+          <div class="agent-icon">💬</div>
+          <div class="agent-name">Support Agent</div>
+          <div class="agent-runs">Landing page + in-app support</div>
+          <div class="agent-desc">Answers questions about SchemaZero, explains risk levels, helps configure alerts, and escalates issues that need a human.</div>
+        </div>
+        <div class="agent-card">
+          <div class="agent-icon">📋</div>
+          <div class="agent-name">Sales Agent</div>
+          <div class="agent-runs">Teams + Enterprise qualifier</div>
+          <div class="agent-desc">Qualifies inbound Teams and Enterprise interest, collects context on team size and use case, and routes warm leads to the founder.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── SECURITY ── -->
+<div id="security" class="section">
+  <div class="inner">
+    <div class="section-eyebrow">Security</div>
+    <h2>Read-only by design</h2>
+    <p class="section-desc">SchemaZero never writes to your database. It reads schema metadata only — never your row-level data, never your application secrets.</p>
+
+    <div class="sec-grid">
+      <div class="sec-card">
+        <div class="sec-icon">🔒</div>
+        <div class="sec-name">Read-only credentials</div>
+        <div class="sec-body">Minimum required permissions only. SchemaZero accesses information_schema and system catalogs — never your table data, never your application rows.</div>
+      </div>
+      <div class="sec-card">
+        <div class="sec-icon">🔐</div>
+        <div class="sec-name">Credentials encrypted at rest</div>
+        <div class="sec-body">Connection strings are encrypted with AES-256 and stored separately from application data. Decrypted only when Scout needs to connect — never logged.</div>
+      </div>
+      <div class="sec-card">
+        <div class="sec-icon">🛡️</div>
+        <div class="sec-name">SOC 2 Type II in progress</div>
+        <div class="sec-body">We're completing our SOC 2 Type II audit. Reports are available for Enterprise prospects on request.</div>
+      </div>
+      <div class="sec-card">
+        <div class="sec-icon">🌐</div>
+        <div class="sec-name">VPC peering on Enterprise</div>
+        <div class="sec-body">Enterprise plans support direct VPC peering so your connection string never leaves your network perimeter. SSO / SAML included.</div>
+      </div>
+    </div>
+
+    <div class="sec-quote">
+      "SchemaZero never sees your data. It only sees your structure."
+    </div>
+  </div>
+</div>
+
+<!-- ── PRICING ── -->
+<div id="pricing" class="section">
+  <div class="inner">
+    <div class="section-eyebrow">Pricing</div>
+    <h2>Simple pricing.<br>No surprises.</h2>
+    <p class="section-desc">Start free. Upgrade when you're ready. No credit card required to begin.</p>
+
+    <div class="trial-note">
+      ✦ 14-day free trial on all plans — no credit card required
+    </div>
+
+    <div class="price-grid">
+
+      <div class="price-card featured">
+        <div class="popular-tag">Solo</div>
+        <div style="height:18px"></div>
+        <div class="plan-price">$19 <sub>/ mo</sub></div>
+        <div class="plan-desc">One seat. One database. Everything included.</div>
+        <ul class="features">
+          <li>1 seat</li>
+          <li>1 database connection</li>
+          <li>All supported engines</li>
+          <li>Real-time schema monitoring</li>
+          <li>Full impact analysis</li>
+          <li>Slack + PagerDuty alerts</li>
+          <li>Email notifications</li>
+          <li>14-day free trial</li>
+        </ul>
+        <button class="plan-btn solid">Start free trial</button>
+      </div>
+
+      <div class="price-card">
+        <div class="plan-name">Teams</div>
+        <div class="plan-price">Custom</div>
+        <div class="plan-desc">Multiple seats. Multiple databases. Built for your team.</div>
+        <ul class="features">
+          <li>Multiple seats</li>
+          <li>Multiple database connections</li>
+          <li>All supported engines</li>
+          <li>Team alert routing</li>
+          <li>Role-based access</li>
+          <li>Priority support</li>
+          <li>14-day free trial</li>
+        </ul>
+        <button class="plan-btn outline">Talk to us</button>
+      </div>
+
+      <div class="price-card">
+        <div class="plan-name">Enterprise</div>
+        <div class="plan-price">Custom</div>
+        <div class="plan-desc">For regulated industries and large organizations.</div>
+        <ul class="features">
+          <li>Everything in Teams</li>
+          <li>VPC peering</li>
+          <li>SSO / SAML</li>
+          <li>SOC 2 report access</li>
+          <li>Custom data retention</li>
+          <li>Dedicated SLA</li>
+          <li>14-day free trial</li>
+        </ul>
+        <button class="plan-btn outline">Talk to us</button>
+      </div>
+
+    </div>
+
+    <div class="pricing-footer">
+      All plans include real-time monitoring, full impact analysis, and Slack + PagerDuty alerts. &nbsp;·&nbsp; Questions? <a href="/cdn-cgi/l/email-protection#5038353c3c3f10233338353d312a35223f7e333f3d" style="color:var(--text-muted);text-decoration:underline"><span class="__cf_email__" data-cfemail="fd9598919192bd8e9e9598909c87988f92d39e9290">[email&#160;protected]</span></a>
+    </div>
+  </div>
+</div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+  function show(id, btn) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    var match = document.querySelector('.tab-btn[onclick*="' + id + '"]');
+    if (match) match.classList.add('active');
+  }
+</script>
+
+</body>
+</html>
