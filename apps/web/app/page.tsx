@@ -6,8 +6,7 @@ import Hero from "@/components/landing/Hero";
 import HowItWorks from "@/components/landing/HowItWorks";
 import Security from "@/components/landing/Security";
 import Pricing from "@/components/landing/Pricing";
-
-export type Tab = "demo" | "how" | "security" | "pricing";
+import type { Tab } from "@/lib/types";
 
 export default function LandingPage() {
   const [activeTab, setActiveTab] = useState<Tab>("demo");
