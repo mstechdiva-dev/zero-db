@@ -11,9 +11,10 @@ SchemaZero is a schema change detection and impact analysis agent for PostgreSQL
 - Detects schema changes in real time via Supabase pg_notify
 - Analyzes impact — which queries, indexes, and services are affected
 - Scores risk — low, medium, or high
-- Posts a detailed comment on the GitHub PR that triggered the migration
 - Fires Slack and PagerDuty alerts for high risk changes
-- Blocks deploys automatically when risk is critical
+- Notifies your team via dashboard, email, or Slack — no GitHub required
+
+> Schema changes happen directly in Postgres — from migration scripts, Supabase Studio, Flyway, Liquibase, or manual ALTER TABLE statements. SchemaZero catches all of them regardless of how they got there.
 
 ---
 
@@ -22,12 +23,11 @@ SchemaZero is a schema change detection and impact analysis agent for PostgreSQL
 | Layer | Technology |
 |-------|-----------|
 | Frontend | Vercel (Next.js) |
-| Backend / Agent Engine | Railway |
+| Backend / Agent Engine | Railway (FastAPI) |
 | Database + Auth | Supabase (PostgreSQL) |
-| Schema Watcher | Supabase pg_notify |
-| GitHub Integration | GitHub App |
+| Schema Watcher | pg_notify + engine adapters |
 | Billing | Stripe |
-| Alerts | Slack, PagerDuty |
+| Alerts | Slack, PagerDuty, Email |
 
 ---
 
@@ -36,8 +36,8 @@ SchemaZero is a schema change detection and impact analysis agent for PostgreSQL
 | Agent | Role | Runs On |
 |-------|------|---------|
 | Scout | Background schema watcher | Railway (always-on) |
-| Zero | Impact analyzer, PR commenter, alert sender | Railway |
-| Shawn | Onboarding — database connection wizard | Vercel / Supabase Edge |
+| Zero | Impact analyzer, alert sender | Railway |
+| Shawn | Onboarding — database connection wizard | Vercel |
 | Taylor | Landing page + in-app support | Vercel |
 | Jordan | Sales qualifier for Teams and Enterprise | Vercel |
 
@@ -55,28 +55,43 @@ All plans start with a **14-day free trial. No credit card required.**
 
 ---
 
+## Community Integrations (Open Source)
+
+GitHub and other platform integrations are open source, optional, and community maintained. The core product never depends on them.
+
+```
+schemazero-community/  # public, open source
+  ├── github/          # GitHub App — PR comments, optional
+  ├── gitlab/          # community contributed
+  ├── linear/          # community contributed
+  └── bitbucket/       # community contributed
+```
+
+Community integrations live at: [github.com/schemazero-community](#)
+
+---
+
 ## Build Phases
 
 ### Phase 1 — Foundation
 - [ ] Supabase project setup — auth, database schema
 - [ ] Railway project setup — backend service
-- [ ] GitHub App registration — webhooks, permissions
 - [ ] Vercel deployment — frontend connected to repo
 
 ### Phase 2 — Agent Brain
-- [ ] `schemazero-agent.md` — Zero's system prompt
-- [ ] `scout-agent.md` — Scout's watcher instructions
-- [ ] `onboarding-agent.md` — database connection wizard
-- [ ] `taylor-agent.md` — support agent
-- [ ] `jordan-agent.md` — sales qualifier
+- [ ] `zero.md` — Zero's system prompt and skills
+- [ ] `scout.md` — Scout's watcher instructions
+- [ ] `shawn.md` — database connection wizard
+- [ ] `taylor.md` — support agent
+- [ ] `jordan.md` — sales qualifier
 
 ### Phase 3 — Core Engine
 - [ ] Schema diff engine — before/after DDL snapshots
-- [ ] pg_notify listener — Scout watching for migrations
+- [ ] Database listener — Scout watching for changes per engine
 - [ ] Impact analysis logic — traces affected queries, indexes, services
-- [ ] Risk scorer — low / medium / high
-- [ ] PR comment formatter — Zero's GitHub output
+- [ ] Risk scorer — low / medium / high / critical
 - [ ] Slack alert formatter — high risk notifications
+- [ ] Email alert formatter
 
 ### Phase 4 — Frontend
 - [ ] Dashboard — live change feed, risk indicators
@@ -86,8 +101,7 @@ All plans start with a **14-day free trial. No credit card required.**
 ### Phase 5 — Integrations
 - [ ] Slack webhook
 - [ ] PagerDuty
-- [ ] GitHub PR comment posting
-- [ ] Deploy blocking — draft PR on high risk
+- [ ] Email notifications
 
 ### Phase 6 — Auth and Billing
 - [ ] Supabase auth — signup, login, session management
@@ -106,11 +120,6 @@ SUPABASE_SERVICE_ROLE_KEY=
 
 # Railway
 RAILWAY_API_URL=
-
-# GitHub App
-GITHUB_APP_ID=
-GITHUB_APP_PRIVATE_KEY=
-GITHUB_WEBHOOK_SECRET=
 
 # Stripe
 STRIPE_SECRET_KEY=
@@ -136,14 +145,9 @@ schemazero/
 │   └── agent/        # Railway backend (Scout + Zero)
 ├── packages/
 │   ├── schema-diff/  # Core diff engine
-│   ├── impact/       # Impact analysis logic
-│   └── agents/       # Agent MD files and prompts
-├── docs/
-│   ├── schemazero-agent.md
-│   ├── scout-agent.md
-│   ├── onboarding-agent.md
-│   ├── taylor-agent.md
-│   └── jordan-agent.md
+│   └── impact/       # Impact analysis logic
+├── agents/           # Agent MD skill files
+├── docs/             # Project documentation
 └── README.md
 ```
 
@@ -171,4 +175,4 @@ Early access waitlist open at [schemazero.com](#)
 
 ## Contact
 
-Questions: schemazero@xyzagents.ai
+Questions: hello@schemazero.com
