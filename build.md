@@ -22,7 +22,7 @@
 - **Backend** — FastAPI (Python), deployed on Railway
 - **Database + Auth** — Supabase (PostgreSQL)
 - **AI** — Anthropic Claude via API
-- **Billing** — Stripe
+- **Billing** — Lemon Squeezy
 - **Alerts** — Custom Webhook, Slack, PagerDuty, Email
 
 ## Architecture Reference
@@ -76,9 +76,9 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 RAILWAY_API_URL=
-STRIPE_SECRET_KEY=
-STRIPE_WEBHOOK_SECRET=
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
+LEMONSQUEEZY_API_KEY=
+LEMONSQUEEZY_WEBHOOK_SECRET=
+NEXT_PUBLIC_LEMONSQUEEZY_STORE_ID=
 SLACK_WEBHOOK_URL=
 PAGERDUTY_API_KEY=
 ANTHROPIC_API_KEY=
@@ -499,7 +499,7 @@ apps/web/
 │   └── api/
 │       ├── agent/route.ts      # Proxy to Railway agent endpoint
 │       └── webhook/
-│           └── stripe/route.ts # Stripe webhook handler
+│           └── lemonsqueezy/route.ts # Lemon Squeezy webhook handler
 ├── components/
 │   ├── landing/
 │   │   ├── Hero.tsx            # Hero + live demo panel
@@ -523,7 +523,7 @@ apps/web/
 ├── lib/
 │   ├── supabase.ts             # Supabase client
 │   ├── railway.ts              # Railway API client
-│   └── stripe.ts               # Stripe client
+│   └── lemonsqueezy.ts         # Lemon Squeezy client
 └── middleware.ts               # Auth protection for dashboard routes
 
 Key requirements:
@@ -580,10 +580,10 @@ Use Tailwind CSS throughout. Match the dark theme exactly. Build every component
 
 ---
 
-## Phase 6 — Auth and Billing
+## Phase 6 — Auth
 
 ```
-You are implementing authentication and billing for SchemaZero.
+You are implementing authentication for SchemaZero.
 
 Auth requirements:
 1. Supabase Auth handles all authentication
@@ -607,27 +607,6 @@ Auth requirements:
    - Show TrialBanner with days remaining
    - Block dashboard access when trial expires and plan is still trial
    - Redirect to pricing page with upgrade prompt
-
-Stripe requirements:
-1. Solo plan: $19/mo, one Stripe Price ID
-2. Teams: no Stripe price — Contact form only
-3. Enterprise: no Stripe price — Contact form only
-
-4. Stripe integration must:
-   - Create Stripe customer on org creation
-   - Stripe checkout session for Solo plan upgrade
-   - Webhook handler at /api/webhook/stripe:
-     - checkout.session.completed → update org plan to solo, set trial_converted = true
-     - customer.subscription.deleted → revert org plan to trial, set trial_ends_at = now()
-   - Store stripe_customer_id and stripe_subscription_id on organizations table
-
-5. Settings page billing section must:
-   - Show current plan
-   - Show trial days remaining if on trial
-   - Show Upgrade to Solo button for trial users
-   - Show Manage Subscription button for Solo users
-   - Show Cancel Subscription option
-   - Show contact form for Teams and Enterprise interest — CREATE_LEAD signal to Jordan
 
 Build completely. No placeholders.
 ```
@@ -805,19 +784,37 @@ You are doing final cleanup and verification for SchemaZero before launch.
 
 3. Verify the frontend matches the dark theme design with #0a0a0a background and #00e87a accent
 
-4. Verify Stripe webhook handles both checkout completion and subscription cancellation
+4. Verify Scout heartbeat updates correctly and ScoutStatus component shows real status
 
-5. Verify Scout heartbeat updates correctly and ScoutStatus component shows real status
+5. Verify trial logic: signup → 14 days → block → redirect to pricing
 
-6. Verify trial logic: signup → 14 days → block → redirect to pricing
+6. Implement Lemon Squeezy billing:
+   - Solo plan: $19/mo, one Lemon Squeezy variant ID
+   - Teams: no Lemon Squeezy price — Contact form only
+   - Enterprise: no Lemon Squeezy price — Contact form only
+   - Create Lemon Squeezy customer on org creation
+   - Lemon Squeezy checkout session for Solo plan upgrade
+   - Webhook handler at /api/webhook/lemonsqueezy:
+     - order_created → update org plan to solo, set trial_converted = true
+     - subscription_cancelled → revert org plan to trial, set trial_ends_at = now()
+   - Store lemonsqueezy_customer_id and lemonsqueezy_subscription_id on organizations table
+   - Verify webhook handles both order completion and subscription cancellation
 
-7. Remove build.md from the repository
+7. Settings page billing section must:
+   - Show current plan
+   - Show trial days remaining if on trial
+   - Show Upgrade to Solo button for trial users
+   - Show Manage Subscription button for Solo users
+   - Show Cancel Subscription option
+   - Show contact form for Teams and Enterprise interest — CREATE_LEAD signal to Jordan
 
-8. Update README.md build phase checklist — mark all phases complete
+9. Remove build.md from the repository
 
-9. Create a CHANGELOG.md in docs/ with initial v0.1.0 entry listing everything built
+10. Update README.md build phase checklist — mark all phases complete
 
-10. Final check: make sure no real agent names (Scout, Zero, Obi, Sully, Sal) appear in any public-facing file or the README. Public files use placeholder names only.
+11. Create a CHANGELOG.md in docs/ with initial v0.1.0 entry listing everything built
+
+12. Final check: make sure no real agent names (Scout, Zero, Obi, Sully, Sal) appear in any public-facing file or the README. Public files use placeholder names only.
 
 Verify everything is complete and production ready.
 ```
