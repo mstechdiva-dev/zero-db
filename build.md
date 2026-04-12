@@ -23,7 +23,7 @@
 - **Database + Auth** — Supabase (PostgreSQL)
 - **AI** — Anthropic Claude via API
 - **Billing** — Stripe
-- **Alerts** — Slack, PagerDuty, Email
+- **Alerts** — Custom Webhook, Slack, PagerDuty, Email
 
 ## Architecture Reference
 
@@ -116,11 +116,8 @@ Scout must:
   - MySQL / MariaDB: polling information_schema every 60 seconds
   - MongoDB: change streams on system.namespaces
   - Redis: keyspace notifications for key pattern changes
-  - SQL Server: DDL triggers + polling sys.objects
-  - SQLite: file modification detection
-  - Oracle: LogMiner or polling ALL_OBJECTS
-  - Snowflake: polling INFORMATION_SCHEMA.TABLES
-  - DynamoDB: DynamoDB Streams
+  - SQL Server: polling sys.objects (coming soon)
+  - Snowflake: polling INFORMATION_SCHEMA.TABLES (coming soon)
 - Capture before and after state as JSON snapshots
 - Write change events to Supabase change_events table
 - Update scout_heartbeat table every 30 seconds
@@ -140,18 +137,24 @@ Skills table must include:
 
 FILE: agents/zero.md
 
-Zero is the impact analyzer. It is triggered by Scout when a schema change is detected. It reads the change event, analyzes impact, scores risk, writes results to Supabase, and fires alerts.
+Zero is the impact analyzer and decision advisor. It is triggered by Scout when a schema change is detected. It reads the change event, analyzes impact, determines the next action, scores risk, writes results to Supabase, and fires alerts.
 
 Zero must:
 - Read change events from Supabase change_events table
-- Use Claude API to analyze: what changed, what it affects, what the risk is
+- Use Claude API to analyze: what changed, what it affects, what the risk is, and what the team should do next
 - Write impact analysis to Supabase impact_analysis table
 - Update risk_level on the change event
+- Always include a next_action in plain English — not just what happened but what the team should do:
+  - LOW: "Safe to deploy. No action required."
+  - MEDIUM: "Review [specific thing] before deploying."
+  - HIGH: "Do not deploy until this is resolved. [specific action needed]."
+  - CRITICAL: "Stop. Escalate immediately. [specific action needed]."
+- Fire custom webhook alert if configured (always check webhook first)
 - Fire Slack alert if risk is high or critical
 - Fire PagerDuty alert if risk is critical
 - Send email notification based on org alert config
 - Write to notification_log table for every alert sent
-- Explain everything in plain English — no jargon
+- Explain everything in plain English — no jargon, no log entries, no technical output without context
 
 Risk scoring rules:
 - LOW: additive changes, nullable columns added, index added
@@ -163,6 +166,8 @@ Skills table must include:
 - change_event_reader
 - impact_analyzer
 - risk_scorer
+- next_action_advisor
+- webhook_alerter
 - slack_alerter
 - pagerduty_alerter
 - email_alerter
@@ -223,10 +228,9 @@ Handoff signals:
 - CREATE_TICKET — escalate to founder
 
 Pricing Taylor knows:
-- Solo: $19/mo, 1 seat, 1 database, full access
-- Teams: Custom pricing, talk to us
-- Enterprise: Custom pricing, talk to us
-- All plans: 14-day free trial, no credit card required
+- Solo: $19/mo, 1 seat, 1 database, full access, 14-day free trial, no credit card required
+- Teams: Custom pricing, talk to us, no self-serve trial
+- Enterprise: Custom pricing, talk to us, no self-serve trial
 
 Skills table must include:
 - product_qa
@@ -301,6 +305,7 @@ apps/agent/
 │   ├── anthropic_service.py    # Claude API wrapper
 │   ├── supabase_service.py     # Supabase client and queries
 │   ├── encryption_service.py   # AES-256 connection string encryption
+│   ├── webhook_service.py      # Custom webhook sender (checked first before other alerts)
 │   ├── slack_service.py        # Slack webhook sender
 │   ├── pagerduty_service.py    # PagerDuty API sender
 │   └── email_service.py        # Email notification sender
@@ -446,7 +451,8 @@ Key requirements:
      - affected_queries (list)
      - affected_services (list)
      - affected_indexes (list)
-     - summary (plain English)
+     - summary (plain English — what changed and what it touches)
+     - next_action (plain English — what the team should do: safe to deploy / review X before deploying / do not deploy / stop and escalate)
      - recommendations (list)
 
 6. All diff results must be:
@@ -524,9 +530,12 @@ Key requirements:
 1. Landing page (page.tsx) must:
    - Match the existing HTML design exactly
    - Tabs: Live Demo, How it works, Security, Pricing
-   - Live Demo tab shows the mock change feed cards (ADDED, MODIFIED, DROPPED)
-   - Pricing tab shows: 14-day free trial card, Solo $19/mo, Teams custom, Enterprise custom
+   - Live Demo tab shows the mock change feed cards (ADDED, MODIFIED, DROPPED) — each card must show "What to review" not just "Impact", and HIGH/CRITICAL cards must show a clear next action (e.g. "Do not deploy until this is resolved")
+   - Pricing tab shows: 14-day free trial on Solo only (no credit card), Solo $19/mo, Teams custom, Enterprise custom
+   - Hero headline: "Stop investigating. Start knowing."
+   - Hero sub: "When your schema changes, SchemaZero tells your team exactly what it affects, why it matters, and what to review — before it becomes a production incident."
    - Hero includes: "SchemaZero never sees your data. It only sees your structure."
+   - Notification channels line: "Alerts land in your own custom webhook, Slack, PagerDuty, or email — where your team already works."
    - CTA buttons link to /auth/signup
 
 2. Dashboard (dashboard/page.tsx) must:
@@ -631,38 +640,52 @@ You are building the alert integrations for SchemaZero.
 
 Build the following services in apps/agent/services/:
 
-1. slack_service.py must:
+1. webhook_service.py must:
+   - Send HTTP POST to customer-configured webhook URL
+   - Always checked and fired first before any other alert channel
+   - Payload format (JSON):
+     - event: "schema_change"
+     - database_name, engine, risk_level
+     - change_type, object_type, object_name
+     - summary (plain English)
+     - next_action (plain English)
+     - timestamp
+     - dashboard_url
+   - Include SchemaZero-Signature header for payload verification
+   - Retry once on failure before logging error
+
+2. slack_service.py must:
    - Send formatted Slack messages via webhook URL
    - Message format for HIGH risk:
      - Header: ⚠️ Schema Change Detected — HIGH RISK
      - Database name and engine
      - What changed (object type, name, change type)
      - Impact summary from Zero
-     - Recommendations
+     - Next action — what the team should do
      - Link to dashboard
    - Message format for CRITICAL risk:
      - Header: 🚨 CRITICAL Schema Change — Immediate Attention Required
      - Same fields with urgency framing
    - Use Slack Block Kit for formatting
 
-2. pagerduty_service.py must:
+3. pagerduty_service.py must:
    - Create PagerDuty incident via Events API v2
    - Only fires on CRITICAL risk events
    - Incident title: SchemaZero: Critical schema change in [database name]
-   - Incident body: full impact analysis summary
+   - Incident body: full impact analysis summary plus next action
    - Severity: critical
    - Source: schemazero
 
-3. email_service.py must:
+4. email_service.py must:
    - Send email notifications via SMTP or Resend API
    - HTML email template matching SchemaZero dark theme
-   - Include: change summary, risk level, impact analysis, link to dashboard
+   - Include: change summary, risk level, impact analysis, next action, link to dashboard
    - Support per-org email preferences from alert_configs table
 
-4. alert_dispatcher.py in apps/agent/zero/ must:
+5. alert_dispatcher.py in apps/agent/zero/ must:
    - Read org alert_configs from Supabase
    - Check notify_on array against current risk level
-   - Route to correct service(s)
+   - Route to correct service(s) in this order: webhook first, then Slack, PagerDuty, email
    - Write result to notification_log table
    - Handle service failures gracefully — log error, continue to next channel
 
@@ -706,11 +729,7 @@ Build the following in apps/agent/scout/listeners/:
    - Snapshot: SCAN with pattern matching to map key namespaces and types
    - Poll every 30 seconds for new patterns
 
-5. sqlserver_listener.py:
-   - aioodbc connection
-   - Poll sys.objects, sys.columns, sys.indexes every 60 seconds
-   - Compare against last snapshot
-   - Detect: table/column/index changes
+Note: SQL Server and Snowflake listeners are coming soon — do not build them yet. Create stub files with a clear NOT_IMPLEMENTED comment so they can be completed later without breaking the runner.
 
 Each listener must:
    - Implement all abstract methods from base_listener.py
