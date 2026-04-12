@@ -45,7 +45,7 @@ export default function Security() {
             key={point.title}
             className="bg-[#111] border border-white/[0.06] rounded-xl p-7 hover:border-[rgba(0,232,122,0.2)] transition-colors"
           >
-            <div className="text-[22px] mb-3.5">{point.icon}</div>
+            <div className="text-[22px] mb-3.5"><span aria-hidden="true">{point.icon}</span></div>
             <h3 className="text-[15px] font-semibold text-white mb-2">{point.title}</h3>
             <p className="text-[13px] text-white/45 leading-[1.65]">{point.description}</p>
           </div>

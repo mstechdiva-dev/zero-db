@@ -142,6 +142,7 @@ export default function Hero({ onTabChange }: HeroProps) {
             Start free trial
           </a>
           <button
+            type="button"
             onClick={() => onTabChange("how")}
             className="px-6 py-3 border border-white/10 text-white/50 text-sm font-medium rounded-lg hover:text-white hover:border-white/22 transition-colors"
           >

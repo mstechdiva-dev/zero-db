@@ -3,7 +3,7 @@ const PLANS = [
     name: "Solo",
     label: "Solo",
     price: "$19",
-    period: "/ mo",
+    period: "/mo",
     description: "One seat. One database. Everything included.",
     features: [
       "1 seat",

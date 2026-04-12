@@ -151,9 +151,9 @@ export default function HowItWorks() {
         <p className="font-mono text-[10px] uppercase tracking-[1.5px] text-[#00e87a] mb-3.5">
           Agents
         </p>
-        <h2 className="text-[28px] font-semibold text-white leading-[1.15] tracking-[-1.2px] mb-3">
+        <h3 className="text-[28px] font-semibold text-white leading-[1.15] tracking-[-1.2px] mb-3">
           Five agents. One continuous loop.
-        </h2>
+        </h3>
         <p className="text-base text-white/45 max-w-[560px] leading-[1.65] mb-8">
           Each agent has a single job and does it well. Together they cover detection,
           analysis, onboarding, support, and sales — without you managing any of it.
@@ -164,7 +164,7 @@ export default function HowItWorks() {
               key={agent.name}
               className="bg-[#111] border border-white/[0.06] rounded-xl p-6 hover:border-[rgba(0,232,122,0.2)] transition-colors"
             >
-              <div className="text-[22px] mb-3">{agent.icon}</div>
+              <div className="text-[22px] mb-3"><span aria-hidden="true">{agent.icon}</span></div>
               <div className="text-[15px] font-semibold text-white mb-1">{agent.name}</div>
               <div className="font-mono text-[9px] uppercase tracking-[0.5px] text-white/22 mb-2.5">
                 {agent.runs}
