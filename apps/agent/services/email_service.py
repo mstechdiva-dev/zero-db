@@ -6,7 +6,7 @@ from typing import Sequence
 
 
 class EmailService:
-    """Send email notifications for schema change alerts. Full implementation in Phase 7."""
+    """Send email notifications for schema change alerts."""
 
     def __init__(self):
         self.smtp_host = os.environ.get("SMTP_HOST", "")
@@ -30,6 +30,7 @@ class EmailService:
         msg["From"] = self.from_address
         msg["To"] = ", ".join(recipients)
         msg.attach(MIMEText(html_body, "html"))
+        # HTML template is built by the caller (AlertDispatcher._build_email_html)
         try:
             with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
                 server.starttls()
