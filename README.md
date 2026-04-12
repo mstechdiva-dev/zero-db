@@ -105,7 +105,7 @@ Community integrations live at: [github.com/schemazero-community](#)
 
 ### Phase 6 — Auth and Billing
 - [ ] Supabase auth — signup, login, session management
-- [ ] Stripe — Solo $19/mo, Teams and Enterprise custom
+- [ ] Lemon Squeezy — Solo $19/mo, Teams and Enterprise custom
 - [ ] Trial logic — 14 days, no credit card, convert or out
 
 ---

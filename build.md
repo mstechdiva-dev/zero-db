@@ -608,18 +608,18 @@ Auth requirements:
    - Block dashboard access when trial expires and plan is still trial
    - Redirect to pricing page with upgrade prompt
 
-Stripe requirements:
-1. Solo plan: $19/mo, one Stripe Price ID
-2. Teams: no Stripe price — Contact form only
-3. Enterprise: no Stripe price — Contact form only
+Lemon Squeezy requirements:
+1. Solo plan: $19/mo, one Lemon Squeezy variant ID
+2. Teams: no Lemon Squeezy price — Contact form only
+3. Enterprise: no Lemon Squeezy price — Contact form only
 
-4. Stripe integration must:
-   - Create Stripe customer on org creation
-   - Stripe checkout session for Solo plan upgrade
-   - Webhook handler at /api/webhook/stripe:
-     - checkout.session.completed → update org plan to solo, set trial_converted = true
-     - customer.subscription.deleted → revert org plan to trial, set trial_ends_at = now()
-   - Store stripe_customer_id and stripe_subscription_id on organizations table
+4. Lemon Squeezy integration must:
+   - Create Lemon Squeezy customer on org creation
+   - Lemon Squeezy checkout session for Solo plan upgrade
+   - Webhook handler at /api/webhook/lemonsqueezy:
+     - order_created → update org plan to solo, set trial_converted = true
+     - subscription_cancelled → revert org plan to trial, set trial_ends_at = now()
+   - Store lemonsqueezy_customer_id and lemonsqueezy_subscription_id on organizations table
 
 5. Settings page billing section must:
    - Show current plan
