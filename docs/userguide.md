@@ -6,8 +6,16 @@ SchemaZero watches your database schema for changes, analyzes the impact using A
 
 ## Table of Contents
 
-1. [Connecting Your Database](#connecting-your-database)
-2. [PostgreSQL & Compatible](#postgresql--compatible)
+1. [Using SchemaZero](#using-schemazero)
+   - [Landing Page](#landing-page)
+   - [Signing Up](#signing-up)
+   - [Onboarding — Connect Your First Database](#onboarding--connect-your-first-database)
+   - [Dashboard — Change Feed](#dashboard--change-feed)
+   - [Dashboard — Databases](#dashboard--databases)
+   - [Dashboard — Settings](#dashboard--settings)
+   - [Trial and Billing](#trial-and-billing)
+2. [Connecting Your Database](#connecting-your-database)
+3. [PostgreSQL & Compatible](#postgresql--compatible)
    - [Local Postgres](#local-postgres)
    - [Neon](#neon)
    - [Supabase (Direct Connection)](#supabase-direct-connection)
@@ -18,15 +26,214 @@ SchemaZero watches your database schema for changes, analyzes the impact using A
    - [Railway Postgres](#railway-postgres)
    - [ElephantSQL](#elephantsql)
    - [Timescale Cloud](#timescale-cloud)
-3. [MySQL / MariaDB](#mysql--mariadb)
-4. [MongoDB](#mongodb)
-5. [Redis](#redis)
-6. [Coming Soon](#coming-soon)
-7. [SSL Reference](#ssl-reference)
-8. [How Scout Watches Each Engine](#how-scout-watches-each-engine)
-9. [Alert Channels](#alert-channels)
-10. [Risk Levels](#risk-levels)
-11. [Troubleshooting](#troubleshooting)
+4. [MySQL / MariaDB](#mysql--mariadb)
+5. [MongoDB](#mongodb)
+6. [Redis](#redis)
+7. [Coming Soon](#coming-soon)
+8. [SSL Reference](#ssl-reference)
+9. [How Scout Watches Each Engine](#how-scout-watches-each-engine)
+10. [Alert Channels](#alert-channels)
+11. [Risk Levels](#risk-levels)
+12. [Troubleshooting](#troubleshooting)
+
+---
+
+## Using SchemaZero
+
+### Landing Page
+
+The landing page gives you a full product tour before you sign up. Use the tabs at the top to navigate:
+
+| Tab | What it shows |
+|-----|--------------|
+| **Live Demo** | A live mock change feed showing how schema changes appear — ADDED, MODIFIED, and DROPPED events with risk badges and AI-generated next actions |
+| **How it works** | Step-by-step walkthrough of the full pipeline: Scout detects → Zero analyzes → your team gets alerted |
+| **Security** | Read-only credentials, AES-256 encryption, and the core promise: SchemaZero never sees your data, only your structure |
+| **Pricing** | Solo ($19/mo), Teams (custom), and Enterprise (custom). The 14-day free trial is available on Solo — no credit card required |
+
+The **Live Demo** panel on the right side of the hero shows exactly what your dashboard will look like. Each change card includes:
+- The change type badge (green ADDED / red DROPPED / yellow MODIFIED)
+- The affected table or collection in monospace
+- An AI-generated impact summary
+- A **"What to review"** section with a plain-English next action
+- HIGH and CRITICAL cards show a red "Do not deploy" warning
+
+Click **Start free trial** or **Get early access** to go to signup. Click **Sign in** in the top nav if you already have an account.
+
+---
+
+### Signing Up
+
+Go to `/auth/signup`. No credit card is required.
+
+1. Enter your **organization name** (optional — you can fill this in later)
+2. Enter your **email address**
+3. Choose a **password** (minimum 8 characters)
+4. Click **Start free trial**
+
+SchemaZero creates your account, creates your organization, and starts a 14-day free trial. You are redirected to onboarding to connect your first database.
+
+Already have an account? Click **Sign in** at the bottom of the signup page to go to `/auth/login`.
+
+---
+
+### Onboarding — Connect Your First Database
+
+After signup you land on `/onboarding`. This is a guided setup flow with **Obi**, the onboarding assistant.
+
+**How it works:**
+
+1. Obi greets you and asks what database engine you are using
+2. Select your engine from the grid — PostgreSQL, Supabase, Neon, CockroachDB, MySQL, MariaDB, MongoDB, Redis, and more
+3. Obi asks for your connection string and validates the connection
+4. Obi confirms what Scout will monitor for your chosen engine
+5. Once the connection is saved and Scout starts watching, Obi says "Scout is now watching" and you are redirected to the dashboard
+
+**Tips:**
+- You can type in the chat or click an engine button from the grid — both work
+- Obi validates that your connection string is reachable before saving it
+- SchemaZero connects in read-only mode — it never writes to your database
+- If you have questions about connection strings, see [Connecting Your Database](#connecting-your-database) below
+- If you need help, Obi will route you to Sully (support) automatically
+
+You can connect additional databases later from **Dashboard → Databases**.
+
+---
+
+### Dashboard — Change Feed
+
+`/dashboard` is your main view. It shows every schema change Scout has detected, in real time.
+
+**Page layout:**
+
+```
+┌─────────────────────────────────────────────────┐
+│  Scout status pills  (one per connected database) │
+├─────────────────────────────────────────────────┤
+│  Change card                                     │
+│  Change card                                     │
+│  Change card                                     │
+│  ...                                             │
+└─────────────────────────────────────────────────┘
+```
+
+**Scout status pills** appear at the top. Each connected database has a pill:
+- **Green animated dot + "Scout active"** — heartbeat received within the last 60 seconds
+- **Red dot + "Scout offline"** — no heartbeat for more than 60 seconds. Check your database connection.
+
+**Change cards** appear in reverse chronological order (newest first). Each card shows:
+
+| Element | Description |
+|---------|-------------|
+| Change type badge | **ADDED** (green), **DROPPED** (red), or **MODIFIED** (yellow) |
+| Object name | The affected table, column, index, or collection in monospace |
+| Change description | Plain-English description of what changed |
+| Risk badge | **LOW** / **MEDIUM** / **HIGH** / **CRITICAL** — see [Risk Levels](#risk-levels) |
+| Timestamp | When the change was detected |
+
+The feed updates in real time — new changes slide in at the top without a page refresh.
+
+**Empty state:** If no changes have been detected yet, the feed shows "No schema changes detected yet. Scout is watching." This is normal when you first connect. Scout will surface changes as they happen.
+
+---
+
+### Dashboard — Databases
+
+`/dashboard/databases` shows all your connected databases and lets you add more.
+
+**What you see for each database:**
+- **Database name** — the display name you set during onboarding
+- **Engine** — postgres, mysql, mongodb, or redis
+- **Status** — "Scout watching" (active) or "Inactive"
+
+**Adding a database:**
+Click **Add database** in the top right. This takes you back to `/onboarding` to go through the guided setup again for your next database. You can connect as many databases as your plan allows.
+
+---
+
+### Dashboard — Settings
+
+`/dashboard/settings` is where you configure how SchemaZero alerts your team.
+
+#### Alert Configuration
+
+SchemaZero supports four alert channels. You can configure any combination of them. Alerts fire in this order: **webhook first, then Slack, then PagerDuty, then email.**
+
+**Custom Webhook URL**
+
+Paste the URL of your endpoint. SchemaZero will POST a signed JSON payload to it whenever a schema change meets your alert threshold. This fires before all other channels.
+
+See [Alert Channels → Custom Webhook](#custom-webhook) for the full payload format and how to verify the signature.
+
+**Slack Webhook URL**
+
+Paste a Slack Incoming Webhook URL. SchemaZero will send formatted Block Kit messages to your channel for HIGH and CRITICAL changes.
+
+To create a Slack Incoming Webhook:
+1. Go to [api.slack.com/apps](https://api.slack.com/apps) → Create New App → From scratch
+2. Enable **Incoming Webhooks**
+3. Add a webhook to your workspace and select a channel
+4. Copy the webhook URL and paste it here
+
+**PagerDuty Integration Key**
+
+Paste your PagerDuty **Integration Key** (also called a Routing Key). SchemaZero will create a PagerDuty incident for CRITICAL changes only.
+
+To get an Integration Key:
+1. In PagerDuty, go to **Services → Service Directory → your service → Integrations**
+2. Add an integration → select **Events API v2**
+3. Copy the Integration Key
+
+**Email Recipients**
+
+Enter one or more email addresses separated by commas. SchemaZero will send an HTML email for changes that match your alert threshold.
+
+Example: `alice@company.com, oncall@company.com`
+
+#### Notify On
+
+Use the checkboxes to choose which risk levels trigger alerts:
+
+- **Low** — additive changes, nullable columns added
+- **Medium** — widening changes, index drops on low-traffic tables
+- **High** — column drops, NOT NULL added, index drops on critical tables
+- **Critical** — table drops, primary key changes, foreign key drops
+
+Default: **High** and **Critical** are checked. Most teams leave it this way.
+
+Click **Save alert config** to save your settings. You'll see "Saved ✓" for a few seconds when it succeeds.
+
+---
+
+### Trial and Billing
+
+**Trial banner**
+
+A banner appears at the top of every dashboard page while you are on a free trial:
+
+| Situation | Banner |
+|-----------|--------|
+| More than 3 days remaining | Blue — "X days left in your trial." |
+| 3 days or fewer remaining | Orange — "X days left in your trial." with an **Upgrade** button |
+| Trial expired | Orange — "Your trial has expired." |
+
+**Upgrading**
+
+Click **Upgrade to Solo — $19/mo** in the banner (or go to **Settings**) to upgrade. Solo includes:
+- 1 seat
+- 1 database
+- Full SchemaZero access
+- All alert channels
+
+**Trial expiry**
+
+When your trial expires, dashboard access is blocked and you are redirected to **Settings** to upgrade. Your data and alert configuration are preserved.
+
+**Teams and Enterprise**
+
+Teams and Enterprise plans are custom-priced and do not have a self-serve trial. Contact us from the Pricing tab on the landing page to talk to the sales team.
+
+---
 
 ---
 
