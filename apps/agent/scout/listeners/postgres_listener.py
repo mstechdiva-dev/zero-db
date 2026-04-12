@@ -1,8 +1,9 @@
 import asyncio
-import json
 import logging
 import os
+import ssl
 from typing import Optional
+from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 
 import asyncpg
 
@@ -78,6 +79,53 @@ $$;
 """
 
 
+def _parse_connection(connection_string: str) -> tuple[str, object]:
+    """Normalise a Postgres connection string and derive the ssl argument for asyncpg.
+
+    asyncpg does not recognise ``sslmode`` as a DSN query parameter — leaving it
+    in the string raises ``invalid connection parameter``.  This function strips
+    ``sslmode``, converts it to the correct ``ssl`` kwarg, and normalises the
+    ``postgres://`` scheme so the same connection string works everywhere:
+
+    * ``sslmode=disable``     → ssl=False
+    * ``sslmode=require``     → SSLContext, no cert/hostname verification
+      (matches libpq "require" semantics: encrypt, don't verify)
+    * ``sslmode=verify-ca``   → same as require (CA bundle not available client-side)
+    * ``sslmode=verify-full`` → default SSLContext (hostname + cert verified)
+    * absent / prefer / allow → ssl=None (asyncpg chooses; attempts TLS, falls back)
+    """
+    # Normalise postgres:// → postgresql:// (asyncpg accepts both, but being
+    # explicit avoids edge cases in some asyncpg versions)
+    dsn = connection_string
+    if dsn.startswith("postgres://"):
+        dsn = "postgresql://" + dsn[len("postgres://"):]
+
+    parsed = urlparse(dsn)
+    qs = parse_qs(parsed.query, keep_blank_values=True)
+    sslmode = qs.pop("sslmode", [None])[0]
+
+    # Rebuild query string without sslmode
+    clean_query = urlencode({k: v[0] for k, v in qs.items()})
+    dsn = urlunparse(parsed._replace(query=clean_query))
+
+    ssl_arg: object = None
+    if sslmode == "disable":
+        ssl_arg = False
+    elif sslmode in ("require", "verify-ca"):
+        # Encrypt the connection; skip certificate/hostname verification to
+        # match libpq's "require" behaviour (trust the wire, not the cert).
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+        ssl_arg = ctx
+    elif sslmode == "verify-full":
+        # Full chain + hostname verification — strictest mode.
+        ssl_arg = ssl.create_default_context()
+    # else: prefer / allow / absent → ssl_arg stays None
+
+    return dsn, ssl_arg
+
+
 class PostgresListener(BaseListener):
     """Scout listener for PostgreSQL, Supabase, Neon, and CockroachDB.
 
@@ -95,7 +143,11 @@ class PostgresListener(BaseListener):
         self._use_notify = True
 
     async def connect(self, connection_string: str) -> None:
-        self._conn = await asyncpg.connect(connection_string)
+        dsn, ssl_arg = _parse_connection(connection_string)
+        kwargs: dict = {"timeout": 30}
+        if ssl_arg is not None:
+            kwargs["ssl"] = ssl_arg
+        self._conn = await asyncpg.connect(dsn, **kwargs)
         logger.info("PostgresListener connected to database_id=%s", self.database_id)
 
     async def capture_snapshot(self) -> dict:
