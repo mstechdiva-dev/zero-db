@@ -171,4 +171,4 @@ Early access waitlist open at [schemazero.com](#)
 
 ## Contact
 
-Questions: hello@schemazero.com
+Questions: schemazero@xyzagents.ai
