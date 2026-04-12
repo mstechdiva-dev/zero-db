@@ -652,7 +652,12 @@ Build the following services in apps/agent/services/:
      - next_action (plain English)
      - timestamp
      - dashboard_url
-   - Include SchemaZero-Signature header for payload verification
+   - Include webhook signing headers for payload verification:
+     - SchemaZero-Timestamp: current UNIX timestamp in seconds
+     - SchemaZero-Signature: `sha256=` + lowercase hex digest of HMAC-SHA256 over the exact string `{timestamp}.{raw_request_body}`
+     - `raw_request_body` means the exact UTF-8 JSON bytes sent on the wire, before parsing or reformatting
+     - Use a shared signing secret loaded from environment variable `SCHEMAZERO_WEBHOOK_SIGNING_SECRET` — never hardcode it
+     - Receivers must verify the HMAC with the same secret and reject requests whose timestamp is older than 5 minutes to prevent replay attacks
    - Retry once on failure before logging error
 
 2. slack_service.py must:
