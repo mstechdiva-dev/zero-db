@@ -13,8 +13,20 @@ alter table organizations
 
 -- ============================================================
 -- 2. alert_channel enum — add webhook as first-class channel
+--    Creates the type if it doesn't exist, otherwise adds the value
 -- ============================================================
-alter type alert_channel add value if not exists 'webhook' before 'slack';
+do $$
+begin
+  if not exists (select 1 from pg_type where typname = 'alert_channel') then
+    create type alert_channel as enum ('webhook', 'slack', 'pagerduty', 'email');
+  elsif not exists (
+    select 1 from pg_enum e
+    join pg_type t on e.enumtypid = t.oid
+    where t.typname = 'alert_channel' and e.enumlabel = 'webhook'
+  ) then
+    alter type alert_channel add value 'webhook' before 'slack';
+  end if;
+end $$;
 
 -- ============================================================
 -- 3. alert_configs — add custom webhook URL column
