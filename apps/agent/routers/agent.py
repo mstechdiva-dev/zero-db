@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request, HTTPException, Depends
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
 
 from services.anthropic_service import AnthropicService
@@ -14,7 +14,7 @@ HANDOFF_SIGNALS = ["HANDOFF:", "CREATE_TICKET", "CREATE_LEAD"]
 class ChatRequest(BaseModel):
     agent: str
     message: str
-    history: Optional[list[dict]] = []
+    history: list[dict] = Field(default_factory=list)
 
 
 class ChatResponse(BaseModel):

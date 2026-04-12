@@ -190,6 +190,16 @@ alter table impact_analysis enable row level security;
 alter table alert_configs enable row level security;
 alter table notification_log enable row level security;
 
+-- scout_heartbeat: users can read heartbeats for databases in their org
+create policy "users_select_own_scout_heartbeat" on scout_heartbeat
+  for select using (
+    database_id in (
+      select id from connected_databases where org_id in (
+        select org_id from users where auth_user_id = auth.uid()
+      )
+    )
+  );
+
 -- Users can only read their own org
 create policy "users_select_own_org" on organizations
   for select using (
@@ -236,6 +246,11 @@ create policy "users_update_own_alert_config" on alert_configs
     org_id in (
       select org_id from users where auth_user_id = auth.uid()
     )
+  )
+  with check (
+    org_id in (
+      select org_id from users where auth_user_id = auth.uid()
+    )
   );
 
 create policy "users_insert_own_alert_config" on alert_configs
@@ -256,9 +271,24 @@ create policy "users_select_own_notification_log" on notification_log
 -- Functions
 -- ============================================================
 
+-- Trigger to keep alert_configs.updated_at current
+create or replace function set_updated_at()
+returns trigger language plpgsql as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+create trigger alert_configs_updated_at
+  before update on alert_configs
+  for each row execute procedure set_updated_at();
+
 -- Called on signup to provision org + user record
 create or replace function handle_new_user()
-returns trigger language plpgsql security definer as $$
+returns trigger language plpgsql security definer
+set search_path = public, auth
+as $$
 declare
   new_org_id uuid;
 begin

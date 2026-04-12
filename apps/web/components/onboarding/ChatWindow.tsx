@@ -47,6 +47,9 @@ export default function ChatWindow({ agentName, onComplete }: ChatWindowProps) {
         }),
       });
 
+      if (!res.ok) {
+        throw new Error(`Request failed: ${res.status}`);
+      }
       const data = await res.json();
       setMessages((prev) => [
         ...prev,

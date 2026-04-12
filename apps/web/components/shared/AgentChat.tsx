@@ -51,6 +51,9 @@ export default function AgentChat({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ agent, message: text, history: messages }),
       });
+      if (!res.ok) {
+        throw new Error(`Request failed: ${res.status}`);
+      }
       const data = await res.json();
       setMessages((prev) => [
         ...prev,

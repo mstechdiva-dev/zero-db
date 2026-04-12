@@ -28,17 +28,20 @@ async def verify_jwt(
             .single()
             .execute()
         )
-        org_id = user_result.data["org_id"] if user_result.data else None
+        if not user_result.data or not user_result.data.get("org_id"):
+            raise HTTPException(
+                status_code=403, detail="User is not assigned to an organization"
+            )
 
         return {
             "user_id": result.user.id,
             "email": result.user.email,
-            "org_id": org_id,
+            "org_id": user_result.data["org_id"],
         }
     except HTTPException:
         raise
-    except Exception as exc:
-        raise HTTPException(status_code=401, detail=str(exc))
+    except Exception:
+        raise HTTPException(status_code=401, detail="Authentication failed")
 
 
 class SupabaseService:
@@ -74,6 +77,13 @@ class SupabaseService:
             )
             .execute()
         )
+        if getattr(result, "error", None):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Failed to create connected database: {result.error}",
+            )
+        if not result.data:
+            raise HTTPException(status_code=502, detail="Failed to create connected database")
         return result.data[0]
 
     async def delete_connected_database(self, database_id: str, org_id: str):
@@ -108,6 +118,8 @@ class SupabaseService:
         return result.data
 
     async def get_impact_analysis(self, change_id: str, org_id: str) -> dict:
+        # Verify the change event belongs to this org before returning impact
+        await self.get_change_event(change_id=change_id, org_id=org_id)
         result = (
             self.client.table("impact_analysis")
             .select("*")
@@ -135,4 +147,11 @@ class SupabaseService:
             .upsert({"org_id": org_id, **config.model_dump(exclude_unset=True)})
             .execute()
         )
+        if getattr(result, "error", None):
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to update alert config: {result.error}",
+            )
+        if not result.data:
+            raise HTTPException(status_code=500, detail="Failed to update alert config")
         return result.data[0]

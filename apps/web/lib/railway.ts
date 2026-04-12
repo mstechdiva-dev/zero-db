@@ -1,5 +1,9 @@
 const RAILWAY_API_URL = process.env.RAILWAY_API_URL;
 
+if (!RAILWAY_API_URL) {
+  throw new Error("RAILWAY_API_URL environment variable is not set");
+}
+
 export type AgentName = "shawn" | "taylor" | "jordan";
 
 export interface ChatMessage {

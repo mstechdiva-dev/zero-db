@@ -46,6 +46,7 @@ class AnthropicService:
         response = await self.client.messages.create(
             model=self.model,
             max_tokens=self.max_tokens,
+            temperature=self.temperature,
             system=self.system_prompt,
             messages=messages,
         )
@@ -62,6 +63,7 @@ class AnthropicService:
         async with self.client.messages.stream(
             model=self.model,
             max_tokens=self.max_tokens,
+            temperature=self.temperature,
             system=self.system_prompt,
             messages=messages,
         ) as stream:
