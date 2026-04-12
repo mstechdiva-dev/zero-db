@@ -1,64 +1,59 @@
 const POINTS = [
   {
-    title: "Read-only credentials only",
+    icon: "🔒",
+    title: "Read-only credentials",
     description:
-      "SchemaZero only ever connects with read-only credentials. We cannot write to your database.",
+      "Minimum required permissions only. SchemaZero accesses information_schema and system catalogs — never your table data, never your application rows.",
   },
   {
-    title: "AES-256 encryption at rest",
+    icon: "🔐",
+    title: "Credentials encrypted at rest",
     description:
-      "Connection strings are encrypted with AES-256-GCM before storage. Decrypted only at connection time, never logged.",
+      "Connection strings are encrypted with AES-256 and stored separately from application data. Decrypted only when Scout needs to connect — never logged.",
   },
   {
-    title: "Schema metadata only",
+    icon: "🛡️",
+    title: "SOC 2 Type II in progress",
     description:
-      "We capture table names, column types, indexes, and constraints — never row-level data, never your application data.",
+      "We're completing our SOC 2 Type II audit. Reports are available for Enterprise prospects on request.",
   },
   {
-    title: "SOC 2 Type II audit in progress",
+    icon: "🌐",
+    title: "VPC peering on Enterprise",
     description:
-      "We are undergoing SOC 2 Type II certification. Report available to Enterprise customers on request.",
-  },
-  {
-    title: "VPC peering (Enterprise)",
-    description:
-      "Enterprise customers can connect via VPC peering for zero-public-internet database access.",
-  },
-  {
-    title: "SSO/SAML (Enterprise)",
-    description:
-      "Enterprise plans include SSO/SAML integration for centralized identity management.",
+      "Enterprise plans support direct VPC peering so your connection string never leaves your network perimeter. SSO / SAML included.",
   },
 ];
 
 export default function Security() {
   return (
-    <div className="pt-16 pb-12">
-      <h2 className="text-3xl font-bold text-white mb-4">Security</h2>
-      <p className="text-gray-400 mb-12 text-lg max-w-2xl">
-        SchemaZero never sees your data. It only sees your structure.
+    <div className="py-20">
+      <p className="font-mono text-[10px] uppercase tracking-[1.5px] text-[#00e87a] mb-3.5">
+        Security
       </p>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <h2 className="text-[36px] font-semibold text-white leading-[1.15] tracking-[-1.2px] mb-3.5">
+        Read-only by design
+      </h2>
+      <p className="text-base text-white/45 max-w-[560px] leading-[1.65] mb-14">
+        SchemaZero never writes to your database. It reads schema metadata only — never
+        your row-level data, never your application secrets.
+      </p>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {POINTS.map((point) => (
           <div
             key={point.title}
-            className="bg-[#111] border border-gray-800 rounded-xl p-6"
+            className="bg-[#111] border border-white/[0.06] rounded-xl p-7 hover:border-[rgba(0,232,122,0.2)] transition-colors"
           >
-            <div className="flex items-start gap-3">
-              <span className="text-[#00e87a] mt-0.5">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                  <path d="M8 0a8 8 0 110 16A8 8 0 018 0zm3.646 5.646a.5.5 0 00-.707 0L7 9.586 5.061 7.646a.5.5 0 10-.707.707l2.293 2.293a.5.5 0 00.707 0l4.293-4.293a.5.5 0 000-.707z" />
-                </svg>
-              </span>
-              <div>
-                <h3 className="text-white font-semibold">{point.title}</h3>
-                <p className="text-gray-400 text-sm mt-1 leading-relaxed">
-                  {point.description}
-                </p>
-              </div>
-            </div>
+            <div className="text-[22px] mb-3.5"><span aria-hidden="true">{point.icon}</span></div>
+            <h3 className="text-[15px] font-semibold text-white mb-2">{point.title}</h3>
+            <p className="text-[13px] text-white/45 leading-[1.65]">{point.description}</p>
           </div>
         ))}
+      </div>
+
+      <div className="mt-10 border border-[rgba(0,232,122,0.2)] bg-[rgba(0,232,122,0.08)] rounded-xl px-8 py-7 text-[15px] text-[#00e87a] italic leading-[1.6] text-center tracking-[-0.1px]">
+        "SchemaZero never sees your data. It only sees your structure."
       </div>
     </div>
   );

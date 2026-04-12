@@ -14,12 +14,14 @@ export default function LandingPage() {
   return (
     <main className="min-h-screen bg-[#0a0a0a]">
       <Nav activeTab={activeTab} onTabChange={setActiveTab} />
-      <div className="max-w-7xl mx-auto px-6 pb-24">
-        {activeTab === "demo" && <Hero />}
-        {activeTab === "how" && <HowItWorks />}
-        {activeTab === "security" && <Security />}
-        {activeTab === "pricing" && <Pricing />}
-      </div>
+      {activeTab === "demo" && <Hero onTabChange={setActiveTab} />}
+      {activeTab !== "demo" && (
+        <div className="max-w-[960px] mx-auto px-10 pb-24">
+          {activeTab === "how" && <HowItWorks />}
+          {activeTab === "security" && <Security />}
+          {activeTab === "pricing" && <Pricing />}
+        </div>
+      )}
     </main>
   );
 }
