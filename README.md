@@ -103,9 +103,8 @@ Community integrations live at: [github.com/schemazero-community](#)
 - [ ] PagerDuty
 - [ ] Email notifications
 
-### Phase 6 — Auth and Billing
+### Phase 6 — Auth
 - [ ] Supabase auth — signup, login, session management
-- [ ] Lemon Squeezy — Solo $19/mo, Teams and Enterprise custom
 - [ ] Trial logic — 14 days, no credit card, convert or out
 
 ---
