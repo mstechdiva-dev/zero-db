@@ -4,7 +4,7 @@ export default function SettingsPage() {
       <div>
         <h1 className="text-2xl font-bold text-white">Settings</h1>
         <p className="text-gray-400 mt-1">
-          Manage alerts, team members, and billing
+          Manage alerts and team members
         </p>
       </div>
 
@@ -54,12 +54,6 @@ export default function SettingsPage() {
         </div>
       </section>
 
-      <section className="bg-[#111] border border-gray-800 rounded-xl p-6 space-y-4">
-        <h2 className="text-lg font-semibold text-white">Billing</h2>
-        <p className="text-gray-400 text-sm">
-          Billing management is implemented in Phase 6.
-        </p>
-      </section>
     </div>
   );
 }
