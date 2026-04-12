@@ -34,7 +34,13 @@ SchemaZero watches your database schema for changes, analyzes the impact using A
 9. [How Scout Watches Each Engine](#how-scout-watches-each-engine)
 10. [Alert Channels](#alert-channels)
 11. [Risk Levels](#risk-levels)
-12. [Troubleshooting](#troubleshooting)
+12. [Admin Panel](#admin-panel)
+    - [Access](#access)
+    - [Overview Page](#overview-page)
+    - [Org Detail Page](#org-detail-page)
+    - [Leads Page](#leads-page)
+    - [Managed SaaS vs Self-Hosted](#managed-saas-vs-self-hosted)
+13. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -663,6 +669,111 @@ Every schema change is scored automatically by Zero (the AI impact analyzer).
 | Table dropped | CRITICAL |
 | Primary key changed | CRITICAL |
 | Foreign key constraint dropped | CRITICAL |
+
+---
+
+## Admin Panel
+
+SchemaZero ships with a built-in admin panel at `/admin`. It is the founder's view into the entire managed service — every customer organization, trial funnel, usage metrics, and qualified sales leads captured by Sal.
+
+The admin panel is **only** accessible to email addresses listed in the `ADMIN_EMAIL` environment variable. All other users are redirected to the dashboard. Regular customers never see it.
+
+---
+
+### Access
+
+1. Set `ADMIN_EMAIL` in your environment (comma-separated for multiple admins):
+   ```
+   ADMIN_EMAIL=founder@company.com,ops@company.com
+   ```
+2. Log in to SchemaZero with one of those email addresses
+3. Navigate to `/admin`
+
+That's it. No separate login, no extra credentials — it's the same Supabase session.
+
+---
+
+### Overview Page
+
+`/admin` — the main founder dashboard.
+
+**Stats bar** across the top shows:
+
+| Metric | What it means |
+|--------|--------------|
+| Total orgs | Every organization ever created |
+| Active trials | Trial accounts with time remaining |
+| Converted | Accounts that upgraded to Solo (or higher) |
+| Expired | Trials that ran out without converting — re-engagement targets |
+| Active DBs | Total databases currently connected and watched by Scout |
+| Events (7d) | Schema changes detected across all customers in the last 7 days |
+| Events (total) | All-time change events — proxy for total Scout activity |
+| Leads | Qualified Teams/Enterprise leads captured by Sal |
+
+**Organizations table** below the stats lists every org with:
+- Organization name (links to the org detail page)
+- Plan badge — active trial with days remaining / EXPIRED / SOLO / TEAMS / ENTERPRISE
+- User count and database count
+- Last schema change detected (time ago) — a good signal for engagement
+- Signup date
+
+Click any org name to drill in.
+
+---
+
+### Org Detail Page
+
+`/admin/orgs/[id]` — everything about a single customer.
+
+**Header** shows org name, plan status, trial dates, and whether they converted.
+
+**Sections:**
+
+| Section | What it shows |
+|---------|--------------|
+| Users | All users in the org — email, role (owner / admin / member), join date |
+| Alert Channels | Which channels are configured (webhook, Slack, PagerDuty, email) and the notify-on risk levels |
+| Databases | Every connected database — engine, display name, Scout heartbeat status (active / inactive), last seen |
+| Recent Changes | Last 15 schema change events with risk badge, object name, and time |
+| Recent Alerts | Last 15 notification log entries — channel and success/failure indicator |
+
+This page tells you in one view: is this customer active? Are their alerts set up? Is Scout running? Have they seen any schema changes recently?
+
+---
+
+### Leads Page
+
+`/admin/leads` — qualified sales leads from the Sal agent.
+
+When a visitor on the Pricing page chats with Sal and Sal determines they're a serious Teams or Enterprise prospect, Sal emits a `CREATE_LEAD` signal. The full conversation is stored and surfaced here.
+
+**Each lead card shows:**
+- Visitor's email and their org (if they were signed in)
+- How long ago the conversation happened
+- **Sal's summary** — the last message Sal sent before flagging the lead, which contains the qualification context Sal gathered (team size, use case, urgency, database count)
+- **Full conversation transcript** — expand to read the entire exchange
+
+This replaces ad-hoc email notifications. Open the Leads page to see who's warm and reach out directly.
+
+---
+
+### Managed SaaS vs Self-Hosted
+
+SchemaZero supports both deployment models with the same codebase.
+
+**Managed SaaS (default)**
+
+You run SchemaZero on Railway + Vercel + Supabase. Customers sign up at your domain, you manage the infrastructure. The admin panel shows every customer org.
+
+Set `ADMIN_EMAIL` to your email. The admin panel is your customer ops tool — trials, conversions, engagement, and leads in one place.
+
+**Self-Hosted**
+
+A customer deploys their own SchemaZero instance. They run their own Railway, Vercel, and Supabase. They are the only organization on their instance.
+
+Set `ADMIN_EMAIL` to the instance owner's email. The admin panel shows their own org — useful for ops and debugging their Scout setup.
+
+Both modes are configured identically. The only difference is how many orgs appear in the admin overview.
 
 ---
 
