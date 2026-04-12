@@ -49,7 +49,7 @@ export default function Nav({ activeTab, onTabChange }: NavProps) {
             href="/auth/signup"
             className="px-4 py-2 bg-[#00e87a] text-black text-sm font-semibold rounded-lg hover:bg-[#00c96a] transition-colors"
           >
-            Start free trial
+            Get early access
           </a>
         </div>
       </div>
