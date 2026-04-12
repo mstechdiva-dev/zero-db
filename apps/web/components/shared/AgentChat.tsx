@@ -2,12 +2,12 @@
 
 import { useState, useRef, useEffect } from "react";
 
-type AgentName = "shawn" | "taylor" | "jordan";
+type AgentName = "obi" | "sully" | "sal";
 
 const AGENT_LABELS: Record<AgentName, { name: string; role: string }> = {
-  shawn: { name: "Shawn", role: "Database setup assistant" },
-  taylor: { name: "Taylor", role: "Support" },
-  jordan: { name: "Jordan", role: "Sales" },
+  obi: { name: "Obi", role: "Database setup assistant" },
+  sully: { name: "Sully", role: "Support" },
+  sal: { name: "Sal", role: "Sales" },
 };
 
 interface Message {
