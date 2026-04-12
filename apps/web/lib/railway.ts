@@ -1,9 +1,3 @@
-const RAILWAY_API_URL = process.env.RAILWAY_API_URL;
-
-if (!RAILWAY_API_URL) {
-  throw new Error("RAILWAY_API_URL environment variable is not set");
-}
-
 export type AgentName = "shawn" | "taylor" | "jordan";
 
 export interface ChatMessage {
@@ -23,6 +17,11 @@ export async function callAgent(
   history: ChatMessage[] = [],
   accessToken: string
 ): Promise<ChatResponse> {
+  const RAILWAY_API_URL = process.env.RAILWAY_API_URL;
+  if (!RAILWAY_API_URL) {
+    throw new Error("RAILWAY_API_URL environment variable is not set");
+  }
+
   const res = await fetch(`${RAILWAY_API_URL}/agent/chat`, {
     method: "POST",
     headers: {

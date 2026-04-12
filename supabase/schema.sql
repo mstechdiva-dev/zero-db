@@ -63,8 +63,8 @@ create table organizations (
   trial_starts_at       timestamptz not null default now(),
   trial_ends_at         timestamptz not null default (now() + interval '14 days'),
   trial_converted       boolean not null default false,
-  stripe_customer_id    text,
-  stripe_subscription_id text,
+  lemon_customer_id     text,
+  lemon_subscription_id text,
   created_at            timestamptz not null default now()
 );
 
