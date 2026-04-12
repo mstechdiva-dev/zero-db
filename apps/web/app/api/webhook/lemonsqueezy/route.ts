@@ -39,34 +39,59 @@ export async function POST(request: NextRequest) {
   const data = payload?.data?.attributes ?? {};
 
   switch (eventName) {
-    case "subscription_created":
-    case "order_created": {
-      if (orgId) {
-        await supabaseAdmin
-          .from("organizations")
-          .update({
-            plan: "solo",
-            trial_converted: true,
-            lemon_customer_id: String(data.customer_id ?? ""),
-            lemon_subscription_id: String(data.id ?? ""),
-          })
-          .eq("id", orgId);
+    case "subscription_created": {
+      if (!orgId) break;
+      const customerId = data.customer_id;
+      const subscriptionId = data.id;
+      if (customerId == null || subscriptionId == null) {
+        return NextResponse.json(
+          { error: "Missing required subscription identifiers" },
+          { status: 400 }
+        );
       }
+      await supabaseAdmin
+        .from("organizations")
+        .update({
+          plan: "solo",
+          trial_converted: true,
+          lemon_customer_id: String(customerId),
+          lemon_subscription_id: String(subscriptionId),
+        })
+        .eq("id", orgId);
+      break;
+    }
+
+    case "order_created": {
+      if (!orgId) break;
+      const customerId = data.customer_id;
+      if (customerId == null) {
+        return NextResponse.json(
+          { error: "Missing required customer identifier" },
+          { status: 400 }
+        );
+      }
+      await supabaseAdmin
+        .from("organizations")
+        .update({
+          plan: "solo",
+          trial_converted: true,
+          lemon_customer_id: String(customerId),
+        })
+        .eq("id", orgId);
       break;
     }
 
     case "subscription_cancelled":
     case "subscription_expired": {
-      const customerId = data.customer_id ? String(data.customer_id) : null;
-      if (customerId) {
-        await supabaseAdmin
-          .from("organizations")
-          .update({
-            plan: "trial",
-            lemon_subscription_id: null,
-          })
-          .eq("lemon_customer_id", customerId);
-      }
+      const customerId = data.customer_id;
+      if (customerId == null) break;
+      await supabaseAdmin
+        .from("organizations")
+        .update({
+          plan: "trial",
+          lemon_subscription_id: null,
+        })
+        .eq("lemon_customer_id", String(customerId));
       break;
     }
 
