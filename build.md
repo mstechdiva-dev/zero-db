@@ -118,6 +118,7 @@ Scout must:
   - Redis: keyspace notifications for key pattern changes
   - SQL Server: polling sys.objects (coming soon)
   - Snowflake: polling INFORMATION_SCHEMA.TABLES (coming soon)
+  - Oracle: polling ALL_OBJECTS (coming soon)
 - Capture before and after state as JSON snapshots
 - Write change events to Supabase change_events table
 - Update scout_heartbeat table every 30 seconds
@@ -729,7 +730,7 @@ Build the following in apps/agent/scout/listeners/:
    - Snapshot: SCAN with pattern matching to map key namespaces and types
    - Poll every 30 seconds for new patterns
 
-Note: SQL Server and Snowflake listeners are coming soon — do not build them yet. Create stub files with a clear NOT_IMPLEMENTED comment so they can be completed later without breaking the runner.
+Note: SQL Server, Snowflake, and Oracle listeners are coming soon — do not build them yet. Create stub files with a clear NOT_IMPLEMENTED comment so they can be completed later without breaking the runner.
 
 Each listener must:
    - Implement all abstract methods from base_listener.py
