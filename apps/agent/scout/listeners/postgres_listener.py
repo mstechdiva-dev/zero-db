@@ -284,8 +284,11 @@ def _diff_snapshots(before: dict, after: dict) -> list[dict]:
         )
 
     # Indexes
-    before_idx = {i["indexname"]: i for i in before.get("indexes", [])}
-    after_idx = {i["indexname"]: i for i in after.get("indexes", [])}
+    def _idx_key(i: dict) -> str:
+        return f"{i.get('schemaname')}.{i.get('tablename')}.{i.get('indexname')}"
+
+    before_idx = {_idx_key(i): i for i in before.get("indexes", [])}
+    after_idx = {_idx_key(i): i for i in after.get("indexes", [])}
 
     for name, idx in after_idx.items():
         if name not in before_idx:
@@ -314,8 +317,11 @@ def _diff_snapshots(before: dict, after: dict) -> list[dict]:
             )
 
     # Constraints
-    before_con = {c["constraint_name"]: c for c in before.get("constraints", [])}
-    after_con = {c["constraint_name"]: c for c in after.get("constraints", [])}
+    def _con_key(c: dict) -> str:
+        return f"{c.get('constraint_schema')}.{c.get('table_name')}.{c.get('constraint_name')}"
+
+    before_con = {_con_key(c): c for c in before.get("constraints", [])}
+    after_con = {_con_key(c): c for c in after.get("constraints", [])}
 
     for name, con in after_con.items():
         if name not in before_con:

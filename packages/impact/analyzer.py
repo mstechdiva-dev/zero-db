@@ -7,17 +7,11 @@ IndexTracer) with optional Claude API analysis via the Zero agent prompt.
 
 import json
 import logging
-import os
-import sys
 from typing import Optional
 
-_pkg_root = os.path.abspath(os.path.dirname(__file__))
-if _pkg_root not in sys.path:
-    sys.path.insert(0, _pkg_root)
-
-from models import ImpactResult  # noqa: E402
-from query_tracer import QueryTracer  # noqa: E402
-from index_tracer import IndexTracer  # noqa: E402
+from .models import ImpactResult
+from .query_tracer import QueryTracer
+from .index_tracer import IndexTracer
 
 logger = logging.getLogger(__name__)
 

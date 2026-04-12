@@ -21,6 +21,7 @@ CRITICAL_CHANGE_TYPES = {
 
 HIGH_CHANGE_TYPES = {
     "column_dropped",
+    "key_pattern_dropped",
 }
 
 MEDIUM_CHANGE_TYPES = {

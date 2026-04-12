@@ -95,13 +95,21 @@ class MongoDBListener(BaseListener):
         after = await self.capture_snapshot()
 
         change_type_map = {
-            "createCollection": "table_created",
-            "dropCollection": "table_dropped",
+            "createCollection": "collection_created",
+            "dropCollection": "collection_dropped",
             "createIndexes": "index_created",
             "dropIndexes": "index_dropped",
         }
         change_type = change_type_map.get(op, "schema_change")
         object_type = "collection" if "Collection" in op else "index"
+
+        # For index operations, use the actual index name(s) rather than the collection name
+        if op in ("createIndexes", "dropIndexes"):
+            index_entries = change.get("operationDescription", {}).get("indexes", [])
+            index_names = [idx.get("name", "") for idx in index_entries if idx.get("name")]
+            object_name = ", ".join(index_names) if index_names else collection_name
+        else:
+            object_name = collection_name
 
         before_state = before.get("collections", {}).get(collection_name)
         after_state = after.get("collections", {}).get(collection_name)
@@ -109,7 +117,7 @@ class MongoDBListener(BaseListener):
         event_id = await self.write_change_event(
             change_type=change_type,
             object_type=object_type,
-            object_name=collection_name,
+            object_name=object_name,
             schema_name=self._db_name,
             before_state=before_state,
             after_state=after_state,

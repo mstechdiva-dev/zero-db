@@ -129,11 +129,17 @@ class BaseListener(ABC):
         """Notify Zero to analyze the new change event."""
         import httpx
 
+        headers: dict[str, str] = {}
+        secret = os.environ.get("INTERNAL_API_SECRET", "")
+        if secret:
+            headers["X-Internal-Secret"] = secret
+
         try:
             async with httpx.AsyncClient() as client:
                 await client.post(
                     f"{internal_url}/internal/analyze",
                     json={"change_event_id": change_event_id},
+                    headers=headers,
                     timeout=5,
                 )
         except Exception as exc:

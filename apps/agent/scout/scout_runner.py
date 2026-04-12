@@ -83,8 +83,12 @@ class ScoutRunner:
         for database_id in list(self._listeners.keys()):
             if database_id not in active_ids:
                 logger.info("Stopping listener for removed db=%s", database_id)
-                self._listeners[database_id].cancel()
-                del self._listeners[database_id]
+                task = self._listeners.pop(database_id)
+                task.cancel()
+                try:
+                    await task
+                except (asyncio.CancelledError, Exception):
+                    pass
 
         # Start listeners for new databases
         for db in active_databases:

@@ -33,7 +33,7 @@ class DiffResult(BaseModel):
     Matches the change_events table schema in Supabase.
     """
 
-    change_type: str
+    change_type: ChangeType
     object_type: str
     object_name: str
     schema_name: Optional[str] = None

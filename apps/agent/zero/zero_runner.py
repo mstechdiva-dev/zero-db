@@ -62,9 +62,8 @@ class ZeroRunner:
             risk_level=risk_level,
         )
 
-        # Ensure next_action is present and uses the risk-level framing
-        if not impact.get("next_action") or impact["next_action"] == "Review before deploying.":
-            impact["next_action"] = next_action(risk_level)
+        # Always enforce risk-level framing — don't trust the AI to match exactly
+        impact["next_action"] = next_action(risk_level)
 
         # 4. Write impact_analysis record
         impact_record = {

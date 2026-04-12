@@ -64,36 +64,43 @@ export default function SettingsPage() {
   async function saveAlertConfig() {
     setSaving(true);
     setSaved(false);
-    const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return;
+    try {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
 
-    const { data: userData } = await supabase
-      .from("users")
-      .select("org_id")
-      .eq("auth_user_id", user.id)
-      .single();
-    if (!userData) return;
+      const { data: userData } = await supabase
+        .from("users")
+        .select("org_id")
+        .eq("auth_user_id", user.id)
+        .single();
+      if (!userData) return;
 
-    const emails = emailInput
-      .split(/[,\s]+/)
-      .map((e) => e.trim())
-      .filter(Boolean);
+      const emails = emailInput
+        .split(/[,\s]+/)
+        .map((e) => e.trim())
+        .filter(Boolean);
 
-    await supabase.from("alert_configs").upsert({
-      org_id: userData.org_id,
-      slack_webhook_url: alertConfig.slack_webhook_url || null,
-      pagerduty_api_key: alertConfig.pagerduty_api_key || null,
-      webhook_url: alertConfig.webhook_url || null,
-      email_recipients: emails,
-      notify_on: alertConfig.notify_on,
-    });
+      const { error } = await supabase.from("alert_configs").upsert({
+        org_id: userData.org_id,
+        slack_webhook_url: alertConfig.slack_webhook_url || null,
+        pagerduty_api_key: alertConfig.pagerduty_api_key || null,
+        webhook_url: alertConfig.webhook_url || null,
+        email_recipients: emails,
+        notify_on: alertConfig.notify_on,
+      });
 
-    setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+      if (error) throw error;
+
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      console.error("Failed to save alert config:", err);
+    } finally {
+      setSaving(false);
+    }
   }
 
   function toggleRiskLevel(level: string) {

@@ -48,7 +48,7 @@ class AlertDispatcher:
             )
             return
 
-        database_name = change_event.get("object_name", "unknown")
+        object_name = change_event.get("object_name", "unknown")
         engine = change_event.get("engine", "unknown")
         change_type = change_event.get("change_type", "schema_change")
         object_type = change_event.get("object_type", "object")
@@ -56,6 +56,11 @@ class AlertDispatcher:
         next_action = impact.get("next_action", "")
         dashboard_url = f"{DASHBOARD_BASE_URL}/dashboard"
         event_id = change_event.get("id", "")
+
+        # Look up the actual database display name from connected_databases
+        database_name = await self._get_database_name(
+            change_event.get("database_id", ""), org_id
+        )
 
         # 1. Custom webhook — always first
         webhook_url = alert_config.get("webhook_url")
@@ -85,7 +90,7 @@ class AlertDispatcher:
                 engine=engine,
                 change_type=change_type,
                 object_type=object_type,
-                object_name=database_name,
+                object_name=object_name,
                 summary=summary,
                 next_action=next_action,
                 dashboard_url=dashboard_url,
@@ -243,6 +248,23 @@ class AlertDispatcher:
             ).execute()
         except Exception as exc:
             logger.warning("Failed to write notification_log: %s", exc)
+
+    async def _get_database_name(self, database_id: str, org_id: str) -> str:
+        """Look up the display name of a connected database."""
+        if not database_id:
+            return "unknown database"
+        try:
+            result = (
+                self.supabase.table("connected_databases")
+                .select("display_name")
+                .eq("id", database_id)
+                .eq("org_id", org_id)
+                .single()
+                .execute()
+            )
+            return result.data.get("display_name", "unknown database") if result.data else "unknown database"
+        except Exception:
+            return "unknown database"
 
     async def _get_alert_config(self, org_id: str) -> dict:
         try:
