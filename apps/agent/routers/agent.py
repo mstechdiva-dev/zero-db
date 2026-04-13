@@ -1,9 +1,13 @@
+import logging
+
 from fastapi import APIRouter, Request, HTTPException, Depends
 from pydantic import BaseModel, Field
 from typing import Optional
 
 from services.anthropic_service import AnthropicService
-from services.supabase_service import verify_jwt
+from services.supabase_service import verify_jwt, get_supabase
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -52,4 +56,52 @@ async def chat(
             handoff = signal
             break
 
-    return ChatResponse(response=response_text, handoff=handoff, agent=body.agent)
+    # When Sal flags a qualified lead, persist the full conversation so the
+    # admin panel can surface it under /admin/leads.
+    if handoff == "CREATE_LEAD" and body.agent == "sal":
+        # Strip internal routing tokens before storing so the admin summary is clean
+        clean_summary = response_text
+        for signal in HANDOFF_SIGNALS:
+            clean_summary = clean_summary.replace(signal, "").strip()
+        await _store_lead(
+            org_id=user.get("org_id"),
+            user_email=user.get("email"),
+            history=body.history,
+            last_message=body.message,
+            sal_summary=clean_summary,
+        )
+
+    # Strip internal routing tokens from the user-visible response
+    visible_response = response_text
+    for signal in HANDOFF_SIGNALS:
+        visible_response = visible_response.replace(signal, "").strip()
+
+    return ChatResponse(response=visible_response, handoff=handoff, agent=body.agent)
+
+
+async def _store_lead(
+    org_id: Optional[str],
+    user_email: Optional[str],
+    history: list[dict],
+    last_message: str,
+    sal_summary: str,
+) -> None:
+    """Persist a CREATE_LEAD event to the leads table (service-role, bypasses RLS)."""
+    try:
+        full_conversation = history + [
+            {"role": "user", "content": last_message},
+            {"role": "assistant", "content": sal_summary},
+        ]
+        supabase = get_supabase()
+        supabase.table("leads").insert(
+            {
+                "org_id": org_id,
+                "user_email": user_email,
+                "conversation": full_conversation,
+                "sal_summary": sal_summary,
+            }
+        ).execute()
+        logger.info("Lead stored for org_id=%s email=%s", org_id, user_email)
+    except Exception as exc:
+        # Never let lead storage failure break the chat response
+        logger.warning("Failed to store lead for org_id=%s: %s", org_id, exc)

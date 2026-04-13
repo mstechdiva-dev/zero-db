@@ -5,7 +5,7 @@ PAGERDUTY_EVENTS_URL = "https://events.pagerduty.com/v2/enqueue"
 
 
 class PagerDutyService:
-    """Create PagerDuty incidents via Events API v2. Full implementation in Phase 7."""
+    """Create PagerDuty incidents via Events API v2."""
 
     def __init__(self, api_key: str | None = None):
         self.api_key = api_key or os.environ.get("PAGERDUTY_API_KEY", "")
@@ -14,7 +14,6 @@ class PagerDutyService:
         """Create a critical incident in PagerDuty. Returns True on success."""
         if not self.api_key:
             return False
-        # Full implementation in Phase 7
         payload = {
             "routing_key": self.api_key,
             "event_action": "trigger",

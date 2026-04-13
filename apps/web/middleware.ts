@@ -40,6 +40,27 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // Protect admin routes — must be authenticated AND email listed in ADMIN_EMAIL env var
+  if (pathname.startsWith("/admin")) {
+    const adminEmails = (process.env.ADMIN_EMAIL ?? "")
+      .split(",")
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean);
+
+    if (!user) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/auth/login";
+      return NextResponse.redirect(url);
+    }
+
+    if (!adminEmails.includes(user.email?.toLowerCase() ?? "")) {
+      // Authenticated but not an admin — send to dashboard
+      const url = request.nextUrl.clone();
+      url.pathname = "/dashboard";
+      return NextResponse.redirect(url);
+    }
+  }
+
   // Redirect authenticated users away from auth pages
   if (pathname.startsWith("/auth") && user) {
     const url = request.nextUrl.clone();
