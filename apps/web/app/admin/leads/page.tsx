@@ -28,7 +28,7 @@ export default async function LeadsPage() {
     .order("created_at", { ascending: false });
 
   // Fetch org names for display
-  const orgIds = [...new Set((leads ?? []).map((l: any) => l.org_id).filter(Boolean))];
+  const orgIds = Array.from(new Set((leads ?? []).map((l: any) => l.org_id).filter(Boolean)));
   const { data: orgs } =
     orgIds.length > 0
       ? await db
