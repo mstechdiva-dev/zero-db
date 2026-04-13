@@ -112,11 +112,17 @@ def _sslmode_to_arg(sslmode: Optional[str]) -> object:
     """Convert a libpq sslmode string to the asyncpg ``ssl`` kwarg value."""
     if sslmode == "disable":
         return False
-    if sslmode in ("require", "verify-ca"):
+    if sslmode == "require":
         # Encrypt but skip cert/hostname check — matches libpq "require" semantics.
         ctx = ssl.create_default_context()
         ctx.check_hostname = False
         ctx.verify_mode = ssl.CERT_NONE
+        return ctx
+    if sslmode == "verify-ca":
+        # Verify the certificate chain, but do not enforce hostname matching.
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_REQUIRED
         return ctx
     if sslmode == "verify-full":
         # Full chain + hostname verification.

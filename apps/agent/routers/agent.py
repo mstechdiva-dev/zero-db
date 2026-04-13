@@ -59,15 +59,24 @@ async def chat(
     # When Sal flags a qualified lead, persist the full conversation so the
     # admin panel can surface it under /admin/leads.
     if handoff == "CREATE_LEAD" and body.agent == "sal":
+        # Strip internal routing tokens before storing so the admin summary is clean
+        clean_summary = response_text
+        for signal in HANDOFF_SIGNALS:
+            clean_summary = clean_summary.replace(signal, "").strip()
         await _store_lead(
             org_id=user.get("org_id"),
             user_email=user.get("email"),
             history=body.history,
             last_message=body.message,
-            sal_summary=response_text,
+            sal_summary=clean_summary,
         )
 
-    return ChatResponse(response=response_text, handoff=handoff, agent=body.agent)
+    # Strip internal routing tokens from the user-visible response
+    visible_response = response_text
+    for signal in HANDOFF_SIGNALS:
+        visible_response = visible_response.replace(signal, "").strip()
+
+    return ChatResponse(response=visible_response, handoff=handoff, agent=body.agent)
 
 
 async def _store_lead(

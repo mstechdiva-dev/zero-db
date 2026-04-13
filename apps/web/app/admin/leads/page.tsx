@@ -24,8 +24,24 @@ export default async function LeadsPage() {
 
   const { data: leads } = await db
     .from("leads")
-    .select("id, org_id, user_email, sal_summary, conversation, created_at")
-    .order("created_at", { ascending: false });
+    .select("id, org_id, user_email, sal_summary, created_at")
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  // Load full conversation only for the leads we're displaying
+  const leadIds = (leads ?? []).map((l: any) => l.id);
+  const { data: conversations } =
+    leadIds.length > 0
+      ? await db.from("leads").select("id, conversation").in("id", leadIds)
+      : { data: [] };
+
+  const conversationById = (conversations ?? []).reduce(
+    (acc: Record<string, any[]>, c: { id: string; conversation: any[] }) => {
+      acc[c.id] = c.conversation;
+      return acc;
+    },
+    {}
+  );
 
   // Fetch org names for display
   const orgIds = Array.from(new Set((leads ?? []).map((l: any) => l.org_id).filter(Boolean)));
@@ -70,7 +86,7 @@ export default async function LeadsPage() {
         <div className="space-y-4">
           {leadList.map((lead: any) => {
             const messages: { role: string; content: string }[] =
-              Array.isArray(lead.conversation) ? lead.conversation : [];
+              Array.isArray(conversationById[lead.id]) ? conversationById[lead.id] : [];
             const userMessages = messages.filter((m) => m.role === "user");
 
             return (

@@ -57,7 +57,6 @@ export default async function OrgDetailPage({
     { data: changes },
     { data: alertConfig },
     { data: notifLog },
-    { data: heartbeats },
   ] = await Promise.all([
     db.from("organizations").select("*").eq("id", id).single(),
     db.from("users").select("id, email, role, created_at").eq("org_id", id),
@@ -85,10 +84,19 @@ export default async function OrgDetailPage({
       .eq("org_id", id)
       .order("sent_at", { ascending: false })
       .limit(15),
-    db.from("scout_heartbeat").select("database_id, status, last_seen_at"),
   ]);
 
   if (!org) notFound();
+
+  // Fetch heartbeats only for this org's databases to avoid cross-org data leakage
+  const dbIds = (databases ?? []).map((d: any) => d.id as string);
+  const { data: heartbeats } =
+    dbIds.length > 0
+      ? await db
+          .from("scout_heartbeat")
+          .select("database_id, status, last_seen_at")
+          .in("database_id", dbIds)
+      : { data: [] };
 
   const heartbeatByDb = (heartbeats ?? []).reduce(
     (acc: Record<string, { status: string; last_seen_at: string }>, h: any) => {

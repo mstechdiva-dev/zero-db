@@ -20,6 +20,4 @@ CREATE INDEX IF NOT EXISTS leads_created_at_idx ON leads(created_at DESC);
 -- this table. Regular anon/authenticated Supabase keys cannot.
 ALTER TABLE leads ENABLE ROW LEVEL SECURITY;
 
-COMMENT ON TABLE leads IS
-  'Qualified sales leads flagged by the Sal agent. Admin-only — no RLS policies '
-  'for regular users. Access via service-role key only.';
+COMMENT ON TABLE leads IS 'Qualified sales leads flagged by the Sal agent. Admin-only — no RLS policies for regular users. Access via service-role key only.';
