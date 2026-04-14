@@ -23,3 +23,15 @@
 
 ### Existing Design Reference
 - `docs/schemazero-3.html` — landing page reference. All new mockups must be visually consistent with this file.
+
+## Engineering Rules
+
+### SIMPLE BUILD ONLY
+- **Always choose the simplest solution that works. No exceptions.**
+- Before writing any code, ask: what is the minimum needed to solve this?
+- One Supabase query beats a chain of HTTP proxies.
+- Don't build Railway endpoints just to read/write data that Supabase already owns.
+- Git is already a version history. Don't build a version history table unless git can't serve that role.
+- If a textarea and a Supabase upsert solve the problem, that is the right solution.
+- Do not add layers, abstractions, or infrastructure that aren't required right now.
+- Over-engineering is a bug. If a simpler path exists, take it. Every time.

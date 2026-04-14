@@ -1,19 +1,18 @@
 const PLANS = [
   {
     name: "Solo",
-    label: "Solo",
     price: "$19",
     period: "/mo",
-    description: "One seat. One database. Everything included.",
+    description: "One seat. Two databases. Everything included.",
     features: [
       "1 seat",
-      "1 database connection",
+      "2 database connections",
       "All supported engines",
       "Real-time schema monitoring",
       "Full impact analysis",
-      "Slack + PagerDuty alerts",
+      "Custom webhook + Slack + PagerDuty alerts",
       "Email notifications",
-      "14-day free trial",
+      "14-day free trial — no credit card required",
     ],
     cta: "Start free trial",
     href: "/auth/signup",
@@ -21,37 +20,34 @@ const PLANS = [
   },
   {
     name: "Teams",
-    label: null,
-    price: "Custom",
-    period: "",
+    price: "$79",
+    period: "/mo",
     description: "Multiple seats. Multiple databases. Built for your team.",
     features: [
-      "Multiple seats",
-      "Multiple database connections",
+      "Up to 10 seats",
+      "Up to 10 database connections",
       "All supported engines",
       "Team alert routing",
       "Role-based access",
       "Priority support",
-      "14-day free trial",
     ],
-    cta: "Talk to us",
+    cta: "Get started",
     href: "/auth/signup",
     featured: false,
   },
   {
     name: "Enterprise",
-    label: null,
     price: "Custom",
     period: "",
     description: "For regulated industries and large organizations.",
     features: [
       "Everything in Teams",
+      "Unlimited databases",
       "VPC peering",
       "SSO / SAML",
       "SOC 2 report access",
       "Custom data retention",
       "Dedicated SLA",
-      "14-day free trial",
     ],
     cta: "Talk to us",
     href: "/auth/signup",
@@ -69,13 +65,8 @@ export default function Pricing() {
         Simple pricing.<br />No surprises.
       </h2>
       <p className="text-base text-white/45 max-w-[560px] leading-[1.65] mb-10">
-        Start free. Upgrade when you&apos;re ready. No credit card required to begin.
+        Start free on Solo. No credit card required. Upgrade when your team grows.
       </p>
-
-      {/* Trial note */}
-      <div className="inline-flex items-center gap-2 bg-[rgba(0,232,122,0.08)] border border-[rgba(0,232,122,0.2)] text-[#00e87a] text-[13px] font-mono px-4 py-2 rounded-lg mb-10">
-        ✦ 14-day free trial on all plans — no credit card required
-      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {PLANS.map((plan) => (
@@ -87,10 +78,9 @@ export default function Pricing() {
                 : "border-white/[0.06] bg-[#111]"
             }`}
           >
-            {/* Featured tab */}
             {plan.featured && (
               <div className="absolute top-[-1px] left-1/2 -translate-x-1/2 bg-[#00e87a] text-black text-[10px] font-bold font-mono px-3.5 py-1 rounded-b-lg tracking-[0.3px]">
-                {plan.label}
+                SOLO
               </div>
             )}
             {plan.featured && <div className="h-4" />}
@@ -134,7 +124,8 @@ export default function Pricing() {
       </div>
 
       <p className="mt-8 text-center text-[13px] text-white/22">
-        All plans include real-time monitoring, full impact analysis, and Slack + PagerDuty alerts.
+        All plans include real-time monitoring, full impact analysis, and multi-channel alerts.
+        Solo includes a 14-day free trial — no credit card required.
       </p>
     </div>
   );

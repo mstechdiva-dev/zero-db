@@ -1,3 +1,4 @@
+import asyncio
 import logging
 
 from fastapi import APIRouter, Request, HTTPException, Depends
@@ -10,6 +11,28 @@ from services.supabase_service import verify_jwt, get_supabase
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+def _load_prompt(agent_name: str, fallback: dict[str, str]) -> str:
+    """Return the agent prompt from Supabase, falling back to the disk copy.
+
+    This is a synchronous function intentionally — it must be called via
+    run_in_executor from async endpoints to avoid blocking the event loop.
+    """
+    try:
+        supabase = get_supabase()
+        result = (
+            supabase.table("agent_skills")
+            .select("content")
+            .eq("name", agent_name)
+            .single()
+            .execute()
+        )
+        if result.data:
+            return result.data["content"]
+    except Exception as exc:
+        logger.debug("Supabase agent_skills lookup failed, using disk: %s", exc)
+    return fallback.get(agent_name, "")
 
 SUPPORTED_AGENTS = {"obi", "sully", "sal"}
 HANDOFF_SIGNALS = ["HANDOFF:", "CREATE_TICKET", "CREATE_LEAD"]
@@ -36,13 +59,17 @@ async def chat(
     if body.agent not in SUPPORTED_AGENTS:
         raise HTTPException(status_code=400, detail=f"Unknown agent: {body.agent}")
 
-    agent_prompts: dict[str, str] = request.app.state.agent_prompts
-    if body.agent not in agent_prompts:
+    # Try Supabase first so admin edits take effect immediately,
+    # fall back to the prompts loaded from disk at startup.
+    # Run in executor to avoid blocking the event loop on a sync Supabase call.
+    loop = asyncio.get_running_loop()
+    system_prompt = await loop.run_in_executor(
+        None, _load_prompt, body.agent, request.app.state.agent_prompts
+    )
+    if not system_prompt:
         raise HTTPException(
             status_code=500, detail=f"Agent prompt not loaded: {body.agent}"
         )
-
-    system_prompt = agent_prompts[body.agent]
     service = AnthropicService(system_prompt=system_prompt, agent_name=body.agent)
 
     response_text = await service.chat(
