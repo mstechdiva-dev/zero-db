@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase";
 
 interface AlertConfig {
@@ -11,7 +11,18 @@ interface AlertConfig {
   notify_on: string[];
 }
 
+interface OrgBilling {
+  plan: string;
+  trial_ends_at: string;
+  trial_converted: boolean;
+  lemonsqueezy_customer_portal_url: string | null;
+}
+
 const ALL_RISK_LEVELS = ["low", "medium", "high", "critical"];
+
+function trialDaysLeft(endsAt: string): number {
+  return Math.max(0, Math.ceil((new Date(endsAt).getTime() - Date.now()) / 86_400_000));
+}
 
 export default function SettingsPage() {
   const [alertConfig, setAlertConfig] = useState<AlertConfig>({
@@ -22,18 +33,14 @@ export default function SettingsPage() {
     notify_on: ["high", "critical"],
   });
   const [emailInput, setEmailInput] = useState("");
+  const [billing, setBilling] = useState<OrgBilling | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [checkingOut, setCheckingOut] = useState(false);
 
-  useEffect(() => {
-    loadAlertConfig();
-  }, []);
-
-  async function loadAlertConfig() {
+  const loadSettings = useCallback(async () => {
     const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
     const { data: userData } = await supabase
@@ -43,11 +50,14 @@ export default function SettingsPage() {
       .single();
     if (!userData) return;
 
-    const { data: configData } = await supabase
-      .from("alert_configs")
-      .select("*")
-      .eq("org_id", userData.org_id)
-      .single();
+    const [{ data: configData }, { data: orgData }] = await Promise.all([
+      supabase.from("alert_configs").select("*").eq("org_id", userData.org_id).single(),
+      supabase
+        .from("organizations")
+        .select("plan, trial_ends_at, trial_converted, lemonsqueezy_customer_portal_url")
+        .eq("id", userData.org_id)
+        .single(),
+    ]);
 
     if (configData) {
       setAlertConfig({
@@ -59,16 +69,18 @@ export default function SettingsPage() {
       });
       setEmailInput((configData.email_recipients ?? []).join(", "));
     }
-  }
+
+    if (orgData) setBilling(orgData as OrgBilling);
+  }, []);
+
+  useEffect(() => { loadSettings(); }, [loadSettings]);
 
   async function saveAlertConfig() {
     setSaving(true);
     setSaved(false);
     try {
       const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       const { data: userData } = await supabase
@@ -78,10 +90,7 @@ export default function SettingsPage() {
         .single();
       if (!userData) return;
 
-      const emails = emailInput
-        .split(/[,\s]+/)
-        .map((e) => e.trim())
-        .filter(Boolean);
+      const emails = emailInput.split(/[,\s]+/).map((e) => e.trim()).filter(Boolean);
 
       const { error } = await supabase.from("alert_configs").upsert({
         org_id: userData.org_id,
@@ -93,13 +102,25 @@ export default function SettingsPage() {
       });
 
       if (error) throw error;
-
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (err) {
       console.error("Failed to save alert config:", err);
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleUpgrade() {
+    setCheckingOut(true);
+    try {
+      const res = await fetch("/api/checkout", { method: "POST" });
+      const data = await res.json();
+      if (data.url) window.location.href = data.url;
+    } catch (err) {
+      console.error("Checkout failed:", err);
+    } finally {
+      setCheckingOut(false);
     }
   }
 
@@ -112,13 +133,84 @@ export default function SettingsPage() {
     }));
   }
 
+  const daysLeft = billing ? trialDaysLeft(billing.trial_ends_at) : 0;
+  const isTrialActive = billing?.plan === "trial" && daysLeft > 0 && !billing.trial_converted;
+  const isSolo = billing?.plan === "solo" || billing?.trial_converted;
+  const isTeams = billing?.plan === "teams";
+  const isEnterprise = billing?.plan === "enterprise";
+
   return (
     <div className="space-y-8 max-w-2xl">
       <div>
         <h1 className="text-2xl font-bold text-white">Settings</h1>
-        <p className="text-gray-400 mt-1">Manage alerts and team members</p>
+        <p className="text-gray-400 mt-1">Manage billing and alerts</p>
       </div>
 
+      {/* Billing section */}
+      <section className="bg-[#111] border border-gray-800 rounded-xl p-6 space-y-4">
+        <h2 className="text-lg font-semibold text-white">Billing</h2>
+
+        {billing && (
+          <div className="flex items-center gap-3">
+            <span className={`text-xs font-mono font-bold px-2 py-1 rounded border uppercase ${
+              isSolo ? "text-[#00e87a] bg-[#00e87a]/10 border-[#00e87a]/30" :
+              isTeams ? "text-purple-400 bg-purple-400/10 border-purple-400/30" :
+              isEnterprise ? "text-yellow-400 bg-yellow-400/10 border-yellow-400/30" :
+              "text-blue-400 bg-blue-400/10 border-blue-400/30"
+            }`}>
+              {isSolo ? "Solo" : isTeams ? "Teams" : isEnterprise ? "Enterprise" : `Trial — ${daysLeft}d left`}
+            </span>
+            {isSolo && <span className="text-sm text-gray-500">$19/mo</span>}
+            {isTeams && <span className="text-sm text-gray-500">$79/mo</span>}
+          </div>
+        )}
+
+        {isTrialActive && (
+          <div className="space-y-3">
+            <p className="text-sm text-gray-400">
+              {daysLeft} day{daysLeft !== 1 ? "s" : ""} remaining on your free trial.
+            </p>
+            <button
+              onClick={handleUpgrade}
+              disabled={checkingOut}
+              className="px-4 py-2 bg-[#00e87a] text-black font-semibold rounded-lg hover:bg-[#00c96a] transition-colors text-sm disabled:opacity-50"
+            >
+              {checkingOut ? "Redirecting…" : "Upgrade to Solo — $19/mo"}
+            </button>
+          </div>
+        )}
+
+        {isSolo && (
+          <div className="space-y-3">
+            <p className="text-sm text-gray-400">Solo plan · 2 databases · 1 seat</p>
+            {billing?.lemonsqueezy_customer_portal_url ? (
+              <a
+                href={billing.lemonsqueezy_customer_portal_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block px-4 py-2 border border-gray-700 text-gray-300 hover:text-white hover:border-gray-500 rounded-lg transition-colors text-sm"
+              >
+                Manage subscription
+              </a>
+            ) : (
+              <p className="text-xs text-gray-600">
+                To manage your subscription, visit your Lemon Squeezy account.
+              </p>
+            )}
+          </div>
+        )}
+
+        {(isTeams || isEnterprise) && (
+          <p className="text-sm text-gray-400">
+            To make changes to your plan, email{" "}
+            <a href="mailto:hello@schemazero.com" className="text-[#00e87a] hover:underline">
+              hello@schemazero.com
+            </a>
+          </p>
+        )}
+      </section>
+
+      {/* Alert config section */}
       <section className="bg-[#111] border border-gray-800 rounded-xl p-6 space-y-6">
         <h2 className="text-lg font-semibold text-white">Alert Configuration</h2>
         <div className="space-y-4">
@@ -130,9 +222,7 @@ export default function SettingsPage() {
             <input
               type="url"
               value={alertConfig.webhook_url}
-              onChange={(e) =>
-                setAlertConfig((p) => ({ ...p, webhook_url: e.target.value }))
-              }
+              onChange={(e) => setAlertConfig((p) => ({ ...p, webhook_url: e.target.value }))}
               placeholder="https://your-server.com/webhook"
               className="w-full px-4 py-3 bg-[#0a0a0a] border border-gray-800 rounded-lg text-white placeholder-gray-600 focus:outline-none focus:border-[#00e87a] transition-colors"
             />
@@ -143,24 +233,18 @@ export default function SettingsPage() {
             <input
               type="url"
               value={alertConfig.slack_webhook_url}
-              onChange={(e) =>
-                setAlertConfig((p) => ({ ...p, slack_webhook_url: e.target.value }))
-              }
+              onChange={(e) => setAlertConfig((p) => ({ ...p, slack_webhook_url: e.target.value }))}
               placeholder="https://hooks.slack.com/services/..."
               className="w-full px-4 py-3 bg-[#0a0a0a] border border-gray-800 rounded-lg text-white placeholder-gray-600 focus:outline-none focus:border-[#00e87a] transition-colors"
             />
           </div>
 
           <div>
-            <label className="block text-sm text-gray-400 mb-1">
-              PagerDuty Integration Key
-            </label>
+            <label className="block text-sm text-gray-400 mb-1">PagerDuty Integration Key</label>
             <input
               type="password"
               value={alertConfig.pagerduty_api_key}
-              onChange={(e) =>
-                setAlertConfig((p) => ({ ...p, pagerduty_api_key: e.target.value }))
-              }
+              onChange={(e) => setAlertConfig((p) => ({ ...p, pagerduty_api_key: e.target.value }))}
               placeholder="••••••••••••••••"
               className="w-full px-4 py-3 bg-[#0a0a0a] border border-gray-800 rounded-lg text-white placeholder-gray-600 focus:outline-none focus:border-[#00e87a] transition-colors"
             />
