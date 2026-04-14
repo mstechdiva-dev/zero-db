@@ -10,6 +10,11 @@ function serviceDb() {
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function dig(obj: any, ...keys: string[]): any {
+  return keys.reduce((acc, k) => (acc != null ? acc[k] : undefined), obj);
+}
+
 export async function POST(request: NextRequest) {
   const rawBody = await request.text();
   const signature = request.headers.get("x-signature") ?? "";
@@ -18,9 +23,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
   }
 
-  const event = JSON.parse(rawBody);
-  const eventName: string = event.meta?.event_name ?? "";
-  const orgId: string = event.meta?.custom_data?.org_id ?? "";
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let event: any;
+  try {
+    event = JSON.parse(rawBody);
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  const eventName: string = dig(event, "meta", "event_name") ?? "";
+  const orgId: string = dig(event, "meta", "custom_data", "org_id") ?? "";
 
   if (!orgId) return NextResponse.json({ received: true });
 
@@ -28,32 +40,35 @@ export async function POST(request: NextRequest) {
 
   if (eventName === "order_created") {
     // Solo plan purchased — activate subscription
-    const customerId = String(event.data?.attributes?.customer_id ?? "");
-    await db.from("organizations").update({
+    const customerId = String(dig(event, "data", "attributes", "customer_id") ?? "");
+    const { error } = await db.from("organizations").update({
       plan: "solo",
       trial_converted: true,
       lemonsqueezy_customer_id: customerId,
     }).eq("id", orgId);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
   if (eventName === "subscription_created") {
-    const subscriptionId = String(event.data?.id ?? "");
-    const portalUrl: string = event.data?.attributes?.urls?.customer_portal ?? "";
-    await db.from("organizations").update({
+    const subscriptionId = String(dig(event, "data", "id") ?? "");
+    const portalUrl: string = dig(event, "data", "attributes", "urls", "customer_portal") ?? "";
+    const { error } = await db.from("organizations").update({
       lemonsqueezy_subscription_id: subscriptionId,
       lemonsqueezy_customer_portal_url: portalUrl || null,
     }).eq("id", orgId);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
   if (eventName === "subscription_cancelled") {
     // Revert to expired trial so middleware redirects them to upgrade
-    await db.from("organizations").update({
+    const { error } = await db.from("organizations").update({
       plan: "trial",
       trial_converted: false,
       trial_ends_at: new Date().toISOString(),
       lemonsqueezy_subscription_id: null,
       lemonsqueezy_customer_portal_url: null,
     }).eq("id", orgId);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
   return NextResponse.json({ received: true });

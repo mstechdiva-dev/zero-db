@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
-import fs from "fs";
-import path from "path";
+import fs from "node:fs";
+import path from "node:path";
 
 function serviceDb() {
   return createClient(
@@ -66,7 +66,15 @@ export default async function AgentsPage() {
 
   const agents = AGENT_NAMES.map((name) => {
     const row = byName[name];
-    const content = row?.content ?? "";
+    let content = row?.content ?? "";
+    if (!content) {
+      try {
+        const diskPath = path.join(process.cwd(), "..", "..", "agents", `${name}.md`);
+        content = fs.readFileSync(diskPath, "utf-8");
+      } catch {
+        // agent MD not found on disk — leave content empty
+      }
+    }
     return {
       name,
       content,

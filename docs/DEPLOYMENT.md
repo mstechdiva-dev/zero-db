@@ -34,7 +34,7 @@
 | Variable | Description |
 |---|---|
 | `ANTHROPIC_API_KEY` | Claude API key from console.anthropic.com |
-| `SUPABASE_URL` | Your Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_URL` | Your Supabase project URL |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key (full access) |
 | `ENCRYPTION_KEY` | Base64-encoded 32-byte AES-256 key for connection string encryption |
 | `SCHEMAZERO_WEBHOOK_SIGNING_SECRET` | Shared secret for signing outbound webhook payloads |
@@ -64,6 +64,7 @@ python3 -c "import os, base64; print(base64.b64encode(os.urandom(32)).decode())"
 | `RAILWAY_API_URL` | Backend URL on Railway (server-side only) |
 | `LEMONSQUEEZY_API_KEY` | Lemon Squeezy API key (server-side) |
 | `LEMONSQUEEZY_WEBHOOK_SECRET` | Lemon Squeezy webhook signing secret |
+| `LEMONSQUEEZY_SOLO_VARIANT_ID` | Lemon Squeezy variant ID for the Solo plan |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key (server-side API routes) |
 
 ---
@@ -81,6 +82,8 @@ python3 -c "import os, base64; print(base64.b64encode(os.urandom(32)).decode())"
    ```bash
    psql "$SUPABASE_DB_URL" < supabase/migrations/001_cleanup.sql
    psql "$SUPABASE_DB_URL" < supabase/migrations/002_leads.sql
+   psql "$SUPABASE_DB_URL" < supabase/migrations/003_agent_versions.sql
+   psql "$SUPABASE_DB_URL" < supabase/migrations/004_lemonsqueezy.sql
    ```
 4. Enable Row Level Security (RLS) on all tables — policies are defined in `supabase/schema.sql`.
 5. Copy your project URL and keys from **Project Settings → API**.
@@ -100,7 +103,7 @@ python3 -c "import os, base64; print(base64.b64encode(os.urandom(32)).decode())"
 3. Set all backend environment variables:
    ```bash
    railway variables set ANTHROPIC_API_KEY=sk-ant-...
-   railway variables set SUPABASE_URL=https://...
+   railway variables set NEXT_PUBLIC_SUPABASE_URL=https://...
    railway variables set SUPABASE_SERVICE_ROLE_KEY=...
    railway variables set ENCRYPTION_KEY=...
    # ... set remaining variables

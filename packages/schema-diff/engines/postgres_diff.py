@@ -153,7 +153,7 @@ class PostgresDiff(BaseDiff):
             schema, name = table.split(".", 1)
             results.append(
                 DiffResult(
-                    change_type="table_created",
+                    change_type="table_added",
                     object_type="table",
                     object_name=name,
                     schema_name=schema,
@@ -195,7 +195,7 @@ class PostgresDiff(BaseDiff):
             if name not in before_map:
                 results.append(
                     DiffResult(
-                        change_type="index_created",
+                        change_type="index_added",
                         object_type="index",
                         object_name=name,
                         schema_name=idx.get("schemaname"),

@@ -1,3 +1,4 @@
+import asyncio
 import logging
 
 from fastapi import APIRouter, Request, HTTPException, Depends
@@ -13,7 +14,11 @@ router = APIRouter()
 
 
 def _load_prompt(agent_name: str, fallback: dict[str, str]) -> str:
-    """Return the agent prompt from Supabase, falling back to the disk copy."""
+    """Return the agent prompt from Supabase, falling back to the disk copy.
+
+    This is a synchronous function intentionally — it must be called via
+    run_in_executor from async endpoints to avoid blocking the event loop.
+    """
     try:
         supabase = get_supabase()
         result = (
@@ -56,7 +61,11 @@ async def chat(
 
     # Try Supabase first so admin edits take effect immediately,
     # fall back to the prompts loaded from disk at startup.
-    system_prompt = _load_prompt(body.agent, request.app.state.agent_prompts)
+    # Run in executor to avoid blocking the event loop on a sync Supabase call.
+    loop = asyncio.get_running_loop()
+    system_prompt = await loop.run_in_executor(
+        None, _load_prompt, body.agent, request.app.state.agent_prompts
+    )
     if not system_prompt:
         raise HTTPException(
             status_code=500, detail=f"Agent prompt not loaded: {body.agent}"

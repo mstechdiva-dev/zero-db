@@ -40,7 +40,7 @@ SchemaZero is a universal schema change detection and impact analysis platform. 
 | Enterprise | Custom | Unlimited databases, VPC peering, SSO/SAML, SOC 2, dedicated SLA |
 
 Solo includes a **14-day free trial — no credit card required.**
-Teams and Enterprise have no trial — contact for access.
+Teams is self-serve — no trial. Enterprise requires contact.
 
 ---
 
@@ -91,7 +91,7 @@ DASHBOARD_URL=
 ## Repository Structure
 
 ```
-zero-db/
+schemazero/
 ├── apps/
 │   ├── web/          # Vercel frontend (Next.js 14)
 │   └── agent/        # Railway backend (FastAPI)

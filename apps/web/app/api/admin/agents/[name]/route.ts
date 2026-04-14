@@ -32,12 +32,12 @@ async function verifyAdmin(request: NextRequest): Promise<string | null> {
 // PUT /api/admin/agents/[name] — save agent content to Supabase
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ name: string }> }
+  { params }: { params: { name: string } }
 ) {
   const email = await verifyAdmin(request);
   if (!email) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const { name } = await params;
+  const { name } = params;
   const { content } = await request.json();
 
   if (!content?.trim()) {

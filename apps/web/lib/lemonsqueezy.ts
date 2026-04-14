@@ -55,7 +55,10 @@ export function verifyWebhookSignature(rawBody: string, signature: string): bool
     .update(rawBody, "utf8")
     .digest("hex");
   try {
-    return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
+    return crypto.timingSafeEqual(
+      Buffer.from(expected, "hex"),
+      Buffer.from(signature.toLowerCase(), "hex")
+    );
   } catch {
     return false;
   }

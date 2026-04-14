@@ -230,7 +230,7 @@ class TestTableChanges:
             "numeric_precision": 32,
         })
         results = differ.diff(before, after)
-        created = [r for r in results if r.change_type == "table_created"]
+        created = [r for r in results if r.change_type == "table_added"]
         assert len(created) == 1
         assert created[0].object_name == "orders"
         assert "orders" in created[0].human_readable_summary
@@ -266,7 +266,7 @@ class TestIndexChanges:
             "indexdef": "CREATE INDEX users_email_idx ON public.users USING btree (email)",
         })
         results = differ.diff(before, after)
-        created = [r for r in results if r.change_type == "index_created"]
+        created = [r for r in results if r.change_type == "index_added"]
         assert len(created) == 1
         assert "users_email_idx" in created[0].object_name
 
