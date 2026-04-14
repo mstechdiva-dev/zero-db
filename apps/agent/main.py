@@ -10,7 +10,6 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from routers import agent, databases, changes, alerts, health
 from routers.internal import router as internal_router
-from routers.agents_admin import router as agents_admin_router
 
 AGENTS_DIR = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "..", "..", "agents")
@@ -77,4 +76,3 @@ app.include_router(databases.router, prefix="/databases", tags=["Databases"])
 app.include_router(changes.router, prefix="/changes", tags=["Changes"])
 app.include_router(alerts.router, prefix="/alerts", tags=["Alerts"])
 app.include_router(internal_router, prefix="/internal", tags=["Internal"])
-app.include_router(agents_admin_router, tags=["Admin"])

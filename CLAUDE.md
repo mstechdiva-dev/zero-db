@@ -23,3 +23,13 @@
 
 ### Existing Design Reference
 - `docs/schemazero-3.html` — landing page reference. All new mockups must be visually consistent with this file.
+
+## Engineering Rules
+
+### Prefer Simple Solutions
+- **Before adding a service, proxy, or infrastructure layer, ask: can a direct database read/write solve this?**
+- One Supabase query beats a chain of HTTP proxies.
+- Don't build Railway endpoints just to read/write data that Supabase already owns.
+- Git is already a version history. Don't build a version history table unless git can't serve that role.
+- If a textarea and a Supabase upsert solve the problem, that is the right solution.
+- Over-engineering is a bug. If a simpler path exists, take it.

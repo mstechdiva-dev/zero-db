@@ -1,28 +1,38 @@
+import { createClient } from "@supabase/supabase-js";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import path from "path";
+import fs from "fs";
 import AgentEditor from "./AgentEditor";
 
-const RAILWAY_API_URL = process.env.RAILWAY_API_URL;
-const ADMIN_SECRET = process.env.ADMIN_SECRET ?? "";
-
-interface AgentData {
-  name: string;
-  content: string;
-  role: string;
-  settings: { model: string | null; temperature: number | null; max_tokens: number | null };
-  versions: Array<{ id: string; saved_by: string | null; saved_at: string; label: string | null }>;
+function serviceDb() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { persistSession: false } }
+  );
 }
 
-async function loadAgent(name: string): Promise<AgentData | null> {
-  if (!RAILWAY_API_URL) return null;
+const AGENT_NAMES = ["obi", "sal", "scout", "sully", "zero"];
+
+function parseRole(content: string): string {
+  return content.match(/## Role\s*\n\s*\n(.+)/)?.[1]?.trim() ?? "";
+}
+
+async function loadContent(name: string): Promise<string | null> {
+  // 1. Try Supabase (source of truth after first edit)
+  const db = serviceDb();
+  const { data } = await db
+    .from("agent_skills")
+    .select("content")
+    .eq("name", name)
+    .single();
+  if (data?.content) return data.content;
+
+  // 2. Fall back to disk (repo file, before any admin edit)
   try {
-    const res = await fetch(`${RAILWAY_API_URL}/admin/agents/${name}`, {
-      headers: { "x-admin-secret": ADMIN_SECRET },
-      cache: "no-store",
-    });
-    if (res.status === 404) return null;
-    if (!res.ok) return null;
-    return await res.json();
+    const filePath = path.join(process.cwd(), "..", "..", "agents", `${name}.md`);
+    return fs.readFileSync(filePath, "utf-8");
   } catch {
     return null;
   }
@@ -34,32 +44,25 @@ export default async function AgentEditorPage({
   params: Promise<{ name: string }>;
 }) {
   const { name } = await params;
-  const agent = await loadAgent(name);
 
-  if (!agent) notFound();
+  if (!AGENT_NAMES.includes(name)) notFound();
+
+  const content = await loadContent(name);
+  if (content === null) notFound();
+
+  const role = parseRole(content);
 
   return (
     <div className="flex flex-col h-full">
-      {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm text-gray-600 mb-6 flex-shrink-0">
-        <Link href="/admin" className="hover:text-white transition-colors">
-          Admin
-        </Link>
+        <Link href="/admin" className="hover:text-white transition-colors">Admin</Link>
         <span>/</span>
-        <Link href="/admin/agents" className="hover:text-white transition-colors">
-          Agents
-        </Link>
+        <Link href="/admin/agents" className="hover:text-white transition-colors">Agents</Link>
         <span>/</span>
-        <span className="text-white font-medium">{agent.name}</span>
+        <span className="text-white font-medium">{name}</span>
       </nav>
 
-      <AgentEditor
-        agentName={agent.name}
-        role={agent.role}
-        initialContent={agent.content}
-        initialSettings={agent.settings}
-        initialVersions={agent.versions}
-      />
+      <AgentEditor agentName={name} role={role} initialContent={content} />
     </div>
   );
 }
