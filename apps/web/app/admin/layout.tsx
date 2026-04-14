@@ -45,6 +45,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
         <div className="flex items-center gap-1">
           <NavLink href="/admin">Overview</NavLink>
           <NavLink href="/admin/leads">Leads</NavLink>
+          <NavLink href="/admin/agents">Agents</NavLink>
         </div>
 
         <div className="ml-auto flex items-center gap-4">
