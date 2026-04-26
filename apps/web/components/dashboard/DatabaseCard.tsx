@@ -15,6 +15,8 @@ export default function DatabaseCard() {
   const [databases, setDatabases] = useState<Database[]>([]);
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
@@ -41,6 +43,20 @@ export default function DatabaseCard() {
       );
     }
     setToggling(null);
+  }
+
+  async function deleteDatabase(id: string) {
+    setDeleting(id);
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("connected_databases")
+      .delete()
+      .eq("id", id);
+    if (!error) {
+      setDatabases((prev) => prev.filter((d) => d.id !== id));
+    }
+    setDeleting(null);
+    setConfirmDelete(null);
   }
 
   if (loading) {
@@ -92,11 +108,37 @@ export default function DatabaseCard() {
             </div>
             <button
               onClick={() => toggleActive(db)}
-              disabled={toggling === db.id}
+              disabled={toggling === db.id || deleting === db.id}
               className="text-xs px-3 py-1.5 rounded-lg border transition-colors disabled:opacity-40 disabled:cursor-not-allowed border-gray-700 text-gray-400 hover:border-gray-500 hover:text-white"
             >
               {toggling === db.id ? "…" : db.is_active ? "Disable" : "Enable"}
             </button>
+            {confirmDelete === db.id ? (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-red-400">Remove?</span>
+                <button
+                  onClick={() => setConfirmDelete(null)}
+                  className="text-xs px-2 py-1 rounded border border-gray-700 text-gray-400 hover:text-white transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => deleteDatabase(db.id)}
+                  disabled={deleting === db.id}
+                  className="text-xs px-2 py-1 rounded border border-red-800 text-red-400 hover:bg-red-900/30 transition-colors disabled:opacity-40"
+                >
+                  {deleting === db.id ? "…" : "Remove"}
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setConfirmDelete(db.id)}
+                disabled={deleting === db.id}
+                className="text-xs px-3 py-1.5 rounded-lg border transition-colors disabled:opacity-40 disabled:cursor-not-allowed border-gray-800 text-gray-600 hover:border-red-800 hover:text-red-400"
+              >
+                Remove
+              </button>
+            )}
           </div>
         </div>
       ))}

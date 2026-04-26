@@ -38,6 +38,8 @@ export default function SettingsPage() {
   const [saved, setSaved] = useState(false);
   const [checkingOut, setCheckingOut] = useState(false);
   const [urlErrors, setUrlErrors] = useState<Record<string, string>>({});
+  const [testing, setTesting] = useState(false);
+  const [testResults, setTestResults] = useState<Record<string, { ok: boolean; status?: number; error?: string }> | null>(null);
 
   const loadSettings = useCallback(async () => {
     const supabase = createClient();
@@ -144,6 +146,23 @@ export default function SettingsPage() {
       console.error("Checkout failed:", err);
     } finally {
       setCheckingOut(false);
+    }
+  }
+
+  async function sendTest() {
+    setTesting(true);
+    setTestResults(null);
+    try {
+      const res = await fetch("/api/webhook/test", { method: "POST" });
+      const data = await res.json();
+      if (data.results) {
+        setTestResults(data.results);
+        setTimeout(() => setTestResults(null), 8000);
+      }
+    } catch {
+      setTestResults({ error: { ok: false, error: "Request failed" } });
+    } finally {
+      setTesting(false);
     }
   }
 
@@ -320,13 +339,41 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <button
-            onClick={saveAlertConfig}
-            disabled={saving}
-            className="px-4 py-2 bg-[#00e87a] text-black font-semibold rounded-lg hover:bg-[#00c96a] transition-colors text-sm disabled:opacity-50"
-          >
-            {saving ? "Saving…" : saved ? "Saved ✓" : "Save alert config"}
-          </button>
+          <div className="flex items-center gap-3 flex-wrap">
+            <button
+              onClick={saveAlertConfig}
+              disabled={saving}
+              className="px-4 py-2 bg-[#00e87a] text-black font-semibold rounded-lg hover:bg-[#00c96a] transition-colors text-sm disabled:opacity-50"
+            >
+              {saving ? "Saving…" : saved ? "Saved ✓" : "Save alert config"}
+            </button>
+            {(alertConfig.webhook_url || alertConfig.slack_webhook_url) && (
+              <button
+                onClick={sendTest}
+                disabled={testing}
+                className="px-4 py-2 border border-gray-700 text-gray-300 hover:text-white hover:border-gray-500 rounded-lg transition-colors text-sm disabled:opacity-50"
+              >
+                {testing ? "Sending…" : "Send test"}
+              </button>
+            )}
+          </div>
+
+          {testResults && (
+            <div className="flex flex-wrap gap-2 pt-1">
+              {Object.entries(testResults).map(([channel, result]) => (
+                <span
+                  key={channel}
+                  className={`text-xs font-mono px-2 py-1 rounded border ${
+                    result.ok
+                      ? "text-[#00e87a] bg-[#00e87a]/10 border-[#00e87a]/30"
+                      : "text-red-400 bg-red-400/10 border-red-400/30"
+                  }`}
+                >
+                  {channel}: {result.ok ? `✓ ${result.status}` : `✗ ${result.error ?? result.status}`}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       </section>
     </div>
