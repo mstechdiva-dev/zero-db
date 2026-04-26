@@ -37,6 +37,7 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [checkingOut, setCheckingOut] = useState(false);
+  const [urlErrors, setUrlErrors] = useState<Record<string, string>>({});
 
   const loadSettings = useCallback(async () => {
     const supabase = createClient();
@@ -75,7 +76,29 @@ export default function SettingsPage() {
 
   useEffect(() => { loadSettings(); }, [loadSettings]);
 
+  function validateUrl(value: string): boolean {
+    if (!value) return true;
+    try {
+      const u = new URL(value);
+      return u.protocol === "https:" || u.protocol === "http:";
+    } catch {
+      return false;
+    }
+  }
+
   async function saveAlertConfig() {
+    const errors: Record<string, string> = {};
+    if (!validateUrl(alertConfig.webhook_url)) {
+      errors.webhook_url = "Must be a valid URL (https://…)";
+    }
+    if (!validateUrl(alertConfig.slack_webhook_url)) {
+      errors.slack_webhook_url = "Must be a valid URL (https://hooks.slack.com/…)";
+    }
+    if (Object.keys(errors).length > 0) {
+      setUrlErrors(errors);
+      return;
+    }
+    setUrlErrors({});
     setSaving(true);
     setSaved(false);
     try {
@@ -222,10 +245,18 @@ export default function SettingsPage() {
             <input
               type="url"
               value={alertConfig.webhook_url}
-              onChange={(e) => setAlertConfig((p) => ({ ...p, webhook_url: e.target.value }))}
+              onChange={(e) => {
+                setAlertConfig((p) => ({ ...p, webhook_url: e.target.value }));
+                setUrlErrors((p) => ({ ...p, webhook_url: "" }));
+              }}
               placeholder="https://your-server.com/webhook"
-              className="w-full px-4 py-3 bg-[#0a0a0a] border border-gray-800 rounded-lg text-white placeholder-gray-600 focus:outline-none focus:border-[#00e87a] transition-colors"
+              className={`w-full px-4 py-3 bg-[#0a0a0a] border rounded-lg text-white placeholder-gray-600 focus:outline-none transition-colors ${
+                urlErrors.webhook_url ? "border-red-500 focus:border-red-400" : "border-gray-800 focus:border-[#00e87a]"
+              }`}
             />
+            {urlErrors.webhook_url && (
+              <p className="text-red-400 text-xs mt-1">{urlErrors.webhook_url}</p>
+            )}
           </div>
 
           <div>
@@ -233,10 +264,18 @@ export default function SettingsPage() {
             <input
               type="url"
               value={alertConfig.slack_webhook_url}
-              onChange={(e) => setAlertConfig((p) => ({ ...p, slack_webhook_url: e.target.value }))}
+              onChange={(e) => {
+                setAlertConfig((p) => ({ ...p, slack_webhook_url: e.target.value }));
+                setUrlErrors((p) => ({ ...p, slack_webhook_url: "" }));
+              }}
               placeholder="https://hooks.slack.com/services/..."
-              className="w-full px-4 py-3 bg-[#0a0a0a] border border-gray-800 rounded-lg text-white placeholder-gray-600 focus:outline-none focus:border-[#00e87a] transition-colors"
+              className={`w-full px-4 py-3 bg-[#0a0a0a] border rounded-lg text-white placeholder-gray-600 focus:outline-none transition-colors ${
+                urlErrors.slack_webhook_url ? "border-red-500 focus:border-red-400" : "border-gray-800 focus:border-[#00e87a]"
+              }`}
             />
+            {urlErrors.slack_webhook_url && (
+              <p className="text-red-400 text-xs mt-1">{urlErrors.slack_webhook_url}</p>
+            )}
           </div>
 
           <div>

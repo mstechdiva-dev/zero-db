@@ -80,7 +80,7 @@ export default async function OrgDetailPage({
       .single(),
     db
       .from("notification_log")
-      .select("id, channel, success, sent_at, change_event_id")
+      .select("id, channel, status, sent_at, change_event_id")
       .eq("org_id", id)
       .order("sent_at", { ascending: false })
       .limit(15),
@@ -94,12 +94,12 @@ export default async function OrgDetailPage({
     dbIds.length > 0
       ? await db
           .from("scout_heartbeat")
-          .select("database_id, status, last_seen_at")
+          .select("database_id, last_seen")
           .in("database_id", dbIds)
       : { data: [] };
 
   const heartbeatByDb = (heartbeats ?? []).reduce(
-    (acc: Record<string, { status: string; last_seen_at: string }>, h: any) => {
+    (acc: Record<string, { last_seen: string }>, h: any) => {
       acc[h.database_id] = h;
       return acc;
     },
@@ -240,7 +240,7 @@ export default async function OrgDetailPage({
             const hb = heartbeatByDb[d.id];
             const isActive =
               hb &&
-              Date.now() - new Date(hb.last_seen_at).getTime() < 90_000;
+              Date.now() - new Date(hb.last_seen).getTime() < 90_000;
             return (
               <div
                 key={d.id}
@@ -253,7 +253,7 @@ export default async function OrgDetailPage({
                 <div className="flex items-center gap-2 text-xs">
                   {hb && (
                     <span className="text-gray-600">
-                      {timeAgo(hb.last_seen_at)}
+                      {timeAgo(hb.last_seen)}
                     </span>
                   )}
                   <span
@@ -327,7 +327,7 @@ export default async function OrgDetailPage({
                 <div className="flex items-center gap-2">
                   <span
                     className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                      n.success ? "bg-[#00e87a]" : "bg-red-500"
+                      n.status === "sent" ? "bg-[#00e87a]" : "bg-red-500"
                     }`}
                   />
                   <span className="text-gray-400 capitalize">{n.channel}</span>

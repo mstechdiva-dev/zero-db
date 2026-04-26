@@ -14,6 +14,7 @@ interface Database {
 export default function DatabaseCard() {
   const [databases, setDatabases] = useState<Database[]>([]);
   const [loading, setLoading] = useState(true);
+  const [toggling, setToggling] = useState<string | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
@@ -25,6 +26,22 @@ export default function DatabaseCard() {
         setLoading(false);
       });
   }, []);
+
+  async function toggleActive(db: Database) {
+    setToggling(db.id);
+    const supabase = createClient();
+    const newValue = !db.is_active;
+    const { error } = await supabase
+      .from("connected_databases")
+      .update({ is_active: newValue })
+      .eq("id", db.id);
+    if (!error) {
+      setDatabases((prev) =>
+        prev.map((d) => (d.id === db.id ? { ...d, is_active: newValue } : d))
+      );
+    }
+    setToggling(null);
+  }
 
   if (loading) {
     return (
@@ -64,13 +81,22 @@ export default function DatabaseCard() {
             <span className="text-white font-semibold">{db.display_name}</span>
             <p className="text-gray-500 text-sm capitalize mt-0.5">{db.engine}</p>
           </div>
-          <div className="flex items-center gap-2">
-            <span
-              className={`w-2 h-2 rounded-full ${db.is_active ? "bg-[#00e87a]" : "bg-gray-600"}`}
-            />
-            <span className="text-xs text-gray-400">
-              {db.is_active ? "Scout watching" : "Inactive"}
-            </span>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span
+                className={`w-2 h-2 rounded-full ${db.is_active ? "bg-[#00e87a]" : "bg-gray-600"}`}
+              />
+              <span className="text-xs text-gray-400">
+                {db.is_active ? "Scout watching" : "Inactive"}
+              </span>
+            </div>
+            <button
+              onClick={() => toggleActive(db)}
+              disabled={toggling === db.id}
+              className="text-xs px-3 py-1.5 rounded-lg border transition-colors disabled:opacity-40 disabled:cursor-not-allowed border-gray-700 text-gray-400 hover:border-gray-500 hover:text-white"
+            >
+              {toggling === db.id ? "…" : db.is_active ? "Disable" : "Enable"}
+            </button>
           </div>
         </div>
       ))}

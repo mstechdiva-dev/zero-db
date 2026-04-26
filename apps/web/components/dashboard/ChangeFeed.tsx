@@ -3,10 +3,12 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";
 import ChangeCard, { type ChangeEvent } from "./ChangeCard";
+import ChangeDetailDrawer from "./ChangeDetailDrawer";
 
 export default function ChangeFeed() {
   const [events, setEvents] = useState<ChangeEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<ChangeEvent | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
@@ -14,7 +16,7 @@ export default function ChangeFeed() {
     async function fetchEvents() {
       const { data } = await supabase
         .from("change_events")
-        .select("*")
+        .select("id, change_type, object_type, object_name, schema_name, risk_level, detected_at, database_id, before_state, after_state")
         .order("detected_at", { ascending: false })
         .limit(50);
       setEvents(data ?? []);
@@ -23,7 +25,6 @@ export default function ChangeFeed() {
 
     fetchEvents();
 
-    // Real-time subscription
     const channel = supabase
       .channel("change_events_feed")
       .on(
@@ -64,10 +65,13 @@ export default function ChangeFeed() {
   }
 
   return (
-    <div className="space-y-3">
-      {events.map((event) => (
-        <ChangeCard key={event.id} event={event} />
-      ))}
-    </div>
+    <>
+      <div className="space-y-3">
+        {events.map((event) => (
+          <ChangeCard key={event.id} event={event} onClick={() => setSelected(event)} />
+        ))}
+      </div>
+      <ChangeDetailDrawer event={selected} onClose={() => setSelected(null)} />
+    </>
   );
 }

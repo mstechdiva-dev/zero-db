@@ -56,8 +56,12 @@ export default function ChatWindow({ agentName, onComplete }: ChatWindowProps) {
         { role: "assistant", content: data.response },
       ]);
 
-      // If agent confirms completion, trigger onComplete
-      if (data.handoff === null && data.response.toLowerCase().includes("scout is now watching")) {
+      // Trigger onComplete when the backend signals done (preferred) or
+      // falls back to the legacy phrase check for older agent versions.
+      if (
+        data.completed === true ||
+        (data.handoff === null && data.response.toLowerCase().includes("scout is now watching"))
+      ) {
         setTimeout(() => onComplete?.(), 1500);
       }
     } catch {
