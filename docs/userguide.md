@@ -137,6 +137,10 @@ You can connect additional databases later from **Dashboard → Databases**.
 | Risk badge | **LOW** / **MEDIUM** / **HIGH** / **CRITICAL** — see [Risk Levels](#risk-levels) |
 | Timestamp | When the change was detected |
 
+**Click any card** to open a detail drawer on the right. The drawer shows:
+- Before and after state as formatted JSON (what the schema looked like before and after the change)
+- AI-generated impact analysis — a plain-English summary, recommendations, and lists of affected queries, services, and indexes (when available)
+
 The feed updates in real time — new changes slide in at the top without a page refresh.
 
 **Empty state:** If no changes have been detected yet, the feed shows "No schema changes detected yet. Scout is watching." This is normal when you first connect. Scout will surface changes as they happen.
@@ -151,6 +155,8 @@ The feed updates in real time — new changes slide in at the top without a page
 - **Database name** — the display name you set during onboarding
 - **Engine** — postgres, mysql, mongodb, or redis
 - **Status** — "Scout watching" (active) or "Inactive"
+- **Enable / Disable** — pause or resume Scout monitoring for that database without removing it
+- **Remove** — permanently disconnects the database. Click once to see a confirmation prompt, then confirm to remove.
 
 **Adding a database:**
 Click **Add database** in the top right. This takes you back to `/onboarding` to go through the guided setup again for your next database. You can connect as many databases as your plan allows.
@@ -208,6 +214,10 @@ Use the checkboxes to choose which risk levels trigger alerts:
 Default: **High** and **Critical** are checked. Most teams leave it this way.
 
 Click **Save alert config** to save your settings. You'll see "Saved ✓" for a few seconds when it succeeds.
+
+**Send test**
+
+Once you have at least one webhook URL entered, a **Send test** button appears next to Save. Clicking it fires a test payload to your configured webhook and/or Slack URL immediately — using whatever is currently in the form, even if you haven't saved yet. Result badges appear for a few seconds showing success (✓ 200) or failure (✗ and the error) per channel.
 
 ---
 

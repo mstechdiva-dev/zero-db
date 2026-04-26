@@ -9,6 +9,8 @@ export interface ChangeEvent {
   risk_level?: string;
   detected_at: string;
   database_id: string;
+  before_state?: Record<string, unknown> | null;
+  after_state?: Record<string, unknown> | null;
 }
 
 interface ChangeCardProps {

@@ -37,6 +37,9 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [checkingOut, setCheckingOut] = useState(false);
+  const [urlErrors, setUrlErrors] = useState<Record<string, string>>({});
+  const [testing, setTesting] = useState(false);
+  const [testResults, setTestResults] = useState<Record<string, { ok: boolean; status?: number; error?: string }> | null>(null);
 
   const loadSettings = useCallback(async () => {
     const supabase = createClient();
@@ -75,7 +78,29 @@ export default function SettingsPage() {
 
   useEffect(() => { loadSettings(); }, [loadSettings]);
 
+  function validateUrl(value: string): boolean {
+    if (!value) return true;
+    try {
+      const u = new URL(value);
+      return u.protocol === "https:" || u.protocol === "http:";
+    } catch {
+      return false;
+    }
+  }
+
   async function saveAlertConfig() {
+    const errors: Record<string, string> = {};
+    if (!validateUrl(alertConfig.webhook_url)) {
+      errors.webhook_url = "Must be a valid URL (https://…)";
+    }
+    if (!validateUrl(alertConfig.slack_webhook_url)) {
+      errors.slack_webhook_url = "Must be a valid URL (https://hooks.slack.com/…)";
+    }
+    if (Object.keys(errors).length > 0) {
+      setUrlErrors(errors);
+      return;
+    }
+    setUrlErrors({});
     setSaving(true);
     setSaved(false);
     try {
@@ -121,6 +146,39 @@ export default function SettingsPage() {
       console.error("Checkout failed:", err);
     } finally {
       setCheckingOut(false);
+    }
+  }
+
+  async function sendTest() {
+    setTesting(true);
+    setTestResults(null);
+    try {
+      const res = await fetch("/api/webhook/test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        // Pass current form values so unsaved edits are tested correctly
+        body: JSON.stringify({
+          webhook_url: alertConfig.webhook_url || undefined,
+          slack_webhook_url: alertConfig.slack_webhook_url || undefined,
+        }),
+      });
+      let data: { results?: Record<string, { ok: boolean; status?: number; error?: string }>; error?: string } | null = null;
+      try { data = await res.json(); } catch { /* non-JSON body */ }
+
+      if (!res.ok) {
+        setTestResults({ error: { ok: false, error: data?.error ?? `Request failed (${res.status})` } });
+        return;
+      }
+      if (data?.results) {
+        setTestResults(data.results);
+        setTimeout(() => setTestResults(null), 8000);
+      } else {
+        setTestResults({ error: { ok: false, error: "Unexpected response from test endpoint" } });
+      }
+    } catch {
+      setTestResults({ error: { ok: false, error: "Request failed" } });
+    } finally {
+      setTesting(false);
     }
   }
 
@@ -222,10 +280,18 @@ export default function SettingsPage() {
             <input
               type="url"
               value={alertConfig.webhook_url}
-              onChange={(e) => setAlertConfig((p) => ({ ...p, webhook_url: e.target.value }))}
+              onChange={(e) => {
+                setAlertConfig((p) => ({ ...p, webhook_url: e.target.value }));
+                setUrlErrors((p) => ({ ...p, webhook_url: "" }));
+              }}
               placeholder="https://your-server.com/webhook"
-              className="w-full px-4 py-3 bg-[#0a0a0a] border border-gray-800 rounded-lg text-white placeholder-gray-600 focus:outline-none focus:border-[#00e87a] transition-colors"
+              className={`w-full px-4 py-3 bg-[#0a0a0a] border rounded-lg text-white placeholder-gray-600 focus:outline-none transition-colors ${
+                urlErrors.webhook_url ? "border-red-500 focus:border-red-400" : "border-gray-800 focus:border-[#00e87a]"
+              }`}
             />
+            {urlErrors.webhook_url && (
+              <p className="text-red-400 text-xs mt-1">{urlErrors.webhook_url}</p>
+            )}
           </div>
 
           <div>
@@ -233,10 +299,18 @@ export default function SettingsPage() {
             <input
               type="url"
               value={alertConfig.slack_webhook_url}
-              onChange={(e) => setAlertConfig((p) => ({ ...p, slack_webhook_url: e.target.value }))}
+              onChange={(e) => {
+                setAlertConfig((p) => ({ ...p, slack_webhook_url: e.target.value }));
+                setUrlErrors((p) => ({ ...p, slack_webhook_url: "" }));
+              }}
               placeholder="https://hooks.slack.com/services/..."
-              className="w-full px-4 py-3 bg-[#0a0a0a] border border-gray-800 rounded-lg text-white placeholder-gray-600 focus:outline-none focus:border-[#00e87a] transition-colors"
+              className={`w-full px-4 py-3 bg-[#0a0a0a] border rounded-lg text-white placeholder-gray-600 focus:outline-none transition-colors ${
+                urlErrors.slack_webhook_url ? "border-red-500 focus:border-red-400" : "border-gray-800 focus:border-[#00e87a]"
+              }`}
             />
+            {urlErrors.slack_webhook_url && (
+              <p className="text-red-400 text-xs mt-1">{urlErrors.slack_webhook_url}</p>
+            )}
           </div>
 
           <div>
@@ -281,13 +355,41 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <button
-            onClick={saveAlertConfig}
-            disabled={saving}
-            className="px-4 py-2 bg-[#00e87a] text-black font-semibold rounded-lg hover:bg-[#00c96a] transition-colors text-sm disabled:opacity-50"
-          >
-            {saving ? "Saving…" : saved ? "Saved ✓" : "Save alert config"}
-          </button>
+          <div className="flex items-center gap-3 flex-wrap">
+            <button
+              onClick={saveAlertConfig}
+              disabled={saving}
+              className="px-4 py-2 bg-[#00e87a] text-black font-semibold rounded-lg hover:bg-[#00c96a] transition-colors text-sm disabled:opacity-50"
+            >
+              {saving ? "Saving…" : saved ? "Saved ✓" : "Save alert config"}
+            </button>
+            {(alertConfig.webhook_url || alertConfig.slack_webhook_url) && (
+              <button
+                onClick={sendTest}
+                disabled={testing}
+                className="px-4 py-2 border border-gray-700 text-gray-300 hover:text-white hover:border-gray-500 rounded-lg transition-colors text-sm disabled:opacity-50"
+              >
+                {testing ? "Sending…" : "Send test"}
+              </button>
+            )}
+          </div>
+
+          {testResults && (
+            <div className="flex flex-wrap gap-2 pt-1">
+              {Object.entries(testResults).map(([channel, result]) => (
+                <span
+                  key={channel}
+                  className={`text-xs font-mono px-2 py-1 rounded border ${
+                    result.ok
+                      ? "text-[#00e87a] bg-[#00e87a]/10 border-[#00e87a]/30"
+                      : "text-red-400 bg-red-400/10 border-red-400/30"
+                  }`}
+                >
+                  {channel}: {result.ok ? `✓ ${result.status}` : `✗ ${result.error ?? result.status}`}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       </section>
     </div>
