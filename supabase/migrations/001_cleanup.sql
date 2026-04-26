@@ -29,10 +29,10 @@ begin
 end $$;
 
 -- ============================================================
--- 3. alert_configs — add custom webhook URL column
+-- 3. alert_configs — add webhook URL column
 -- ============================================================
 alter table alert_configs
-  add column if not exists custom_webhook_url text;
+  add column if not exists webhook_url text;
 
 -- ============================================================
 -- 4. impact_analysis — add next_action column

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase";
 import RiskBadge from "./RiskBadge";
 import type { ChangeEvent } from "./ChangeCard";
@@ -30,7 +30,7 @@ function JsonBlock({ data }: { data: unknown }) {
 }
 
 function StringList({ items, empty }: { items: unknown[]; empty: string }) {
-  if (!items || items.length === 0) {
+  if (!Array.isArray(items) || items.length === 0) {
     return <p className="text-gray-600 text-xs italic">{empty}</p>;
   }
   return (
@@ -47,24 +47,54 @@ function StringList({ items, empty }: { items: unknown[]; empty: string }) {
 export default function ChangeDetailDrawer({ event, onClose }: Props) {
   const [impact, setImpact] = useState<ImpactAnalysis | null>(null);
   const [loadingImpact, setLoadingImpact] = useState(false);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
+  // Fetch impact analysis — guarded against stale responses and errors
   useEffect(() => {
     if (!event) {
       setImpact(null);
+      setLoadingImpact(false);
       return;
     }
+
+    let isCurrent = true;
+    setImpact(null);
     setLoadingImpact(true);
-    const supabase = createClient();
-    supabase
-      .from("impact_analysis")
-      .select("summary, affected_queries, affected_services, affected_indexes, recommendations")
-      .eq("change_event_id", event.id)
-      .single()
-      .then(({ data }) => {
-        setImpact(data ?? null);
-        setLoadingImpact(false);
-      });
+
+    async function fetchImpact() {
+      const supabase = createClient();
+      try {
+        const { data } = await supabase
+          .from("impact_analysis")
+          .select("summary, affected_queries, affected_services, affected_indexes, recommendations")
+          .eq("change_event_id", event!.id)
+          .single();
+        if (isCurrent) setImpact(data ?? null);
+      } catch {
+        if (isCurrent) setImpact(null);
+      } finally {
+        if (isCurrent) setLoadingImpact(false);
+      }
+    }
+
+    void fetchImpact();
+    return () => { isCurrent = false; };
   }, [event?.id]);
+
+  // Escape key to close
+  useEffect(() => {
+    if (!event) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [event, onClose]);
+
+  // Focus the close button when drawer opens
+  useEffect(() => {
+    if (event) closeButtonRef.current?.focus();
+  }, [event]);
 
   if (!event) return null;
 
@@ -78,10 +108,16 @@ export default function ChangeDetailDrawer({ event, onClose }: Props) {
       <div
         className="fixed inset-0 bg-black/50 z-40"
         onClick={onClose}
+        aria-hidden="true"
       />
 
       {/* Drawer */}
-      <div className="fixed right-0 top-0 h-full w-full max-w-xl bg-[#111] border-l border-gray-800 z-50 flex flex-col overflow-hidden">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Change details: ${objectPath}`}
+        className="fixed right-0 top-0 h-full w-full max-w-xl bg-[#111] border-l border-gray-800 z-50 flex flex-col overflow-hidden"
+      >
         {/* Header */}
         <div className="px-6 py-4 border-b border-gray-800 flex items-start justify-between gap-4 shrink-0">
           <div className="min-w-0">
@@ -93,6 +129,7 @@ export default function ChangeDetailDrawer({ event, onClose }: Props) {
           <div className="flex items-center gap-3 shrink-0">
             {event.risk_level && <RiskBadge level={event.risk_level} />}
             <button
+              ref={closeButtonRef}
               onClick={onClose}
               className="text-gray-600 hover:text-white transition-colors text-xl leading-none"
               aria-label="Close"
@@ -137,31 +174,31 @@ export default function ChangeDetailDrawer({ event, onClose }: Props) {
               <div className="space-y-4">
                 <p className="text-sm text-gray-300 leading-relaxed">{impact.summary}</p>
 
-                {(impact.recommendations as unknown[]).length > 0 && (
+                {Array.isArray(impact.recommendations) && impact.recommendations.length > 0 && (
                   <div className="space-y-2">
                     <p className="text-xs text-gray-600 uppercase tracking-wider">Recommendations</p>
-                    <StringList items={impact.recommendations as unknown[]} empty="None" />
+                    <StringList items={impact.recommendations} empty="None" />
                   </div>
                 )}
 
-                {(impact.affected_queries as unknown[]).length > 0 && (
+                {Array.isArray(impact.affected_queries) && impact.affected_queries.length > 0 && (
                   <div className="space-y-2">
                     <p className="text-xs text-gray-600 uppercase tracking-wider">Affected queries</p>
-                    <StringList items={impact.affected_queries as unknown[]} empty="None" />
+                    <StringList items={impact.affected_queries} empty="None" />
                   </div>
                 )}
 
-                {(impact.affected_services as unknown[]).length > 0 && (
+                {Array.isArray(impact.affected_services) && impact.affected_services.length > 0 && (
                   <div className="space-y-2">
                     <p className="text-xs text-gray-600 uppercase tracking-wider">Affected services</p>
-                    <StringList items={impact.affected_services as unknown[]} empty="None" />
+                    <StringList items={impact.affected_services} empty="None" />
                   </div>
                 )}
 
-                {(impact.affected_indexes as unknown[]).length > 0 && (
+                {Array.isArray(impact.affected_indexes) && impact.affected_indexes.length > 0 && (
                   <div className="space-y-2">
                     <p className="text-xs text-gray-600 uppercase tracking-wider">Affected indexes</p>
-                    <StringList items={impact.affected_indexes as unknown[]} empty="None" />
+                    <StringList items={impact.affected_indexes} empty="None" />
                   </div>
                 )}
               </div>

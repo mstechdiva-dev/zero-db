@@ -17,6 +17,7 @@ export default function DatabaseCard() {
   const [toggling, setToggling] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
@@ -31,32 +32,40 @@ export default function DatabaseCard() {
 
   async function toggleActive(db: Database) {
     setToggling(db.id);
-    const supabase = createClient();
-    const newValue = !db.is_active;
-    const { error } = await supabase
-      .from("connected_databases")
-      .update({ is_active: newValue })
-      .eq("id", db.id);
-    if (!error) {
-      setDatabases((prev) =>
-        prev.map((d) => (d.id === db.id ? { ...d, is_active: newValue } : d))
-      );
+    try {
+      const supabase = createClient();
+      const newValue = !db.is_active;
+      const { error } = await supabase
+        .from("connected_databases")
+        .update({ is_active: newValue })
+        .eq("id", db.id);
+      if (!error) {
+        setDatabases((prev) =>
+          prev.map((d) => (d.id === db.id ? { ...d, is_active: newValue } : d))
+        );
+      }
+    } finally {
+      setToggling(null);
     }
-    setToggling(null);
   }
 
   async function deleteDatabase(id: string) {
     setDeleting(id);
-    const supabase = createClient();
-    const { error } = await supabase
-      .from("connected_databases")
-      .delete()
-      .eq("id", id);
-    if (!error) {
+    setDeleteError(null);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("connected_databases")
+        .delete()
+        .eq("id", id);
+      if (error) throw error;
       setDatabases((prev) => prev.filter((d) => d.id !== id));
+    } catch {
+      setDeleteError(id);
+    } finally {
+      setDeleting(null);
+      setConfirmDelete(null);
     }
-    setDeleting(null);
-    setConfirmDelete(null);
   }
 
   if (loading) {
@@ -89,8 +98,8 @@ export default function DatabaseCard() {
   return (
     <div className="space-y-3">
       {databases.map((db) => (
+        <div key={db.id} className="space-y-1">
         <div
-          key={db.id}
           className="bg-[#111] border border-gray-800 rounded-xl p-5 flex items-center justify-between"
         >
           <div>
@@ -140,6 +149,10 @@ export default function DatabaseCard() {
               </button>
             )}
           </div>
+        </div>
+        {deleteError === db.id && (
+          <p className="text-red-400 text-xs px-1">Failed to remove database. Please try again.</p>
+        )}
         </div>
       ))}
     </div>

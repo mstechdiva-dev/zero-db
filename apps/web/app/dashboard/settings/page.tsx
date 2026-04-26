@@ -153,11 +153,27 @@ export default function SettingsPage() {
     setTesting(true);
     setTestResults(null);
     try {
-      const res = await fetch("/api/webhook/test", { method: "POST" });
-      const data = await res.json();
-      if (data.results) {
+      const res = await fetch("/api/webhook/test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        // Pass current form values so unsaved edits are tested correctly
+        body: JSON.stringify({
+          webhook_url: alertConfig.webhook_url || undefined,
+          slack_webhook_url: alertConfig.slack_webhook_url || undefined,
+        }),
+      });
+      let data: { results?: Record<string, { ok: boolean; status?: number; error?: string }>; error?: string } | null = null;
+      try { data = await res.json(); } catch { /* non-JSON body */ }
+
+      if (!res.ok) {
+        setTestResults({ error: { ok: false, error: data?.error ?? `Request failed (${res.status})` } });
+        return;
+      }
+      if (data?.results) {
         setTestResults(data.results);
         setTimeout(() => setTestResults(null), 8000);
+      } else {
+        setTestResults({ error: { ok: false, error: "Unexpected response from test endpoint" } });
       }
     } catch {
       setTestResults({ error: { ok: false, error: "Request failed" } });

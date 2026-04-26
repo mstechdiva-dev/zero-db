@@ -153,6 +153,7 @@ create table impact_analysis (
 create table alert_configs (
   id                  uuid primary key default uuid_generate_v4(),
   org_id              uuid not null references organizations(id) on delete cascade,
+  webhook_url         text,
   slack_webhook_url   text,
   pagerduty_api_key   text,
   email_recipients    jsonb not null default '[]',
