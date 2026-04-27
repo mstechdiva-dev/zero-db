@@ -4,6 +4,7 @@ import { useState } from "react";
 import Nav from "@/components/landing/Nav";
 import Hero from "@/components/landing/Hero";
 import Value from "@/components/landing/Value";
+import Founder from "@/components/landing/Founder";
 import HowItWorks from "@/components/landing/HowItWorks";
 import Security from "@/components/landing/Security";
 import Pricing from "@/components/landing/Pricing";
@@ -19,6 +20,7 @@ export default function LandingPage() {
         <>
           <Hero onTabChange={setActiveTab} />
           <Value />
+          <Founder />
         </>
       )}
       {activeTab !== "demo" && (
