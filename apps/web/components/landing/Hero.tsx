@@ -136,10 +136,10 @@ export default function Hero({ onTabChange }: HeroProps) {
 
         <div className="flex gap-3 items-center flex-wrap mb-10">
           <a
-            href="/auth/signup"
+            href="#waitlist"
             className="px-6 py-3 bg-[#00e87a] text-black text-sm font-semibold rounded-lg hover:opacity-85 transition-opacity"
           >
-            Start free trial
+            Join waitlist
           </a>
           <button
             type="button"
@@ -246,10 +246,10 @@ export default function Hero({ onTabChange }: HeroProps) {
           {/* Connect CTA */}
           <div className="text-center py-1.5">
             <a
-              href="/auth/signup"
+              href="#waitlist"
               className="inline-block text-[13px] text-white/45 border border-white/10 px-4 py-2 rounded-lg hover:text-white hover:border-white/22 transition-colors"
             >
-              Connect your database to see live changes →
+              Join the waitlist to get early access →
             </a>
           </div>
         </div>

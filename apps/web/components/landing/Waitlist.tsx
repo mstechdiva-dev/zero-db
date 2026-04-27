@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-export default function Waitlist() {
+export default function Waitlist({ id }: { id?: string }) {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -25,7 +25,7 @@ export default function Waitlist() {
   }
 
   return (
-    <section className="bg-[#0a0a0a] border-t border-white/[0.06] px-10 py-24">
+    <section id={id} className="bg-[#0a0a0a] border-t border-white/[0.06] px-10 py-24">
       <div className="max-w-[960px] mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
 

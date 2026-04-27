@@ -26,7 +26,7 @@ export default function LandingPage() {
           <Customer />
           <Market />
           <Founder />
-          <Waitlist />
+          <Waitlist id="waitlist" />
         </>
       )}
       {activeTab !== "demo" && (
