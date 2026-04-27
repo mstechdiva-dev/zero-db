@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Nav from "@/components/landing/Nav";
 import Hero from "@/components/landing/Hero";
+import Value from "@/components/landing/Value";
 import HowItWorks from "@/components/landing/HowItWorks";
 import Security from "@/components/landing/Security";
 import Pricing from "@/components/landing/Pricing";
@@ -14,7 +15,12 @@ export default function LandingPage() {
   return (
     <main className="min-h-screen bg-[#0a0a0a]">
       <Nav activeTab={activeTab} onTabChange={setActiveTab} />
-      {activeTab === "demo" && <Hero onTabChange={setActiveTab} />}
+      {activeTab === "demo" && (
+        <>
+          <Hero onTabChange={setActiveTab} />
+          <Value />
+        </>
+      )}
       {activeTab !== "demo" && (
         <div className="max-w-[960px] mx-auto px-10 pb-24">
           {activeTab === "how" && <HowItWorks />}
