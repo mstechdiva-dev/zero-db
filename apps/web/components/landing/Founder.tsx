@@ -51,10 +51,8 @@ export default function Founder() {
             </p>
             <p className="text-[15px] text-white/55 leading-[1.75]">
               The timing is right: the database stack is more fragmented than ever, teams
-              are running five engines where they used to run one, and AI-assisted
-              development means a solo builder can ship what used to take an engineering
-              team. The schema change problem is getting harder.
-              SchemaZero is the answer I wish had existed.
+              are running five engines where they used to run one. The schema change problem
+              is getting harder. SchemaZero is the answer I wish had existed.
             </p>
 
             {/* Credibility strip */}
