@@ -36,13 +36,12 @@ export default function Founder() {
           <div className="space-y-5">
             <p className="text-[15px] text-white/55 leading-[1.75]">
               I spent a decade architecting enterprise database systems for Fortune 500
-              companies and government healthcare. That included leading a{" "}
+              companies and government healthcare. That included leading{" "}
               <span className="text-white/85">
-                1,000+ instance SQL Server migration with zero critical downtime
+                100+ planned migrations in the travel industry with zero downtime
               </span>{" "}
-              at Microsoft. I've been in the room when a schema change lands in production
-              undetected. I know exactly what that costs — in hours, in trust, and in
-              revenue.
+              — where a schema change gone wrong doesn't just break an app, it grounds
+              flights. I know exactly what that costs — in hours, in trust, and in revenue.
             </p>
             <p className="text-[15px] text-white/55 leading-[1.75]">
               SchemaZero is built on that experience. Every database engine it supports —
@@ -51,18 +50,19 @@ export default function Founder() {
               from a spec. It's designed from incidents.
             </p>
             <p className="text-[15px] text-white/55 leading-[1.75]">
-              I left Microsoft in 2025 to build full-time. The timing is deliberate: the
-              database stack is more fragmented than ever, teams are running five engines
-              where they used to run one, and AI-assisted development means a solo founder
-              can ship what used to take an engineering team. The schema change problem is
-              getting harder. SchemaZero is the answer I wish had existed.
+              After six years at Microsoft I was laid off in 2025 — and used it as the
+              moment to build full-time. The timing turned out to be right: the database
+              stack is more fragmented than ever, teams are running five engines where they
+              used to run one, and AI-assisted development means a solo founder can ship
+              what used to take an engineering team. The schema change problem is getting
+              harder. SchemaZero is the answer I wish had existed.
             </p>
 
             {/* Credibility strip */}
             <div className="pt-2 flex flex-wrap gap-x-6 gap-y-2">
               {[
                 "Co-authored Professional Hadoop · Wiley Publishing",
-                "1,000+ server migration · zero incidents",
+                "100+ migrations · travel industry · zero downtime",
                 "Fortune 500 & DoD clients",
                 "Founder · The Basics Central 501(c)(3)",
               ].map((item) => (
