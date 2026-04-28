@@ -36,12 +36,14 @@ export default function Founder() {
           <div className="space-y-5">
             <p className="text-[15px] text-white/55 leading-[1.75]">
               I spent a decade architecting enterprise database systems for Fortune 500
-              companies and government healthcare. That included leading{" "}
+              companies and government healthcare. That included{" "}
               <span className="text-white/85">
-                100+ planned migrations in the travel industry with zero downtime
+                leading 100+ planned database migrations in the travel industry,
+                managing an overseas team with zero downtime
               </span>{" "}
-              — where a schema change gone wrong doesn't just break an app, it grounds
-              flights. I know exactly what that costs — in hours, in trust, and in revenue.
+              — where a schema change gone wrong doesn't just break an app, it disrupts
+              travel reservations and plans. I know exactly what that costs — in hours,
+              in trust, and in revenue.
             </p>
             <p className="text-[15px] text-white/55 leading-[1.75]">
               SchemaZero is built on that experience. Every database engine it supports —
