@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Nav from "@/components/landing/Nav";
 import Hero from "@/components/landing/Hero";
+import LiveDemo from "@/components/landing/LiveDemo";
 import Value from "@/components/landing/Value";
 import Customer from "@/components/landing/Customer";
 import Market from "@/components/landing/Market";
@@ -22,6 +23,7 @@ export default function LandingPage() {
       {activeTab === "demo" && (
         <>
           <Hero onTabChange={setActiveTab} />
+          <LiveDemo />
           <Value />
           <Customer />
           <Market />
