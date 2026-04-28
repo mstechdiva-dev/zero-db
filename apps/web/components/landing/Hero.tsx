@@ -98,7 +98,7 @@ export default function Hero({ onTabChange }: HeroProps) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[calc(100vh-64px)]">
       {/* Left: copy */}
-      <div className="flex flex-col justify-center px-10 py-16 lg:border-r border-white/[0.06]">
+      <div className="flex flex-col justify-center px-5 sm:px-10 py-12 lg:py-16 lg:border-r border-white/[0.06]">
         {/* Badge */}
         <div className="inline-flex items-center gap-2 bg-[rgba(0,232,122,0.08)] border border-[rgba(0,232,122,0.2)] text-[#00e87a] font-mono text-[10px] tracking-[0.5px] px-3 py-1.5 rounded-full mb-7 w-fit">
           <span className="w-1.5 h-1.5 bg-[#00e87a] rounded-full animate-pulse" />

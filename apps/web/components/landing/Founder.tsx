@@ -8,7 +8,7 @@ const CREDENTIALS = [
 
 export default function Founder() {
   return (
-    <section className="bg-[#0a0a0a] border-t border-white/[0.06] px-10 py-20">
+    <section className="bg-[#0a0a0a] border-t border-white/[0.06] px-5 sm:px-10 py-20">
       <div className="max-w-[960px] mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-12 items-start">
 

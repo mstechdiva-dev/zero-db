@@ -25,7 +25,7 @@ export default function Waitlist({ id }: { id?: string }) {
   }
 
   return (
-    <section id={id} className="bg-[#0a0a0a] border-t border-white/[0.06] px-10 py-24">
+    <section id={id} className="bg-[#0a0a0a] border-t border-white/[0.06] px-5 sm:px-10 py-24">
       <div className="max-w-[960px] mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
 
@@ -58,7 +58,7 @@ export default function Waitlist({ id }: { id?: string }) {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@company.com"
-                  className="flex-1 min-w-[220px] bg-[#111] border border-white/[0.1] rounded-lg px-4 py-3 text-sm text-white placeholder-white/25 outline-none focus:border-[rgba(0,232,122,0.4)] transition-colors"
+                  className="flex-1 min-w-0 w-full sm:w-auto bg-[#111] border border-white/[0.1] rounded-lg px-4 py-3 text-sm text-white placeholder-white/25 outline-none focus:border-[rgba(0,232,122,0.4)] transition-colors"
                 />
                 <button
                   type="submit"

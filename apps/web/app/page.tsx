@@ -30,7 +30,7 @@ export default function LandingPage() {
         </>
       )}
       {activeTab !== "demo" && (
-        <div className="max-w-[960px] mx-auto px-10 pb-24">
+        <div className="max-w-[960px] mx-auto px-5 sm:px-10 pb-24">
           {activeTab === "how" && <HowItWorks />}
           {activeTab === "security" && <Security />}
           {activeTab === "pricing" && <Pricing />}

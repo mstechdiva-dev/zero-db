@@ -18,7 +18,7 @@ const USE_CASES = [
 
 export default function Customer() {
   return (
-    <section className="bg-[#0a0a0a] border-t border-white/[0.06] px-10 py-20">
+    <section className="bg-[#0a0a0a] border-t border-white/[0.06] px-5 sm:px-10 py-20">
       <div className="max-w-[960px] mx-auto">
 
         <div className="mb-12">
