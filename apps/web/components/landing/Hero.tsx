@@ -1,81 +1,12 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import type { Tab } from "@/lib/types";
-
-const DEMO_EVENTS = [
-  {
-    id: "1",
-    type: "ADDED",
-    engine: "postgres",
-    schema: "public",
-    table: "users",
-    risk: "LOW",
-    time: "just now",
-    diff: { prefix: "+", item: "column", name: "verified_at", detail: "timestamptz DEFAULT null", added: true },
-    impact: (
-      <>
-        <strong>What to review:</strong> 3 queries in <code>auth-service</code> select all columns — they will now return this field. Check your serializers before deploying.
-      </>
-    ),
-  },
-  {
-    id: "2",
-    type: "MODIFIED",
-    engine: "postgres",
-    schema: "public",
-    table: "orders",
-    risk: "LOW",
-    time: "2m ago",
-    diff: { prefix: null, item: "status", name: "varchar(20)", detail: "→ varchar(50)", added: false },
-    impact: (
-      <>
-        <strong>What to review:</strong> Column widened — no truncation possible, existing CHECK constraints remain valid. Safe to deploy.
-      </>
-    ),
-  },
-  {
-    id: "3",
-    type: "DROPPED",
-    engine: "postgres",
-    schema: "public",
-    table: "sessions",
-    risk: "HIGH",
-    time: "7m ago",
-    diff: { prefix: "-", item: "index", name: "idx_sessions_token", detail: "", added: false },
-    impact: (
-      <>
-        <span className="text-red-400 font-semibold">Do not deploy.</span> This index covers 2 frequent queries in <code>api-gateway</code>. Expect full sequential scans until rebuilt. Rebuild the index before your next release.
-      </>
-    ),
-  },
-  {
-    id: "4",
-    type: "DROPPED",
-    engine: "mongodb",
-    schema: "events",
-    table: "user_events",
-    risk: "MEDIUM",
-    time: "14m ago",
-    diff: { prefix: "-", item: "index", name: "idx_user_events_session_id", detail: "", added: false },
-    impact: (
-      <>
-        <strong>What to review:</strong> Aggregation pipeline in <code>analytics-service</code> will degrade without this index. Rebuild before traffic peaks or expect slow queries.
-      </>
-    ),
-  },
-];
 
 const RISK_STYLES: Record<string, string> = {
   LOW: "bg-[rgba(0,232,122,0.08)] text-[rgba(0,232,122,0.65)]",
   MEDIUM: "bg-[rgba(255,178,0,0.1)] text-[rgba(255,178,0,0.8)]",
   HIGH: "bg-[rgba(232,50,50,0.12)] text-[#e85858]",
-  CRITICAL: "bg-[rgba(232,50,50,0.2)] text-[#e83232] border border-[rgba(232,50,50,0.3)]",
-};
-
-const TYPE_STYLES: Record<string, string> = {
-  ADDED: "bg-[rgba(0,232,122,0.12)] text-[#00e87a]",
-  MODIFIED: "bg-[rgba(255,178,0,0.12)] text-[#ffb200]",
-  DROPPED: "bg-[rgba(232,50,50,0.12)] text-[#e83232]",
 };
 
 const ENGINES = [
@@ -89,6 +20,156 @@ const ENGINES = [
   { label: "SQL Server", active: false, soon: true },
   { label: "Snowflake", active: false, soon: true },
 ];
+
+const TOTAL_STEPS = 7;
+const STEP_MS = 950;
+const HOLD_MS = 3500;
+
+function show(step: number, threshold: number) {
+  return step >= threshold
+    ? "opacity-100 translate-y-0"
+    : "opacity-0 translate-y-1";
+}
+
+function EngineDemoPanel() {
+  const [step, setStep] = useState(0);
+
+  useEffect(() => {
+    const t = setTimeout(
+      () => setStep((s) => (s >= TOTAL_STEPS ? 0 : s + 1)),
+      step >= TOTAL_STEPS ? HOLD_MS : STEP_MS
+    );
+    return () => clearTimeout(t);
+  }, [step]);
+
+  return (
+    <div className="bg-[#0d0d0d] flex flex-col overflow-hidden h-full">
+
+      {/* Title bar */}
+      <div className="flex items-center gap-1.5 px-5 py-3 border-b border-white/[0.06] flex-shrink-0">
+        <span className="w-2.5 h-2.5 rounded-full bg-[#e83232]" />
+        <span className="w-2.5 h-2.5 rounded-full bg-[#ffb200]" />
+        <span className="w-2.5 h-2.5 rounded-full bg-[#00e87a]" />
+        <span className="font-mono text-[10px] text-white/22 ml-2">
+          agent-engine · live
+        </span>
+        <span className="ml-auto flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#00e87a] animate-pulse" />
+          <span className="font-mono text-[9px] text-white/25">prod-postgres</span>
+        </span>
+      </div>
+
+      {/* Code pane */}
+      <div className="flex-1 px-5 py-5 font-mono text-[11px] leading-[1.8] overflow-hidden">
+
+        {/* Scout header */}
+        <div className={`transition-all duration-500 ${show(step, 1)}`}>
+          <span className="text-white/22">{"// "}</span>
+          <span className="text-[#c8bfff]">scout.ts</span>
+          <span className="text-white/22"> — watching prod-postgres</span>
+        </div>
+
+        {/* Event received */}
+        <div className={`transition-all duration-500 ${show(step, 2)}`}>
+          <span className="text-white/25">[03:47:22] </span>
+          <span className="text-[#00e87a]">pg_notify</span>
+          <span className="text-white/45"> received DDL_EVENT</span>
+        </div>
+        <div className={`transition-all duration-500 mt-1 mb-2 bg-black/30 border-l-2 border-white/[0.08] rounded-r px-3 py-2 ${show(step, 2)}`}>
+          <div className="text-white/25">{"{"}</div>
+          <div className="pl-3">
+            <span className="text-[#c8bfff]">event</span>
+            <span className="text-white/25">: </span>
+            <span className="text-[#ffb200]">"DROP INDEX"</span>
+            <span className="text-white/25">,</span>
+          </div>
+          <div className="pl-3">
+            <span className="text-[#c8bfff]">index</span>
+            <span className="text-white/25">: </span>
+            <span className="text-[#ffb200]">"idx_sessions_token"</span>
+            <span className="text-white/25">,</span>
+          </div>
+          <div className="pl-3">
+            <span className="text-[#c8bfff]">table</span>
+            <span className="text-white/25">: </span>
+            <span className="text-[#ffb200]">"sessions"</span>
+          </div>
+          <div className="text-white/25">{"}"}</div>
+        </div>
+
+        {/* Agent Zero header */}
+        <div className={`transition-all duration-500 mt-3 ${show(step, 3)}`}>
+          <span className="text-white/22">{"// "}</span>
+          <span className="text-[#c8bfff]">agent-zero.ts</span>
+          <span className="text-white/22"> — analyzing impact</span>
+        </div>
+
+        {/* Scan */}
+        <div className={`transition-all duration-500 ${show(step, 3)}`}>
+          <span className="text-white/35">→ </span>
+          <span className="text-white/50">scanning query catalog</span>
+          <span className="text-white/25">...</span>
+        </div>
+
+        {/* Results */}
+        <div className={`transition-all duration-500 ${show(step, 4)}`}>
+          <span className="text-white/35">→ </span>
+          <span className="text-[#00e87a]">2 queries</span>
+          <span className="text-white/50"> in api-gateway reference this index</span>
+        </div>
+        <div className={`transition-all duration-500 ${show(step, 4)}`}>
+          <span className="text-white/35">→ </span>
+          <span className="text-white/50">removal causes full sequential scans</span>
+        </div>
+
+        {/* Risk */}
+        <div className={`transition-all duration-500 ${show(step, 5)}`}>
+          <span className="text-white/35">→ </span>
+          <span className="text-white/50">risk score: </span>
+          <span className="text-[#e85858] font-bold">HIGH</span>
+        </div>
+
+        {/* Fire */}
+        <div className={`transition-all duration-500 ${show(step, 6)}`}>
+          <span className="text-white/35">→ </span>
+          <span className="text-white/50">firing alert </span>
+          <span className="text-white/25">{"{ "}</span>
+          <span className="text-[#c8bfff]">channel</span>
+          <span className="text-white/25">{": "}</span>
+          <span className="text-[#ffb200]">"slack"</span>
+          <span className="text-white/25">{" }"}</span>
+        </div>
+
+      </div>
+
+      {/* Result pane */}
+      <div className={`flex-shrink-0 border-t border-white/[0.06] transition-all duration-700 ${step >= 7 ? "opacity-100" : "opacity-0"}`}>
+        <div className="px-4 py-2 border-b border-white/[0.04]">
+          <span className="font-mono text-[9px] text-white/22 uppercase tracking-[0.6px]">Alert fired · Slack</span>
+        </div>
+        <div className="p-4">
+          <div className="bg-[#141414] border border-[rgba(232,88,88,0.2)] rounded-xl px-4 py-3">
+            <div className="flex items-center gap-2 mb-2">
+              <span className={`font-mono text-[9px] font-bold px-2 py-0.5 rounded uppercase ${RISK_STYLES.HIGH}`}>
+                HIGH
+              </span>
+              <span className="font-mono text-[10px] text-white/25">DROPPED</span>
+              <span className="font-mono text-[11px] text-white/60">sessions</span>
+            </div>
+            <p className="font-mono text-[10px] text-white/35 mb-1.5">idx_sessions_token</p>
+            <p className="text-[11px] text-white/50 leading-[1.55]">
+              <span className="text-[#e85858] font-semibold">Do not deploy.</span>{" "}
+              This index covers 2 frequent queries in{" "}
+              <span className="font-mono text-white/65">api-gateway</span>.
+              Expect full sequential scans until rebuilt.
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  );
+}
 
 interface HeroProps {
   onTabChange: (tab: Tab) => void;
@@ -176,84 +257,8 @@ export default function Hero({ onTabChange }: HeroProps) {
         </div>
       </div>
 
-      {/* Right: demo panel */}
-      <div className="bg-[#0d0d0d] flex flex-col overflow-hidden">
-        {/* Title bar */}
-        <div className="flex items-center gap-1.5 px-6 py-3.5 border-b border-white/[0.06]">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#e83232]" />
-          <span className="w-2.5 h-2.5 rounded-full bg-[#ffb200]" />
-          <span className="w-2.5 h-2.5 rounded-full bg-[#00e87a]" />
-          <span className="font-mono text-[10px] text-white/22 ml-2 tracking-[0.3px]">
-            change_events · live feed
-          </span>
-        </div>
-
-        {/* DB bar */}
-        <div className="flex items-center gap-2 px-6 py-2.5 border-b border-white/[0.06] font-mono text-[11px] text-white/25">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#00e87a] animate-pulse" />
-          <span className="text-white/45">prod-postgres</span>
-          <span className="mx-1.5 opacity-30">·</span>
-          <span>Scout watching</span>
-        </div>
-
-        {/* Feed */}
-        <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-3">
-          {DEMO_EVENTS.map((event) => (
-            <div
-              key={event.id}
-              className="bg-[#141414] border border-white/[0.06] rounded-xl px-4 py-3.5 hover:border-[rgba(0,232,122,0.2)] transition-colors"
-            >
-              {/* Meta row */}
-              <div className="flex items-center gap-2 mb-2.5 flex-wrap">
-                <span
-                  className={`font-mono text-[9px] font-bold tracking-[0.5px] px-2 py-0.5 rounded uppercase ${TYPE_STYLES[event.type]}`}
-                >
-                  {event.type}
-                </span>
-                <span className="font-mono text-[11px] text-white/45">
-                  {event.schema}.<strong className="text-white">{event.table}</strong>
-                </span>
-                <span className="text-[10px] text-white/25 bg-white/[0.04] px-1.5 py-0.5 rounded font-mono">
-                  {event.engine}
-                </span>
-                <span className="font-mono text-[9px] text-white/22 ml-auto">{event.time}</span>
-              </div>
-
-              {/* Diff */}
-              <div className="font-mono text-[11px] text-white/45 bg-black/30 rounded-md px-3 py-2 mb-2.5 border-l-2 border-white/[0.08]">
-                {event.diff.prefix && (
-                  <span className={event.diff.added ? "text-[#00e87a]" : "text-[#e83232]"}>
-                    {event.diff.prefix}{" "}
-                  </span>
-                )}
-                {event.diff.item}{" "}
-                <em className="not-italic text-[#c8bfff]">{event.diff.name}</em>
-                {event.diff.detail && <> {event.diff.detail}</>}
-              </div>
-
-              {/* Impact */}
-              <div className="text-[12px] text-white/45 leading-[1.55]">
-                {event.impact}
-                <span
-                  className={`inline-block font-mono text-[9px] font-bold tracking-[0.5px] px-2 py-0.5 rounded ml-2 ${RISK_STYLES[event.risk]}`}
-                >
-                  {event.risk}
-                </span>
-              </div>
-            </div>
-          ))}
-
-          {/* Connect CTA */}
-          <div className="text-center py-1.5">
-            <a
-              href="#waitlist"
-              className="inline-block text-[13px] text-white/45 border border-white/10 px-4 py-2 rounded-lg hover:text-white hover:border-white/22 transition-colors"
-            >
-              Join the waitlist to get early access →
-            </a>
-          </div>
-        </div>
-      </div>
+      {/* Right: engine demo */}
+      <EngineDemoPanel />
     </div>
   );
 }
