@@ -1,3 +1,7 @@
+"use client";
+
+import type { Tab } from "@/lib/types";
+
 const PLANS = [
   {
     name: "Solo",
@@ -14,8 +18,8 @@ const PLANS = [
       "Email notifications",
       "14-day free trial, no credit card required",
     ],
-    cta: "Start free trial",
-    href: "/auth/signup",
+    cta: "Join waitlist",
+    type: "waitlist" as const,
     featured: true,
   },
   {
@@ -31,8 +35,8 @@ const PLANS = [
       "Role-based access",
       "Priority support",
     ],
-    cta: "Get started",
-    href: "/auth/signup",
+    cta: "Join waitlist",
+    type: "waitlist" as const,
     featured: false,
   },
   {
@@ -50,12 +54,23 @@ const PLANS = [
       "Dedicated SLA",
     ],
     cta: "Talk to us",
-    href: "/auth/signup",
+    type: "enterprise" as const,
     featured: false,
   },
 ];
 
-export default function Pricing() {
+interface PricingProps {
+  onTabChange: (tab: Tab) => void;
+}
+
+export default function Pricing({ onTabChange }: PricingProps) {
+  function goToWaitlist() {
+    onTabChange("demo");
+    setTimeout(() => {
+      document.getElementById("waitlist")?.scrollIntoView({ behavior: "smooth" });
+    }, 50);
+  }
+
   return (
     <div className="py-20">
       <p className="font-mono text-[10px] uppercase tracking-[1.5px] text-[#00e87a] mb-3.5">
@@ -109,16 +124,26 @@ export default function Pricing() {
               ))}
             </ul>
 
-            <a
-              href={plan.href}
-              className={`block text-center text-[13px] font-semibold py-3 rounded-lg transition-opacity tracking-[-0.1px] ${
-                plan.featured
-                  ? "bg-[#00e87a] text-black hover:opacity-85"
-                  : "border border-white/[0.12] text-white/60 hover:border-white/25 hover:text-white"
-              }`}
-            >
-              {plan.cta}
-            </a>
+            {plan.type === "waitlist" ? (
+              <button
+                type="button"
+                onClick={goToWaitlist}
+                className={`block w-full text-center text-[13px] font-semibold py-3 rounded-lg transition-opacity tracking-[-0.1px] cursor-pointer ${
+                  plan.featured
+                    ? "bg-[#00e87a] text-black hover:opacity-85"
+                    : "border border-white/[0.12] text-white/60 hover:border-white/25 hover:text-white"
+                }`}
+              >
+                {plan.cta}
+              </button>
+            ) : (
+              <a
+                href="mailto:invest@schemazero.com"
+                className="block text-center text-[13px] font-semibold py-3 rounded-lg transition-opacity tracking-[-0.1px] border border-white/[0.12] text-white/60 hover:border-white/25 hover:text-white"
+              >
+                {plan.cta}
+              </a>
+            )}
           </div>
         ))}
       </div>
