@@ -50,12 +50,11 @@ export default function Founder() {
               from a spec. It's designed from incidents.
             </p>
             <p className="text-[15px] text-white/55 leading-[1.75]">
-              After six years at Microsoft I was laid off in 2025 — and used it as the
-              moment to build full-time. The timing turned out to be right: the database
-              stack is more fragmented than ever, teams are running five engines where they
-              used to run one, and AI-assisted development means a solo founder can ship
-              what used to take an engineering team. The schema change problem is getting
-              harder. SchemaZero is the answer I wish had existed.
+              The timing is right: the database stack is more fragmented than ever, teams
+              are running five engines where they used to run one, and AI-assisted
+              development means a solo builder can ship what used to take an engineering
+              team. The schema change problem is getting harder.
+              SchemaZero is the answer I wish had existed.
             </p>
 
             {/* Credibility strip */}
