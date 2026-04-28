@@ -3,13 +3,13 @@ const POINTS = [
     icon: "🔒",
     title: "Read-only credentials",
     description:
-      "Minimum required permissions only. SchemaZero accesses information_schema and system catalogs — never your table data, never your application rows.",
+      "Minimum required permissions only. SchemaZero accesses information_schema and system catalogs, never your table data, never your application rows.",
   },
   {
     icon: "🔐",
     title: "Credentials encrypted at rest",
     description:
-      "Connection strings are encrypted with AES-256 and stored separately from application data. Decrypted only when Scout needs to connect — never logged.",
+      "Connection strings are encrypted with AES-256 and stored separately from application data. Decrypted only when Scout needs to connect, never logged.",
   },
   {
     icon: "🛡️",
@@ -35,7 +35,7 @@ export default function Security() {
         Read-only by design
       </h2>
       <p className="text-base text-white/45 max-w-[560px] leading-[1.65] mb-14">
-        SchemaZero never writes to your database. It reads schema metadata only — never
+        SchemaZero never writes to your database. It reads schema metadata only, never
         your row-level data, never your application secrets.
       </p>
 

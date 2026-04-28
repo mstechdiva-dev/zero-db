@@ -4,7 +4,7 @@ const STEPS = [
     lit: true,
     title: "Connect any database",
     description:
-      "Paste a read-only connection string. SchemaZero reads your entire schema automatically — every table, column, index, and constraint. Nothing to declare, nothing to configure. It just knows.",
+      "Paste a read-only connection string. SchemaZero reads your entire schema automatically: every table, column, index, and constraint. Nothing to declare, nothing to configure. It just knows.",
     codeBlock: (
       <div className="bg-[#0d0d0d] border border-white/[0.06] rounded-lg px-4 py-3 font-mono text-[11px] leading-[1.8] text-white/45 mt-1">
         <span className="text-[#00e87a]">GRANT</span> SELECT{" "}
@@ -28,7 +28,7 @@ const STEPS = [
     lit: true,
     title: "Scout watches continuously",
     description:
-      "Scout runs always-on in the background. The moment a DDL event lands — migration script, manual ALTER TABLE, Supabase Studio, anything — Scout captures the before and after. Your team doesn't have to be watching.",
+      "Scout runs always-on in the background. The moment a DDL event lands (migration script, manual ALTER TABLE, Supabase Studio, anything), Scout captures the before and after. Your team doesn't have to be watching.",
     codeBlock: null,
     note: null,
   },
@@ -37,7 +37,7 @@ const STEPS = [
     lit: true,
     title: "Agent Zero explains what it means",
     description:
-      "This is where SchemaZero is different. Agent Zero doesn't just log the event — it reasons about it. What changed. What it touches. What your team needs to review before deploying. Risk scored, explained in plain English, no jargon.",
+      "This is where SchemaZero is different. Agent Zero doesn't just log the event. It reasons about it. What changed. What it touches. What your team needs to review before deploying. Risk scored, explained in plain English, no jargon.",
     codeBlock: (
       <div className="bg-[#0d0d0d] border border-white/[0.06] rounded-lg px-4 py-3 font-mono text-[11px] leading-[1.8] text-white/45 mt-1">
         <span className="text-[#e83232]">HIGH </span> idx_sessions_token dropped —{" "}
@@ -58,7 +58,7 @@ const STEPS = [
     lit: false,
     title: "Your team gets answers, not just alerts",
     description:
-      "The notification your team receives isn't a ping — it's a briefing. What changed, what's at risk, and what to check. Slack, PagerDuty, email, or your own webhook. Enough context to make the call without opening a single log file.",
+      "The notification your team receives isn't a ping. It's a briefing. What changed, what's at risk, and what to check. Slack, PagerDuty, email, or your own webhook. Enough context to make the call without opening a single log file.",
     codeBlock: null,
     note: null,
   },
@@ -112,7 +112,7 @@ export default function HowItWorks() {
         From schema change to<br />clear answer in seconds
       </h2>
       <p className="text-base text-white/45 max-w-[560px] leading-[1.65] mb-14">
-        Most tools stop at detection. SchemaZero goes further — it explains what changed,
+        Most tools stop at detection. SchemaZero goes further. It explains what changed,
         connects the dots to what it affects, and tells your team exactly what to review.
         No digging. No guessing.
       </p>
@@ -156,7 +156,7 @@ export default function HowItWorks() {
         </h3>
         <p className="text-base text-white/45 max-w-[560px] leading-[1.65] mb-8">
           Each agent has a single job and does it well. Together they cover detection,
-          analysis, onboarding, support, and sales — without you managing any of it.
+          analysis, onboarding, support, and sales, without you managing any of it.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {AGENTS.map((agent) => (
