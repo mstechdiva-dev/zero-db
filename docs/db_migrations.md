@@ -11,6 +11,7 @@ Update this file every time a migration is run.
 |---|------|-------------|--------|------|
 | 000 | `supabase/schema.sql` | Base schema — enums, tables, RLS policies, triggers | ✅ Completed | 2026-04-12 |
 | 001 | `supabase/migrations/001_cleanup.sql` | Lemon Squeezy columns, webhook enum value, custom_webhook_url, next_action | ✅ Completed | 2026-04-12 |
+| 002 | `supabase/migrations/002_waitlist.sql` | Waitlist table for landing page email capture | ⏳ Pending | — |
 
 ---
 
@@ -38,6 +39,20 @@ Applies build.md updates to the existing schema:
 - `alert_channel` enum: added `webhook` before `slack`
 - `alert_configs`: added `custom_webhook_url text`
 - `impact_analysis`: added `next_action text`
+
+---
+
+### 002 — Waitlist (`supabase/migrations/002_waitlist.sql`)
+**Status:** ⏳ Pending — run this in Supabase SQL Editor before launching the landing page
+
+```sql
+create table waitlist (
+  email text primary key,
+  created_at timestamptz default now()
+);
+```
+
+No RLS needed — the `/api/waitlist` route uses the service role key which bypasses RLS.
 
 ---
 

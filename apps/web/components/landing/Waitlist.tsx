@@ -6,21 +6,27 @@ export default function Waitlist({ id }: { id?: string }) {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!email) return;
     setLoading(true);
+    setError(false);
     try {
-      await fetch("/api/waitlist", {
+      const res = await fetch("/api/waitlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
+      if (res.ok) {
+        setSubmitted(true);
+      } else {
+        setError(true);
+      }
     } catch {
-      // fail silently — don't block the UX
+      setError(true);
     }
-    setSubmitted(true);
     setLoading(false);
   }
 
@@ -55,6 +61,7 @@ export default function Waitlist({ id }: { id?: string }) {
                 <input
                   type="email"
                   required
+                  aria-label="Email address"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@company.com"
@@ -68,6 +75,11 @@ export default function Waitlist({ id }: { id?: string }) {
                   {loading ? "Joining…" : "Join waitlist"}
                 </button>
               </form>
+            )}
+            {error && (
+              <p className="mt-3 text-[13px] text-red-400">
+                Something went wrong. Please try again.
+              </p>
             )}
           </div>
 
