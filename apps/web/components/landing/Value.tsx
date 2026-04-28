@@ -29,7 +29,7 @@ export default function Value() {
             <ul className="space-y-4">
               {[
                 "Schema changes silently in production",
-                "Engineer gets paged — queries are slow",
+                "Engineer gets paged, queries are slow",
                 "Dig through migration history and git blame",
                 "Manually trace which queries touch that table",
                 "Best-guess decision: deploy or roll back?",
@@ -109,16 +109,16 @@ export default function Value() {
             <p className="text-[15px] text-white/75 leading-[1.6] mb-2">
               "One prevented incident pays for{" "}
               <span className="text-white font-medium">months</span> of SchemaZero.
-              The question isn't whether schema changes will cause problems —
-              it's whether you'll know about them first."
+              The question isn't whether schema changes will cause problems.
+              It's whether you'll know about them first."
             </p>
             <p className="font-mono text-[11px] text-white/25">SchemaZero · built for engineering teams</p>
           </div>
           <a
-            href="/auth/signup"
+            href="#waitlist"
             className="flex-shrink-0 px-6 py-3 bg-[#00e87a] text-black text-sm font-semibold rounded-lg hover:opacity-85 transition-opacity whitespace-nowrap"
           >
-            Start free trial
+            Join waitlist
           </a>
         </div>
 

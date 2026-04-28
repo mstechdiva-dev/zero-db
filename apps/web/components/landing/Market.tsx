@@ -16,7 +16,7 @@ const STAGES = [
   {
     label: "Platform",
     title: "Data reliability platform",
-    copy: "Enterprise teams running multi-cloud, multi-engine stacks need a single pane of glass for database risk. SOC 2, HIPAA, and DoD compliance requirements make schema audit trails a procurement requirement — not just a convenience.",
+    copy: "Enterprise teams running multi-cloud, multi-engine stacks need a single pane of glass for database risk. SOC 2, HIPAA, and DoD compliance requirements make schema audit trails a procurement requirement, not just a convenience.",
     tag: "Vision",
     tagColor: "text-white/35 bg-white/[0.04] border-white/[0.08]",
   },
@@ -37,7 +37,7 @@ export default function Market() {
           </h2>
           <p className="text-base text-white/45 max-w-[520px] leading-[1.65]">
             The database tooling market is a $10B+ space growing alongside cloud infrastructure.
-            SchemaZero enters through a specific, painful wedge — schema change risk — and
+            SchemaZero enters through a specific, painful wedge (schema change risk) and
             expands from there.
           </p>
         </div>

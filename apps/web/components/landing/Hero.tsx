@@ -193,12 +193,12 @@ export default function Hero({ onTabChange }: HeroProps) {
 
         <p className="text-base text-white/50 leading-[1.65] max-w-[400px] mb-3">
           When your schema changes, SchemaZero tells your team exactly what it
-          affects, why it matters, and what to review — before it becomes a
+          affects, why it matters, and what to review, before it becomes a
           production incident.
         </p>
 
         <p className="text-[13px] text-[#00e87a] opacity-75 mb-3 max-w-[380px]">
-          Connects to your database and reads your schema automatically — no
+          Connects to your database and reads your schema automatically. No
           setup, no declarations, no configuration.
         </p>
 
@@ -206,7 +206,7 @@ export default function Hero({ onTabChange }: HeroProps) {
           Alerts land in your own <strong className="text-white/45 font-medium">custom webhook</strong>,{" "}
           <strong className="text-white/45 font-medium">Slack</strong>,{" "}
           <strong className="text-white/45 font-medium">PagerDuty</strong>, or{" "}
-          <strong className="text-white/45 font-medium">email</strong> — where your team already works.
+          <strong className="text-white/45 font-medium">email</strong>, where your team already works.
         </p>
 
         <div className="border-l-2 border-[#00e87a] pl-3 mb-9">

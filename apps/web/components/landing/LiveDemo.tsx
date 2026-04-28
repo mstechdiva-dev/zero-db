@@ -253,7 +253,7 @@ export default function LiveDemo() {
           <p className="text-base text-white/45 max-w-[520px] leading-[1.65]">
             Left: an engineer drops an index in a migration script.
             Right: Scout catches it, Agent Zero traces the impact to two queries in api-gateway,
-            and the alert lands in Slack — with a plain-English "do not deploy" before anyone ships.
+            and the alert lands in Slack, with a plain-English "do not deploy" before anyone ships.
           </p>
         </div>
 

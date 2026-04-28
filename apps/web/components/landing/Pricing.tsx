@@ -12,7 +12,7 @@ const PLANS = [
       "Full impact analysis",
       "Custom webhook + Slack + PagerDuty alerts",
       "Email notifications",
-      "14-day free trial — no credit card required",
+      "14-day free trial, no credit card required",
     ],
     cta: "Start free trial",
     href: "/auth/signup",
@@ -125,7 +125,7 @@ export default function Pricing() {
 
       <p className="mt-8 text-center text-[13px] text-white/22">
         All plans include real-time monitoring, full impact analysis, and multi-channel alerts.
-        Solo includes a 14-day free trial — no credit card required.
+        Solo includes a 14-day free trial. No credit card required.
       </p>
     </div>
   );

@@ -1,7 +1,7 @@
 const USE_CASES = [
   {
     role: "Backend Engineer",
-    scenario: "Runs a migration before standup. SchemaZero fires a Slack briefing: which queries are affected, what the risk level is, and whether it's safe to deploy — before they touch production.",
+    scenario: "Runs a migration before standup. SchemaZero fires a Slack briefing: which queries are affected, what the risk level is, and whether it's safe to deploy, before they touch production.",
     tag: "Daily user",
   },
   {
@@ -11,7 +11,7 @@ const USE_CASES = [
   },
   {
     role: "Platform / DBA",
-    scenario: "Owns 8 databases across three engines. One dashboard. Every DDL event caught, scored, and explained — without writing a single monitor or query.",
+    scenario: "Owns 8 databases across three engines. One dashboard. Every DDL event caught, scored, and explained, without writing a single monitor or query.",
     tag: "Power user",
   },
 ];

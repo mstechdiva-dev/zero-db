@@ -41,15 +41,16 @@ export default function Founder() {
                 leading 100+ planned database migrations in the travel industry,
                 managing an overseas team with zero downtime
               </span>{" "}
-              — where a schema change gone wrong doesn't just break an app, it disrupts
-              travel reservations and plans. I know exactly what that costs — in hours,
+              where a schema change gone wrong doesn't just break an app; it disrupts
+              travel reservations and plans. I know exactly what that costs in hours,
               in trust, and in revenue.
             </p>
             <p className="text-[15px] text-white/55 leading-[1.75]">
-              SchemaZero is built on that experience. Every database engine it supports —
-              Postgres, MySQL, MongoDB, Redis, CockroachDB — is one I've run in production.
-              The risk scoring, the impact analysis, the alert routing: that's not designed
-              from a spec. It's designed from incidents.
+              SchemaZero is built on that experience. Postgres, MySQL, MongoDB, Redis,
+              CouchDB: databases I've run in production. The risk scoring, the impact
+              analysis, the alert routing: not designed from a spec. Designed from incidents.
+              We are constantly expanding engine support, and it is not limited to what
+              any one person has run.
             </p>
             <p className="text-[15px] text-white/55 leading-[1.75]">
               The timing is right: the database stack is more fragmented than ever, teams
