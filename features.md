@@ -2,27 +2,50 @@
 
 SchemaZero is built for startup engineering teams that move fast and can't afford to find out from a customer that a migration broke production. It watches your database schema, scores the risk of every change, and tells the on-call engineer what to do — in plain English — within seconds.
 
+The product is strongest where modern startups concentrate: the Postgres ecosystem (Postgres, Supabase, Neon, PlanetScale Postgres, CockroachDB) and MongoDB Atlas, where engines expose native DDL events and Scout gets sub-second detection. MySQL family is supported via polling.
+
 This document lists what is actually built today.
 
 ---
 
 ## Real-time schema change detection
 
-Scout watches every connected database continuously and captures a before/after snapshot the moment a structural change happens.
+Scout watches every connected database continuously and captures a before/after snapshot the moment a structural change happens. Detection quality depends on what the engine exposes — the table below is honest about which engines give us sub-second events and which fall back to polling.
+
+### Tier 1 — Real-time, native event triggers
+
+The Postgres ecosystem. This is where SchemaZero is strongest, and it's where most modern startups land.
 
 | Engine | Detection method | Latency |
 |---|---|---|
-| PostgreSQL (direct) | `pg_notify` on DDL event trigger, polling fallback | Sub-second |
-| Supabase (direct) | `pg_notify` on DDL event trigger | Sub-second |
-| Supabase (pooler / 6543) | Polling `information_schema` | Up to 30s |
+| PostgreSQL (direct) | `pg_notify` on DDL event trigger | Sub-second |
+| Supabase (direct, port 5432) | `pg_notify` on DDL event trigger | Sub-second |
 | Neon | `pg_notify` + auto-reconnect on compute pause | Sub-second |
-| CockroachDB | `pg_notify`, polling fallback | Sub-second |
-| AWS RDS / Heroku / Railway / ElephantSQL / Timescale | `pg_notify`, polling fallback | Sub-second |
-| MySQL / MariaDB / PlanetScale / Aurora MySQL | Polling `information_schema` | Up to 60s |
-| MongoDB (Atlas M10+, replica sets) | Change streams | Sub-second |
-| Redis (incl. Upstash, ElastiCache, Redis Cloud) | Keyspace notifications, polling fallback | Sub-second |
+| PlanetScale Postgres (Metal) | `pg_notify` on DDL event trigger | Sub-second |
+| CockroachDB Cloud | `pg_notify` | Sub-second |
+| AWS RDS Postgres / Heroku / Railway / ElephantSQL / Timescale | `pg_notify` (polling fallback if event-trigger privilege is denied) | Sub-second |
 
-Scout writes a heartbeat every 30 seconds. The dashboard turns the status pill red after 90 seconds of silence so a broken connection is visible immediately.
+### Tier 2 — Real-time, change streams
+
+| Engine | Detection method | Latency |
+|---|---|---|
+| MongoDB Atlas (M10+, replica sets, sharded clusters) | Change streams on `createCollection`, `dropCollection`, `createIndexes`, `dropIndexes` | Sub-second |
+| Redis (Upstash, ElastiCache, Redis Cloud) | Keyspace notifications, polling fallback when `CONFIG SET` is restricted | Sub-second |
+
+Note: Atlas M0 (free tier) and shared M2/M5 tiers do not support change streams. Atlas customers need M10 or higher to use SchemaZero in real-time mode.
+
+### Tier 3 — Polling
+
+Engines that don't expose DDL events. SchemaZero polls `information_schema` on a fixed interval; changes show up within one polling cycle.
+
+| Engine | Detection method | Latency |
+|---|---|---|
+| MySQL / MariaDB / PlanetScale (MySQL) / Aurora MySQL | Poll `information_schema.tables`, `columns`, `statistics` every 60s | Up to 60s |
+| Supabase (PgBouncer pooler, port 6543) | Poll `information_schema` every 30s | Up to 30s |
+
+Supabase customers using the pooler connection get polling; the direct connection (5432) gets real-time. Onboarding detects the port automatically and routes accordingly.
+
+Scout writes a heartbeat every 30 seconds across all tiers. The dashboard turns the status pill red after 90 seconds of silence so a broken connection is visible immediately.
 
 ---
 
@@ -118,16 +141,35 @@ Same panel works in managed-SaaS and self-hosted modes — the only difference i
 
 ## Built for the startup stack
 
-The engines startups actually run on are first-class:
+Most modern startups run on the Postgres ecosystem or MongoDB Atlas — and that's where SchemaZero gives sub-second detection with zero engineering effort from the customer. Connection-string quirks that normally take an afternoon to debug are handled automatically.
 
-- **Supabase** — both direct (port 5432, real-time) and pooler (port 6543, polling) connection strings handled automatically
-- **Neon** — auto-reconnect handles compute pauses; no missed changes
-- **PlanetScale / Aurora MySQL** — polling-based detection works across managed MySQL providers
-- **MongoDB Atlas** — change streams on M10+
-- **Upstash Redis** — TLS (`rediss://`) handled automatically; falls back to polling when `CONFIG SET` is restricted
-- **CockroachDB Cloud** — `verify-full` SSL applied automatically
+**Postgres ecosystem (Tier 1 — real-time):**
 
-Coming next: SQL Server, Snowflake, Oracle (stub listeners exist; polling-based detection planned).
+- **Supabase** — direct (5432, real-time via `pg_notify`) and pooler (6543, polling) handled automatically; SSL applied to `*.supabase.co` without configuration
+- **Neon** — auto-reconnect on compute pause with backoff (5s → 60s); Scout takes a fresh snapshot on reconnect so no changes are missed during sleep
+- **PlanetScale Postgres (Metal)** — event triggers work natively; price ($50/mo) aligns with the SchemaZero Teams plan
+- **CockroachDB Cloud** — `verify-full` SSL applied automatically for `*.cockroachlabs.cloud`
+- **AWS RDS / Heroku / Railway / Timescale Cloud / ElephantSQL** — `pg_notify` where privileges allow, polling fallback otherwise
+
+**MongoDB Atlas (Tier 2 — real-time):** Change streams on M10+ surface `createCollection`, `dropCollection`, `createIndexes`, `dropIndexes`, and validation schema changes.
+
+**Redis (Tier 2 — real-time):** Upstash, ElastiCache, and Redis Cloud all work. TLS (`rediss://`) handled automatically; keyspace notifications enabled on connect; polling fallback when the provider blocks `CONFIG SET`.
+
+**MySQL family (Tier 3 — polling):** PlanetScale (MySQL), Aurora MySQL, RDS MySQL, and MariaDB are detected via 60-second polling. Honest tradeoff: detection latency is up to one minute, not sub-second.
+
+**Pricing alignment with the customer's stack:** Solo ($19/mo) lines up with the typical solo-founder bill (Supabase Pro $25, Neon Launch $5+, Cloudflare D1 $5). Teams ($79/mo) lines up with the team-of-engineers bill (MongoDB M10 $57, PlanetScale Postgres Metal $50).
+
+### On the roadmap
+
+| Engine | Status | Why it's not Tier 1 |
+|---|---|---|
+| SQL Server | Stub listener exists; polling planned | Has DDL triggers, but small startup footprint |
+| Snowflake | Stub listener exists; polling planned | OLTP-secondary; analytics workload |
+| Oracle | Stub listener exists; polling planned | Rare in startups |
+| Aurora DSQL | Verifying event-trigger support | Postgres-compatible but excludes some extensions; needs a spike before listing as supported |
+| Cloudflare D1 / Turso (libSQL) | Not started | SQLite — no DDL events; would share a polling adapter |
+| DynamoDB | Not started | Would poll CloudTrail `CreateTable` / `UpdateTable` events |
+| Convex | Not started | Schema-as-code deployed via CLI; git/deploy hook is the natural detection path, not the DB |
 
 ---
 
