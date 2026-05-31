@@ -15,7 +15,7 @@ interface OrgBilling {
   plan: string;
   trial_ends_at: string;
   trial_converted: boolean;
-  lemonsqueezy_customer_portal_url: string | null;
+  stripe_customer_portal_url: string | null;
 }
 
 const ALL_RISK_LEVELS = ["low", "medium", "high", "critical"];
@@ -57,7 +57,7 @@ export default function SettingsPage() {
       supabase.from("alert_configs").select("*").eq("org_id", userData.org_id).single(),
       supabase
         .from("organizations")
-        .select("plan, trial_ends_at, trial_converted, lemonsqueezy_customer_portal_url")
+        .select("plan, trial_ends_at, trial_converted, stripe_customer_portal_url")
         .eq("id", userData.org_id)
         .single(),
     ]);
@@ -241,9 +241,9 @@ export default function SettingsPage() {
         {isSolo && (
           <div className="space-y-3">
             <p className="text-sm text-gray-400">Solo plan · 2 databases · 1 seat</p>
-            {billing?.lemonsqueezy_customer_portal_url ? (
+            {billing?.stripe_customer_portal_url ? (
               <a
-                href={billing.lemonsqueezy_customer_portal_url}
+                href={billing.stripe_customer_portal_url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-block px-4 py-2 border border-gray-700 text-gray-300 hover:text-white hover:border-gray-500 rounded-lg transition-colors text-sm"
@@ -252,7 +252,7 @@ export default function SettingsPage() {
               </a>
             ) : (
               <p className="text-xs text-gray-600">
-                To manage your subscription, visit your Lemon Squeezy account.
+                To manage your subscription, visit the Stripe customer portal.
               </p>
             )}
           </div>

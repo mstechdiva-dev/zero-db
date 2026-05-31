@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
-import { createCheckoutUrl } from "@/lib/lemonsqueezy";
+import { getStripe } from "@/lib/stripe";
 
 function serviceDb() {
   return createClient(
@@ -30,6 +30,16 @@ export async function POST(request: NextRequest) {
 
   if (!userData) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-  const checkoutUrl = await createCheckoutUrl(user.email!, userData.org_id);
-  return NextResponse.json({ url: checkoutUrl });
+  const stripe = getStripe();
+  const session = await stripe.checkout.sessions.create({
+    mode: "subscription",
+    payment_method_types: ["card"],
+    customer_email: user.email,
+    line_items: [{ price: process.env.STRIPE_SOLO_PRICE_ID!, quantity: 1 }],
+    success_url: `${process.env.DASHBOARD_URL}/settings?upgraded=1`,
+    cancel_url: `${process.env.DASHBOARD_URL}/settings`,
+    metadata: { org_id: userData.org_id },
+  });
+
+  return NextResponse.json({ url: session.url });
 }
