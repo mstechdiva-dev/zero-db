@@ -107,7 +107,7 @@ SSL handling, scheme normalization (`postgres://` vs `postgresql://`), and poole
 
 ## Security
 
-- **Read-only credentials** — SchemaZero requires only `SELECT` on `information_schema`. It cannot write to the customer database.
+- **Minimal credentials** — SchemaZero requires only `SELECT` on `information_schema` for polling-mode databases. For real-time Postgres monitoring, it also installs DDL event triggers (requires trigger-creation privileges); for real-time Redis monitoring, it runs `CONFIG SET notify-keyspace-events` (requires CONFIG privileges or falls back to polling). No row data is written or read.
 - **Schema-only** — no row data is ever read, transmitted, or stored. Only structure (table/column/index/constraint definitions).
 - **Encryption at rest** — connection strings encrypted with AES-256-GCM in Supabase.
 - **Signed webhooks** — every outbound webhook signed with HMAC-SHA256, includes a timestamp to prevent replay.
@@ -120,7 +120,7 @@ SSL handling, scheme normalization (`postgres://` vs `postgresql://`), and poole
 | Plan | Price | Includes |
 |---|---|---|
 | Solo | $19/mo | 1 seat, 2 databases, all alert channels, 14-day free trial (no credit card) |
-| Teams | $79/mo | Up to 10 seats, up to 10 databases, self-serve |
+| Teams | $79/mo | Up to 10 seats, up to 10 databases (waitlist — not yet self-serve) |
 | Enterprise | Custom | Unlimited databases, VPC peering, SSO/SAML, SOC 2, dedicated SLA |
 
 Trial expiration blocks dashboard access but preserves data and alert configuration so an upgrade resumes monitoring instantly. Billing runs through Lemon Squeezy with a customer portal for self-serve subscription management.
@@ -151,7 +151,7 @@ Most modern startups run on the Postgres ecosystem or MongoDB Atlas — and that
 - **CockroachDB Cloud** — `verify-full` SSL applied automatically for `*.cockroachlabs.cloud`
 - **AWS RDS / Heroku / Railway / Timescale Cloud / ElephantSQL** — `pg_notify` where privileges allow, polling fallback otherwise
 
-**MongoDB Atlas (Tier 2 — real-time):** Change streams on M10+ surface `createCollection`, `dropCollection`, `createIndexes`, `dropIndexes`, and validation schema changes.
+**MongoDB Atlas (Tier 2 — real-time):** Change streams on M10+ surface `createCollection`, `dropCollection`, `createIndexes`, and `dropIndexes`. Validation schema changes (`collMod`) are not yet detected.
 
 **Redis (Tier 2 — real-time):** Upstash, ElastiCache, and Redis Cloud all work. TLS (`rediss://`) handled automatically; keyspace notifications enabled on connect; polling fallback when the provider blocks `CONFIG SET`.
 
