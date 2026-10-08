@@ -66,11 +66,13 @@ create type change_type as enum (
   'ttl_changed',
   'primary_key_changed',
   'foreign_key_dropped',
-  -- names Scout writes (also added to existing databases by migration 006)
+  -- names Scout writes (existing databases get these from migrations 006 and 008)
   'table_created',
   'index_created',
   'key_type_changed',
-  'ttl_policy_changed'
+  'ttl_policy_changed',
+  'collection_created',
+  'schema_change'
 );
 create type risk_level as enum ('low', 'medium', 'high', 'critical');
 create type alert_channel as enum ('webhook', 'slack', 'pagerduty', 'email');

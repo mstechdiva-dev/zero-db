@@ -24,7 +24,9 @@ Built. Billing runs on Stripe. Setup steps are in `SETUP.md` (Vercel section, st
 | `past_due`, `incomplete`, `paused` | No change. Stripe retries the payment. |
 | Anything else | Acknowledged and ignored |
 
-The org is found from `client_reference_id` at checkout, and from `subscription_data.metadata.org_id` on later events (falling back to the stored subscription id). A database error returns 500 so Stripe retries the event.
+The org is found from `client_reference_id` at checkout, and from `subscription_data.metadata.org_id` on later events (falling back to the stored subscription id). A database error, including a failed lookup of the org, returns 500 so Stripe retries the event.
+
+Checkout uses a Stripe idempotency key built from the org id and the current 5-minute window. Two requests for the same org at the same time (two tabs, two people) get the same Checkout session back instead of starting two subscriptions. It narrows the risk but doesn't remove it: if a second subscription is ever created some other way, the webhook would record the newest one and the older one would keep billing, so check Stripe for duplicates if a customer reports a double charge.
 
 ## Settings
 
@@ -37,6 +39,10 @@ STRIPE_WEBHOOK_SECRET=    # whsec_…
 If any is missing, checkout, the portal and the webhook answer 503 "Billing isn't set up yet" and nothing else is affected.
 
 `STRIPE_API_BASE_URL` exists only so tests can point at a fake Stripe. Never set it for real.
+
+## Checking the billing routes
+
+`npm run build` and then `npm run test:billing` (in `apps/web`) runs the built site against a fake Stripe and a fake Supabase, sends signed events and checkout and portal requests, and checks the results. No accounts, keys or money are involved.
 
 ## Trying it locally
 

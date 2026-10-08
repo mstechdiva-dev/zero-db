@@ -19,6 +19,7 @@ Update this file every time a migration is run.
 | 005 | `supabase/migrations/005_waitlist.sql` | Waitlist table for landing page email capture | ⏳ Pending | — |
 | 006 | `supabase/migrations/006_change_types.sql` | `change_type` values Scout writes (`table_created`, `index_created`, `key_type_changed`, `ttl_policy_changed`) | ⏳ Pending | — |
 | 007 | `supabase/migrations/007_stripe.sql` | Billing columns renamed to `stripe_*`, Lemon Squeezy portal column dropped | ⏳ Pending | — |
+| 008 | `supabase/migrations/008_mongo_change_types.sql` | `collection_created` and `schema_change` change types (MongoDB listener) | ⏳ Pending if you ran `schema.sql` before it was added | — |
 
 ---
 
@@ -67,6 +68,13 @@ Adds `table_created`, `index_created`, `key_type_changed` and `ttl_policy_change
 **Status:** ⏳ Pending. Run before taking payments.
 
 Billing moved from Lemon Squeezy to Stripe. Renames `organizations.lemonsqueezy_customer_id` and `lemonsqueezy_subscription_id` to `stripe_customer_id` and `stripe_subscription_id` (existing values are kept) and drops `lemonsqueezy_customer_portal_url`, since Stripe creates portal links on demand. Safe to run again.
+
+---
+
+### 008 — MongoDB change types (`supabase/migrations/008_mongo_change_types.sql`)
+**Status:** Run it if your database was created from an earlier `schema.sql`.
+
+Adds `collection_created` (MongoDB `createCollection`) and `schema_change` (anything the listener doesn't recognise). Both were missing, so those events were rejected by the database and lost. The current `schema.sql` already includes them. Safe to run again.
 
 ---
 

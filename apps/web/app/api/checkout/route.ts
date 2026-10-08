@@ -47,6 +47,10 @@ export async function POST(request: NextRequest) {
       subscription_data: { metadata: { org_id: userData.org_id } },
       success_url: `${origin}/dashboard/settings?billing=success`,
       cancel_url: `${origin}/dashboard/settings?billing=cancelled`,
+    }, {
+      // Requests for the same org within the same 5 minutes get the same session back from
+      // Stripe, so two clicks (or two tabs) at once can't start two subscriptions.
+      idempotencyKey: `checkout-${userData.org_id}-${Math.floor(Date.now() / 300_000)}`,
     });
     return NextResponse.json({ url: session.url });
   } catch (err) {

@@ -47,6 +47,51 @@ def test_private_hosts_allowed_for_local_dev(monkeypatch):
     ct.check_host_allowed("postgresql://u:p@127.0.0.1:5432/db")
 
 
+# ---- mongodb+srv: the servers the SRV records name must be public too ---------------
+
+class _Srv:
+    def __init__(self, target):
+        self.target = target
+
+
+def _fake_srv(monkeypatch, targets):
+    import dns.resolver
+
+    monkeypatch.delenv("ALLOW_PRIVATE_DB_HOSTS", raising=False)
+    monkeypatch.setattr(dns.resolver, "resolve", lambda *a, **k: [_Srv(t + ".") for t in targets])
+
+
+def test_srv_pointing_at_a_private_server_is_blocked(monkeypatch):
+    _fake_srv(monkeypatch, ["8.8.8.8", "10.0.0.7"])  # one bad target is enough
+    with pytest.raises(ct.ConnectionTestError, match="private network"):
+        ct.check_host_allowed("mongodb+srv://u:p@cluster.example.net/db")
+
+
+def test_srv_pointing_at_link_local_metadata_address_is_blocked(monkeypatch):
+    _fake_srv(monkeypatch, ["169.254.169.254"])
+    with pytest.raises(ct.ConnectionTestError, match="private network"):
+        ct.check_host_allowed("mongodb+srv://u:p@cluster.example.net/db")
+
+
+def test_srv_pointing_at_public_servers_is_allowed(monkeypatch):
+    _fake_srv(monkeypatch, ["8.8.8.8", "1.1.1.1"])
+    ct.check_host_allowed("mongodb+srv://u:p@cluster.example.net/db")
+
+
+def test_srv_lookup_failure_is_a_friendly_error(monkeypatch):
+    import dns.exception
+    import dns.resolver
+
+    monkeypatch.delenv("ALLOW_PRIVATE_DB_HOSTS", raising=False)
+
+    def boom(*a, **k):
+        raise dns.exception.DNSException("nope")
+
+    monkeypatch.setattr(dns.resolver, "resolve", boom)
+    with pytest.raises(ct.ConnectionTestError, match="Couldn't find that host"):
+        ct.check_host_allowed("mongodb+srv://u:p@cluster.example.net/db")
+
+
 # ---- error messages never leak the password ---------------------------------
 
 def test_error_messages_do_not_contain_secrets():

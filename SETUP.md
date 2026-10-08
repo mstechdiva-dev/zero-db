@@ -32,7 +32,9 @@ The backend has to run on something that stays on all day (Railway). Vercel can'
    where table_schema = 'public' order by table_name;
    ```
 
-   The files in `supabase/migrations/` are history for databases built from the previous version of `schema.sql`. You don't need them. `docs/db_migrations.md` explains.
+   **Already ran an earlier copy of `schema.sql`?** Also run `supabase/migrations/008_mongo_change_types.sql`. It adds two change types the MongoDB listener writes (`collection_created`, `schema_change`) that the first version of the file left out. It's two lines and safe to run again. A database created from the current `schema.sql` already has them.
+
+   The other files in `supabase/migrations/` are history for databases built from earlier versions of `schema.sql`. You don't need them. `docs/db_migrations.md` explains.
 3. **Project Settings → API**. Copy three values you'll need below:
    - Project URL → `NEXT_PUBLIC_SUPABASE_URL`
    - `anon` `public` key → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
@@ -176,6 +178,7 @@ ZERO_TEST_PG_DSN=postgresql://postgres@127.0.0.1:5432/scratch pytest tests/test_
 
 ## Known limits
 
+- **Private-network blocking has one gap.** The connection form refuses private and local addresses, including the servers a `mongodb+srv` name points to. But the check looks the name up once and the database driver looks it up again when it connects, so a DNS server that answers differently the second time could slip past. Rare, and it needs a signed-in user, but it's why new sign-ups are best kept to people you invited.
 - **Connection strings never go through the chat.** The secure box sends them straight to the backend. The chat refuses messages containing a password.
 - **Impact analysis reads your schema, not your code.** Claude is told what changed and writes up what is likely affected. It does not know your file names or line numbers.
 - **The "blocked before merge" pull request check shown in the demo is not built yet.**

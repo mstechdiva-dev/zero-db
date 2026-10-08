@@ -333,7 +333,10 @@ async def test_every_value_the_code_produces_is_accepted(db):
         return conn.fetch("select e.enumlabel from pg_enum e join pg_type t on t.oid = e.enumtypid where t.typname = $1", name)
 
     change_types = {r["enumlabel"] for r in await enum("change_type")}
-    emitted = _literals(r'"change_type":\s*"([a-z_]+)"', "scout") | _literals(r'change_type="([a-z_]+)"', "scout")
+    # Every string in the listeners shaped like a change type, wherever it is built
+    # (direct keyword, dict, or lookup table such as the Mongo listener's).
+    emitted = _literals(r'"([a-z]+(?:_[a-z]+)*_(?:added|created|dropped|modified|changed|change))"', "scout")
+    assert {"collection_created", "schema_change", "table_created"} <= emitted, "the scan missed known change types"
     scored = set().union(risk_scorer.CRITICAL_CHANGE_TYPES, risk_scorer.HIGH_CHANGE_TYPES,
                          risk_scorer.MEDIUM_CHANGE_TYPES, risk_scorer.LOW_CHANGE_TYPES)
     assert len(emitted) >= 10

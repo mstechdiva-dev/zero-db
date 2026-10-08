@@ -48,22 +48,9 @@ def check_format(engine: str, connection_string: str) -> None:
         )
 
 
-def check_host_allowed(connection_string: str) -> None:
-    """Refuse hosts on private or local networks, so this endpoint can't be
-    used to probe the servers SchemaZero itself runs next to.
-
-    Set ALLOW_PRIVATE_DB_HOSTS=1 for local development and tests only.
-    mongodb+srv hosts are looked up through DNS SRV records, which this check
-    can't see, so they are not checked here.
-    """
-    if os.environ.get("ALLOW_PRIVATE_DB_HOSTS") == "1":
-        return
-    parsed = urlparse(connection_string.strip())
-    if parsed.scheme.endswith("+srv"):
-        return
-    host = parsed.hostname or ""
+def _check_resolves_to_public(host: str, port: int = 0) -> None:
     try:
-        infos = socket.getaddrinfo(host, parsed.port or 0, type=socket.SOCK_STREAM)
+        infos = socket.getaddrinfo(host, port or 0, type=socket.SOCK_STREAM)
     except OSError:
         raise ConnectionTestError("Couldn't find that host. Check the address in your connection string.")
     for info in infos:
@@ -73,6 +60,41 @@ def check_host_allowed(connection_string: str) -> None:
                 "That address is on a private network, so SchemaZero can't reach it. "
                 "Use your database's public address."
             )
+
+
+def _srv_targets(host: str) -> list[str]:
+    """The real servers behind a mongodb+srv name (the driver connects to these)."""
+    import dns.exception
+    import dns.resolver
+
+    try:
+        answers = dns.resolver.resolve(f"_mongodb._tcp.{host}", "SRV", lifetime=TIMEOUT)
+    except (dns.exception.DNSException, OSError):
+        raise ConnectionTestError("Couldn't find that host. Check the address in your connection string.")
+    return [str(r.target).rstrip(".") for r in answers]
+
+
+def check_host_allowed(connection_string: str) -> None:
+    """Refuse hosts on private or local networks, so this endpoint can't be
+    used to probe the servers SchemaZero itself runs next to.
+
+    For mongodb+srv the name only points at SRV records, so each server those
+    records name is checked too. Set ALLOW_PRIVATE_DB_HOSTS=1 for local
+    development and tests only.
+
+    Known limit: the check resolves the name, then the database driver resolves
+    it again when it connects. A DNS server that answers differently the second
+    time (DNS rebinding) could still slip through.
+    """
+    if os.environ.get("ALLOW_PRIVATE_DB_HOSTS") == "1":
+        return
+    parsed = urlparse(connection_string.strip())
+    host = parsed.hostname or ""
+    if parsed.scheme.endswith("+srv"):
+        for target in _srv_targets(host):
+            _check_resolves_to_public(target)
+        return
+    _check_resolves_to_public(host, parsed.port or 0)
 
 
 def _explain(exc: Exception) -> ConnectionTestError:
@@ -149,7 +171,7 @@ async def _test_redis(connection_string: str) -> None:
 async def test_connection(engine: str, connection_string: str) -> None:
     """Raise ConnectionTestError (safe message) if the database can't be reached."""
     check_format(engine, connection_string)
-    check_host_allowed(connection_string)
+    await asyncio.to_thread(check_host_allowed, connection_string)
     tester = (
         _test_postgres if engine in POSTGRES_FAMILY
         else _test_mysql if engine in ("mysql", "mariadb")

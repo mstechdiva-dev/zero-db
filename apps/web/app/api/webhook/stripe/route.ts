@@ -49,11 +49,13 @@ export async function POST(request: NextRequest) {
 
     let orgId: string | null = sub.metadata?.org_id ?? null;
     if (!orgId) {
-      const { data } = await db
+      const { data, error: lookupError } = await db
         .from("organizations")
         .select("id")
         .eq("stripe_subscription_id", sub.id)
         .maybeSingle();
+      // Don't treat a failed lookup as "no such org": return 500 so Stripe retries.
+      if (lookupError) return NextResponse.json({ error: lookupError.message }, { status: 500 });
       orgId = data?.id ?? null;
     }
 
