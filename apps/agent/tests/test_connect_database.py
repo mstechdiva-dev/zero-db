@@ -133,6 +133,8 @@ def client(monkeypatch):
     monkeypatch.setenv("ENCRYPTION_KEY", base64.b64encode(os.urandom(32)).decode())
     FakeService.stored = []
     monkeypatch.setattr(databases_router, "SupabaseService", FakeService)
+    monkeypatch.setattr(databases_router, "orgs_with_access", lambda sb, ids: set(ids))
+    monkeypatch.setattr(databases_router, "get_supabase", lambda: None)
     app = FastAPI()
     app.include_router(databases_router.router, prefix="/databases")
     app.dependency_overrides[verify_jwt] = lambda: {"org_id": "org-1", "user_id": "u", "email": "e"}
@@ -205,3 +207,11 @@ def test_chat_rejects_credentials_already_in_history(chat_client):
     history = [{"role": "user", "content": PG_URI}]
     res = chat_client.post("/agent/chat", json={"agent": "obi", "message": "hi", "history": history})
     assert res.status_code == 400
+
+
+def test_expired_trial_cannot_add_a_database(client, monkeypatch):
+    monkeypatch.setattr(databases_router, "orgs_with_access", lambda sb, ids: set())
+    r = client.post("/databases/", json=_body())
+    assert r.status_code == 402
+    assert "trial has ended" in r.json()["detail"]
+    assert FakeService.stored == []

@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 
 from models.database import ConnectedDatabase, CreateDatabaseRequest
-from services.supabase_service import SupabaseService, verify_jwt
+from services.supabase_service import SupabaseService, get_supabase, verify_jwt
 from services.encryption_service import EncryptionService
+from services.entitlement import TRIAL_ENDED_MESSAGE, orgs_with_access
 from services.connection_test import ConnectionTestError, test_connection
 from scout.listeners.postgres_listener import remove_ddl_trigger
 
@@ -25,6 +26,10 @@ async def add_database(body: CreateDatabaseRequest, user=Depends(verify_jwt)):
     connection_string = body.connection_string.strip()
     if not display_name or not connection_string:
         raise HTTPException(status_code=400, detail="A name and a connection string are required.")
+
+    # Expired trial and not paying: no new databases until they upgrade.
+    if user["org_id"] not in orgs_with_access(get_supabase(), {user["org_id"]}):
+        raise HTTPException(status_code=402, detail=TRIAL_ENDED_MESSAGE)
 
     try:
         await test_connection(body.engine, connection_string)

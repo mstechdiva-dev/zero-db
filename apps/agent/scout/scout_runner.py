@@ -11,6 +11,7 @@ import os
 from typing import Optional
 
 from services.encryption_service import EncryptionService
+from services.entitlement import orgs_with_access
 from services.supabase_service import get_supabase
 
 logger = logging.getLogger(__name__)
@@ -77,6 +78,10 @@ class ScoutRunner:
             .execute()
         )
         active_databases = result.data or []
+        # Expired, unpaid trials are switched off here; they come back within
+        # one poll once the org upgrades.
+        allowed = orgs_with_access(supabase, {db["org_id"] for db in active_databases})
+        active_databases = [db for db in active_databases if db["org_id"] in allowed]
         active_ids = {db["id"] for db in active_databases}
 
         # Stop listeners for removed databases

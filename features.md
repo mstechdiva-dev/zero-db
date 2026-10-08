@@ -10,6 +10,8 @@ This document lists what is actually built today.
 
 ## Real-time schema change detection
 
+Trials: Scout only watches orgs that are paying or inside their 14-day trial. When a trial ends unpaid, watching and alerts stop within about a minute and new databases are refused (HTTP 402). Upgrading in Settings turns it back on within one poll. If the trial lookup fails, everyone stays on.
+
 Timing: Scout finds out **after** a change has run, not before. It alerts within seconds (Postgres, MongoDB) or within the polling interval (MySQL, MariaDB, Redis, CockroachDB), so the team can fix it fast. It cannot block a change. The separate pre-merge check (beta, `apps/agent/premerge_check.py`) reads SQL migration files before they ship.
 
 Scout watches every connected database continuously and captures a before/after snapshot the moment a structural change happens. Detection quality depends on what the engine exposes — the table below is honest about which engines give us sub-second events and which fall back to polling.
