@@ -22,7 +22,7 @@ from services.email_service import EmailService
 
 logger = logging.getLogger(__name__)
 
-DASHBOARD_BASE_URL = os.environ.get("DASHBOARD_URL", "https://app.schemazero.com")
+DASHBOARD_BASE_URL = os.environ.get("DASHBOARD_URL", "https://schemazero.com")
 
 
 class AlertDispatcher:

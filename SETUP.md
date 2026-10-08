@@ -70,7 +70,7 @@ Keep `ENCRYPTION_KEY` somewhere safe. If it changes, every stored connection str
    | `ANTHROPIC_API_KEY` | Required | Key from console.anthropic.com. Without it the AI analysis fails. |
    | `ENCRYPTION_KEY` | Required | From step 2 |
    | `FRONTEND_URL` | Required | Your website address, e.g. `https://yourdomain.com`. The backend only accepts browser calls from here. Default is `https://schemazero.com`. |
-   | `DASHBOARD_URL` | Required | Where alert links point, e.g. `https://yourdomain.com`. Default is `https://app.schemazero.com`. |
+   | `DASHBOARD_URL` | Required | Where alert links point. Same as your website address, e.g. `https://schemazero.com`. Default is `https://schemazero.com`. |
    | `INTERNAL_API_SECRET` | Recommended | From step 2. Protects the Scout-to-Zero call. If unset, only calls from the same machine are accepted, which is safe for this single-service setup. |
    | `SCHEMAZERO_WEBHOOK_SIGNING_SECRET` | If using custom webhooks | From step 2. Without it, webhooks are sent unsigned. |
    | `SLACK_WEBHOOK_URL` | Optional | Default Slack hook for orgs that haven't set their own |
