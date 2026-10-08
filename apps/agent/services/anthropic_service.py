@@ -37,14 +37,14 @@ class AnthropicService:
             _parse_setting(MAX_TOKENS_PATTERN, system_prompt, DEFAULT_MAX_TOKENS)
         )
 
-    async def chat(self, message: str, history: list[dict]) -> str:
+    async def chat(self, message: str, history: list[dict], model: str | None = None) -> str:
         messages = [
             {"role": m["role"], "content": m["content"]} for m in history
         ]
         messages.append({"role": "user", "content": message})
 
         response = await self.client.messages.create(
-            model=self.model,
+            model=model or self.model,
             max_tokens=self.max_tokens,
             temperature=self.temperature,
             system=self.system_prompt,

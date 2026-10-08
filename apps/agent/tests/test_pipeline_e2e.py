@@ -158,7 +158,7 @@ async def test_column_drop_reaches_signed_webhook(monkeypatch):
     monkeypatch.setenv("SCHEMAZERO_WEBHOOK_SIGNING_SECRET", SECRET)
     monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
 
-    async def canned_chat(self, message, history):
+    async def canned_chat(self, message, history, model=None):
         return json.dumps(
             {
                 "affected_queries": ["SELECT legacy_email FROM zero_e2e_users"],
