@@ -9,7 +9,7 @@ _pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if _pkg_root not in sys.path:
     sys.path.insert(0, _pkg_root)
 
-from models import DiffResult  # noqa: E402  (resolved via sys.path above)
+from diff_models import DiffResult  # noqa: E402  (resolved via sys.path above)
 
 
 class BaseDiff(ABC):

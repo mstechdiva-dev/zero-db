@@ -40,6 +40,8 @@ COLUMNS = {
     "notification_log": {"id", "org_id", "change_event_id", "channel", "status",
                          "error_message", "sent_at"},
     "scout_heartbeat": {"id", "database_id", "last_seen", "created_at"},
+    "connected_databases": {"id", "org_id", "engine", "display_name",
+                            "encrypted_connection_string", "is_active", "created_at"},
 }
 ENUMS = {
     ("change_events", "change_type"): {
@@ -52,6 +54,9 @@ ENUMS = {
     ("change_events", "risk_level"): {"low", "medium", "high", "critical"},
     ("notification_log", "channel"): {"webhook", "slack", "pagerduty", "email"},
     ("notification_log", "status"): {"sent", "failed", "skipped"},
+    ("connected_databases", "engine"): {
+        "postgresql", "supabase", "neon", "cockroachdb", "mysql", "mariadb", "mongodb",
+        "redis", "sqlserver", "sqlite", "oracle", "snowflake", "dynamodb"},
 }
 
 

@@ -95,13 +95,14 @@ Test alerts can be fired from Settings before saving — the team can verify rou
 
 ## Guided onboarding
 
-Obi is the onboarding agent. New users land on `/onboarding` after signup and are walked through connecting their first database conversationally:
+Obi is the onboarding agent. New users land on `/onboarding` after signup, where Obi helps them pick an engine and find their connection string, and a **secure connection box** next to the chat does the actual connecting:
 
-1. Pick an engine (PostgreSQL, Supabase, Neon, CockroachDB, MySQL, MariaDB, MongoDB, Redis, and more)
-2. Paste a connection string — Obi validates reachability before saving
-3. Scout starts watching, the user is redirected to the dashboard
+1. Pick an engine (PostgreSQL, Supabase, Neon, CockroachDB, MySQL, MariaDB, MongoDB, Redis)
+2. Paste the connection string into the secure box. It goes straight to the SchemaZero backend and is **never sent to the chat or to Claude**. The chat itself refuses messages that contain a password.
+3. The backend tests the connection (read-only) and only then saves it, encrypted. Failures come back as plain messages: wrong password, wrong database name, can't reach the host, SSL, or a private-network address.
+4. Scout picks the database up within about a minute and the dashboard status light turns green.
 
-SSL handling, scheme normalization (`postgres://` vs `postgresql://`), and pooler detection (Supabase 6543) are automatic. A startup engineer pastes the string from their provider's dashboard and it works.
+SSL handling, scheme normalization (`postgres://` vs `postgresql://`), and pooler detection (Supabase 6543) are automatic. Hosts on private networks (including `localhost`) are refused, so the endpoint can't be used to probe internal servers.
 
 ---
 

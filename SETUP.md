@@ -73,7 +73,8 @@ Keep `ENCRYPTION_KEY` somewhere safe. If it changes, every stored connection str
    | `PAGERDUTY_API_KEY` | Optional | Default PagerDuty Events v2 key, same idea |
    | `SMTP_HOST` `SMTP_PORT` `SMTP_USER` `SMTP_PASSWORD` | For email alerts | Any SMTP server. Port defaults to 587. With no `SMTP_HOST`, email alerts are skipped. |
    | `EMAIL_FROM` | Optional | Sender address. Default `alerts@schemazero.com` |
-   | `INTERNAL_API_URL` | Leave unset | Defaults to the backend's own port. Only set it if you split Scout and Zero into separate services. |
+   | `ALLOW_PRIVATE_DB_HOSTS` | Never in production | `1` allows connecting to private addresses. Local development and tests only. |
+| `INTERNAL_API_URL` | Leave unset | Defaults to the backend's own port. Only set it if you split Scout and Zero into separate services. |
    | `PORT` | Automatic | Railway sets this |
 
 4. **Settings → Networking → Generate domain** to get the public address.
@@ -108,7 +109,8 @@ Redeploys happen on every push to `main` through Railway's own GitHub connection
 
 ## 5. Check it works (test drop)
 
-1. Open the site and sign up. Walk through **Onboarding** and connect a test database with its connection string.
+1. Open the site and sign up. On **Onboarding**, chat with Obi if you want help, and paste your connection string into the **secure box** (not the chat). The backend tests the connection, then saves it encrypted. Scout starts watching within about a minute.
+   - The database must be reachable from the internet. A database on `localhost` or a private network is refused. If it has an IP allow list, allow your Railway service.
    - **Postgres, Supabase (port 5432), Neon, CockroachDB:** the database user needs permission to create event triggers (the `postgres` role on Supabase has it). With it, changes show up in under a second. Without it, Scout falls back to checking every 30 seconds.
    - **Supabase pooler (port 6543):** polling only, every 30 seconds.
    - **MySQL / MariaDB:** polling every 60 seconds. **MongoDB Atlas** needs M10 or higher. **Redis:** 30-second polling.
@@ -128,6 +130,7 @@ If nothing shows up, look at the Railway logs:
 | `Zero agent prompt not loaded` | The image was built without the `agents/` folder. Redeploy from the repo root. |
 | `pg_notify setup failed ... falling back to polling` | The database user can't create event triggers. Changes arrive every 30 seconds. |
 | `Webhook send error` / `Slack send error` | The destination URL rejected the call. Check the URL in Settings. |
+| Secure box says "private network" | The host resolves to a private address. Use the database's public address. (`ALLOW_PRIVATE_DB_HOSTS=1` lifts this for local development only. Never set it in production.) |
 | `Heartbeat update failed` | Migration `000` didn't run fully. Re-check `supabase/schema.sql`. |
 
 Dashboard shows Scout offline: the backend hasn't written a heartbeat in 90 seconds. Check `/health` and the Railway logs.
@@ -167,6 +170,7 @@ ZERO_TEST_PG_DSN=postgresql://postgres@127.0.0.1:5432/scratch pytest tests/test_
 
 ## Known limits
 
+- **Connection strings never go through the chat.** The secure box sends them straight to the backend. The chat refuses messages containing a password.
 - **Impact analysis reads your schema, not your code.** Claude is told what changed and writes up what is likely affected. It does not know your file names or line numbers.
 - **The "blocked before merge" pull request check shown in the demo is not built yet.**
 - Engines not yet supported: SQL Server, Snowflake, Oracle (listed as "soon" on the site).
