@@ -224,6 +224,15 @@ export default function Hero({ onTabChange }: HeroProps) {
           </a>
           <button
             type="button"
+            onClick={() =>
+              document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" })
+            }
+            className="px-6 py-3 border border-[rgba(0,232,122,0.2)] text-[#00e87a] text-sm font-medium rounded-lg hover:bg-[rgba(0,232,122,0.08)] transition-colors"
+          >
+            Watch the demo ↓
+          </button>
+          <button
+            type="button"
             onClick={() => onTabChange("how")}
             className="px-6 py-3 border border-white/10 text-white/50 text-sm font-medium rounded-lg hover:text-white hover:border-white/22 transition-colors"
           >

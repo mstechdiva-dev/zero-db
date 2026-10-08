@@ -364,7 +364,7 @@ export default function LiveDemo() {
   const View = SCENE_VIEWS[scene];
 
   return (
-    <section className="bg-[#0a0a0a] border-t border-white/[0.06] px-5 sm:px-10 py-20">
+    <section id="demo" className="scroll-mt-16 bg-[#0a0a0a] border-t border-white/[0.06] px-5 sm:px-10 py-20">
       <div className="max-w-[1100px] mx-auto">
 
         <div className="mb-8">
