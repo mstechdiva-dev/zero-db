@@ -16,6 +16,7 @@ Update this file every time a migration is run.
 | 004 | `supabase/migrations/004_lemonsqueezy.sql` | Lemon Squeezy customer portal column | Check | — |
 | 005 | `supabase/migrations/005_waitlist.sql` | Waitlist table for landing page email capture | ⏳ Pending | — |
 | 006 | `supabase/migrations/006_change_types.sql` | `change_type` values Scout writes (`table_created`, `index_created`, `key_type_changed`, `ttl_policy_changed`) | ⏳ Pending | — |
+| 007 | `supabase/migrations/007_stripe.sql` | Billing columns renamed to `stripe_*`, Lemon Squeezy portal column dropped | ⏳ Pending | — |
 
 ---
 
@@ -57,6 +58,13 @@ Creates `waitlist (id, email unique, created_at)` with row-level security on and
 **Status:** ⏳ Pending. Run before connecting databases.
 
 Adds `table_created`, `index_created`, `key_type_changed` and `ttl_policy_changed` to the `change_type` enum. Scout writes these names, and the database rejected them before, so those events were lost. Safe to run again.
+
+---
+
+### 007 — Stripe billing (`supabase/migrations/007_stripe.sql`)
+**Status:** ⏳ Pending. Run before taking payments.
+
+Billing moved from Lemon Squeezy to Stripe. Renames `organizations.lemonsqueezy_customer_id` and `lemonsqueezy_subscription_id` to `stripe_customer_id` and `stripe_subscription_id` (existing values are kept) and drops `lemonsqueezy_customer_portal_url`, since Stripe creates portal links on demand. Safe to run again.
 
 ---
 

@@ -124,7 +124,7 @@ SSL handling, scheme normalization (`postgres://` vs `postgresql://`), and poole
 | Teams | $79/mo | Up to 10 seats, up to 10 databases (waitlist — not yet self-serve) |
 | Enterprise | Custom | Unlimited databases, VPC peering, SSO/SAML, SOC 2, dedicated SLA |
 
-Trial expiration blocks dashboard access but preserves data and alert configuration so an upgrade resumes monitoring instantly. Billing runs through Lemon Squeezy with a customer portal for self-serve subscription management.
+Trial expiration blocks dashboard access but preserves data and alert configuration so an upgrade resumes monitoring instantly. Billing runs through Stripe: Checkout for the Solo subscription and Stripe's customer portal for self-serve changes, cards, invoices and cancellation.
 
 ---
 

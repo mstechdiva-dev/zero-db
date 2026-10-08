@@ -23,14 +23,15 @@ The backend has to run on something that stays on all day (Railway). Vercel can'
    | # | File | What it does |
    |---|---|---|
    | 0 | `supabase/schema.sql` | Base tables, security rules, sign-up trigger |
-   | 1 | `supabase/migrations/001_cleanup.sql` | Lemon Squeezy columns, `webhook` alert channel, webhook URL, `next_action` |
+   | 1 | `supabase/migrations/001_cleanup.sql` | `webhook` alert channel, webhook URL, `next_action` (also renames the billing columns, which `007` later renames again) |
    | 2 | `supabase/migrations/002_leads.sql` | Sales leads table (admin panel) |
    | 3 | `supabase/migrations/003_agent_versions.sql` | Saved agent edits (admin panel) |
-   | 4 | `supabase/migrations/004_lemonsqueezy.sql` | Billing portal column |
+   | 4 | `supabase/migrations/004_lemonsqueezy.sql` | Old billing column. Harmless: `007` removes it. |
    | 5 | `supabase/migrations/005_waitlist.sql` | **Waitlist table. The "Join waitlist" form fails without it.** |
    | 6 | `supabase/migrations/006_change_types.sql` | Change types Scout writes. **Without it, new tables and new indexes are never recorded.** |
+   | 7 | `supabase/migrations/007_stripe.sql` | Billing columns renamed to `stripe_*`. **Billing fails without it.** Keeps existing data. |
 
-   Already set up before? Run only the ones you haven't. `002`, `004`, `005` and `006` are safe to run again. `000`, `001` and `003` are not: they fail with an "already exists" error if repeated. `docs/db_migrations.md` is the log of what has run.
+   Already set up before? Run only the ones you haven't. `002`, `004`, `005`, `006` and `007` are safe to run again. `000`, `001` and `003` are not: they fail with an "already exists" error if repeated. `docs/db_migrations.md` is the log of what has run.
 3. **Project Settings → API**. Copy three values you'll need below:
    - Project URL → `NEXT_PUBLIC_SUPABASE_URL`
    - `anon` `public` key → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
@@ -97,12 +98,16 @@ Redeploys happen on every push to `main` through Railway's own GitHub connection
    | `SUPABASE_SERVICE_ROLE_KEY` | Required | Used by the waitlist, admin panel and billing webhook. Server only. |
    | `RAILWAY_API_URL` | For the chats | Your Railway address from step 3, no trailing slash. The pricing and onboarding chats show an error without it. |
    | `ADMIN_EMAIL` | For `/admin` | Comma-separated emails allowed into the admin panel |
-   | `NEXT_PUBLIC_LEMONSQUEEZY_STORE_ID` | For billing | Lemon Squeezy store ID |
-   | `LEMONSQUEEZY_API_KEY` | For billing | Lemon Squeezy API key |
-   | `LEMONSQUEEZY_SOLO_VARIANT_ID` | For billing | Variant ID of the Solo plan |
-   | `LEMONSQUEEZY_WEBHOOK_SECRET` | For billing | Signing secret for the webhook below |
+   | `STRIPE_SECRET_KEY` | For billing | Stripe secret key (`sk_test_…` while testing, `sk_live_…` for real money). Server only. |
+   | `STRIPE_PRICE_ID_SOLO` | For billing | ID of the Solo plan's price (`price_…`) |
+   | `STRIPE_WEBHOOK_SECRET` | For billing | Signing secret of the webhook in the next step (`whsec_…`) |
 
-4. Billing only: in Lemon Squeezy add a webhook pointing to `https://<your-site>/api/webhook/lemonsqueezy` using the same secret.
+4. Billing only, in the Stripe dashboard (start in **test mode**):
+   1. **Product catalog**: create a product "Solo" with a recurring price of $19 per month. Copy the price ID into `STRIPE_PRICE_ID_SOLO`.
+   2. **Developers → Webhooks → Add endpoint**: URL `https://<your-site>/api/webhook/stripe`, and send these events: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`. Copy the signing secret into `STRIPE_WEBHOOK_SECRET`.
+   3. **Settings → Billing → Customer portal**: turn it on (this is what the "Manage subscription" button opens).
+   4. Try it: Settings → Upgrade → pay with the test card `4242 4242 4242 4242`. The plan should switch to Solo within a few seconds. Then repeat with your live keys and a live price when you're ready for real money.
+   - The free trial needs no card and is tracked in SchemaZero, not Stripe. Teams stays on the waitlist.
 5. Deploy. Vercel redeploys on every push, and each pull request gets its own preview.
 
 ---
@@ -141,7 +146,7 @@ Dashboard shows Scout offline: the backend hasn't written a heartbeat in 90 seco
 
 `.github/workflows/deploy.yml` is **manual only** (Actions tab → Run workflow). It isn't needed: Vercel and Railway deploy from GitHub on their own. If you do run it, it needs these repo **secrets**:
 
-`ENCRYPTION_KEY`, `ANTHROPIC_API_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_LEMONSQUEEZY_STORE_ID`, `RAILWAY_API_URL`, `RAILWAY_TOKEN`, `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`
+`ENCRYPTION_KEY`, `ANTHROPIC_API_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `RAILWAY_API_URL`, `RAILWAY_TOKEN`, `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`
 
 ---
 

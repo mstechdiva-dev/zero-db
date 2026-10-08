@@ -2,10 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { getStripe, serviceDb, stripeConfigured } from "@/lib/stripe";
 
-// Starts a Stripe Checkout subscription for the Solo plan and returns its URL.
+// Opens Stripe's customer portal (change card, cancel, invoices).
 export async function POST(request: NextRequest) {
-  const priceId = process.env.STRIPE_PRICE_ID_SOLO;
-  if (!stripeConfigured() || !priceId) {
+  if (!stripeConfigured()) {
     return NextResponse.json({ error: "Billing isn't set up yet." }, { status: 503 });
   }
 
@@ -27,32 +26,23 @@ export async function POST(request: NextRequest) {
 
   const { data: org } = await db
     .from("organizations")
-    .select("plan, stripe_customer_id, stripe_subscription_id")
+    .select("stripe_customer_id")
     .eq("id", userData.org_id)
     .single();
-  if (org?.plan === "solo" && org.stripe_subscription_id) {
-    return NextResponse.json({ error: "You're already subscribed." }, { status: 409 });
+  if (!org?.stripe_customer_id) {
+    return NextResponse.json({ error: "There's no billing account to manage yet." }, { status: 400 });
   }
 
-  const origin = request.nextUrl.origin;
   try {
-    const session = await getStripe().checkout.sessions.create({
-      mode: "subscription",
-      line_items: [{ price: priceId, quantity: 1 }],
-      client_reference_id: userData.org_id,
-      ...(org?.stripe_customer_id
-        ? { customer: org.stripe_customer_id }
-        : { customer_email: user.email ?? undefined }),
-      // Lets the webhook find the org on later subscription events.
-      subscription_data: { metadata: { org_id: userData.org_id } },
-      success_url: `${origin}/dashboard/settings?billing=success`,
-      cancel_url: `${origin}/dashboard/settings?billing=cancelled`,
+    const session = await getStripe().billingPortal.sessions.create({
+      customer: org.stripe_customer_id,
+      return_url: `${request.nextUrl.origin}/dashboard/settings`,
     });
     return NextResponse.json({ url: session.url });
   } catch (err) {
-    console.error("Stripe checkout failed:", err instanceof Error ? err.message : err);
+    console.error("Stripe portal failed:", err instanceof Error ? err.message : err);
     return NextResponse.json(
-      { error: "Couldn't start checkout. Please try again." },
+      { error: "Couldn't open billing. Please try again." },
       { status: 502 }
     );
   }

@@ -26,7 +26,7 @@ SchemaZero is a universal schema change detection and impact analysis platform. 
 | Backend | FastAPI (Python), Railway |
 | Database + Auth | Supabase (PostgreSQL) |
 | AI | Anthropic Claude API |
-| Billing | Lemon Squeezy |
+| Billing | Stripe |
 | Alerts | Custom webhook, Slack, PagerDuty, Email |
 
 ---
@@ -71,10 +71,9 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 RAILWAY_API_URL=
 ADMIN_EMAIL=
-LEMONSQUEEZY_API_KEY=
-LEMONSQUEEZY_WEBHOOK_SECRET=
-LEMONSQUEEZY_SOLO_VARIANT_ID=
-NEXT_PUBLIC_LEMONSQUEEZY_STORE_ID=
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
+STRIPE_PRICE_ID_SOLO=
 ```
 
 ### Railway (Backend)

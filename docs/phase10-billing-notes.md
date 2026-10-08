@@ -1,68 +1,55 @@
-# Phase 10 — Billing (Lemon Squeezy)
+# Billing (Stripe)
 
 ## Status
-NOT YET BUILT. Billing is intentionally deferred to Phase 10.
+Built. Billing runs on Stripe. Setup steps are in `SETUP.md` (Vercel section, step 4).
 
-## Recovered billing code
-
-A full working implementation of Lemon Squeezy billing was written during the
-Phase 2–6 build session and then removed because it was premature.
-
-**It is preserved in git and can be restored.** Do not rewrite it from scratch.
-
-### How to recover it
-
-Run:
-```bash
-git show 314e1b5:apps/web/lib/lemonsqueezy.ts
-git show 314e1b5:apps/web/app/api/webhook/lemonsqueezy/route.ts
-git show 314e1b5:apps/web/app/api/billing/checkout/route.ts
-git show 314e1b5:apps/web/app/api/billing/portal/route.ts
-```
-
-Or restore all four files at once:
-```bash
-git checkout 314e1b5 -- \
-  apps/web/lib/lemonsqueezy.ts \
-  apps/web/app/api/webhook/lemonsqueezy/route.ts \
-  apps/web/app/api/billing/checkout/route.ts \
-  apps/web/app/api/billing/portal/route.ts
-```
-
-### What was built
+## How it works
 
 | File | What it does |
 |---|---|
-| `lib/lemonsqueezy.ts` | Checkout session creation, customer portal URL, HMAC webhook signature verification |
-| `app/api/webhook/lemonsqueezy/route.ts` | Handles `order_created` (→ upgrade org to `solo`) and `subscription_cancelled` (→ revert to `trial`) |
-| `app/api/billing/checkout/route.ts` | POST endpoint — creates a Solo plan checkout session for the authenticated user's org |
-| `app/api/billing/portal/route.ts` | POST endpoint — returns the Lemon Squeezy customer portal URL |
+| `apps/web/lib/stripe.ts` | Stripe client, plus the subscription states that count as paying or ended |
+| `apps/web/app/api/checkout/route.ts` | Signed-in users: starts a Stripe Checkout subscription for the Solo plan and returns its URL. Refuses (409) if the org already has a subscription. |
+| `apps/web/app/api/billing/portal/route.ts` | Signed-in users: returns the URL of Stripe's customer portal (change card, invoices, cancel) |
+| `apps/web/app/api/webhook/stripe/route.ts` | Stripe's events. The only place the plan changes. Verifies the signature first. |
+| `apps/web/app/dashboard/settings/page.tsx` | Upgrade button, Manage subscription button, success and error messages |
+| `supabase/migrations/007_stripe.sql` | `organizations.stripe_customer_id` and `stripe_subscription_id` |
 
-### Settings page billing section
+## Plan changes (webhook)
 
-The settings page (`apps/web/app/dashboard/settings/page.tsx`) also needs a billing
-section added in Phase 10. The full implementation (trial/solo/teams/enterprise states,
-upgrade CTA, manage subscription button) was also in commit `314e1b5`:
+| Stripe event | What happens |
+|---|---|
+| `checkout.session.completed` (subscription, paid) | Org goes to `solo`, `trial_converted = true`, customer and subscription ids saved |
+| `customer.subscription.updated`, status `active` or `trialing` | Org goes to `solo` (covers resubscribing) |
+| `customer.subscription.updated`, status `canceled`, `unpaid` or `incomplete_expired`, and `customer.subscription.deleted` | Org goes back to an expired trial so the dashboard asks them to upgrade. Only applies if it's the org's current subscription, so an old cancellation can't undo a new one. |
+| `past_due`, `incomplete`, `paused` | No change. Stripe retries the payment. |
+| Anything else | Acknowledged and ignored |
+
+The org is found from `client_reference_id` at checkout, and from `subscription_data.metadata.org_id` on later events (falling back to the stored subscription id). A database error returns 500 so Stripe retries the event.
+
+## Settings
+
+```
+STRIPE_SECRET_KEY=        # sk_test_… or sk_live_…
+STRIPE_PRICE_ID_SOLO=     # price_…
+STRIPE_WEBHOOK_SECRET=    # whsec_…
+```
+
+If any is missing, checkout, the portal and the webhook answer 503 "Billing isn't set up yet" and nothing else is affected.
+
+`STRIPE_API_BASE_URL` exists only so tests can point at a fake Stripe. Never set it for real.
+
+## Trying it locally
+
+With the [Stripe CLI](https://stripe.com/docs/stripe-cli):
 
 ```bash
-git show 314e1b5:apps/web/app/dashboard/settings/page.tsx
+stripe listen --forward-to localhost:3000/api/webhook/stripe   # prints a whsec_… for STRIPE_WEBHOOK_SECRET
 ```
 
-### Environment variables to add in Phase 10
+Then upgrade from Settings with the test card `4242 4242 4242 4242`.
 
-```
-LEMONSQUEEZY_API_KEY=
-LEMONSQUEEZY_WEBHOOK_SECRET=
-NEXT_PUBLIC_LEMONSQUEEZY_STORE_ID=
-LEMONSQUEEZY_SOLO_VARIANT_ID=
-NEXT_PUBLIC_APP_URL=https://app.schemazero.com
-```
+## Limits
 
-### What Phase 10 still needs beyond the restored code
-
-Per `build.md` Phase 10:
-- Wire Lemon Squeezy customer creation on org creation (signup flow)
-- Store `lemonsqueezy_customer_id` and `lemonsqueezy_subscription_id` on `organizations` table
-- Add billing section to settings page (restore from commit above)
-- Add `lemonsqueezy_customer_id` and `lemonsqueezy_subscription_id` columns to `organizations` if not already in schema
-- Teams / Enterprise: contact form only — no Lemon Squeezy price, routes to Jordan agent with `CREATE_LEAD`
+- Solo is the only self-serve plan. Teams is a waitlist and Enterprise is by email, so both change by hand.
+- The 14-day free trial needs no card and is tracked in SchemaZero, not Stripe.
+- Nothing here takes a real payment until you switch to live keys and a live price.

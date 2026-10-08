@@ -75,7 +75,6 @@ jobs:
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          NEXT_PUBLIC_LEMONSQUEEZY_STORE_ID: ${{ secrets.NEXT_PUBLIC_LEMONSQUEEZY_STORE_ID }}
           RAILWAY_API_URL: ${{ secrets.RAILWAY_API_URL }}
         run: npm run build
 

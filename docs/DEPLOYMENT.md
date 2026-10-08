@@ -62,11 +62,10 @@ python3 -c "import os, base64; print(base64.b64encode(os.urandom(32)).decode())"
 |---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL (public) |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key (public) |
-| `NEXT_PUBLIC_LEMONSQUEEZY_STORE_ID` | Lemon Squeezy store ID |
 | `RAILWAY_API_URL` | Backend URL on Railway (server-side only) |
-| `LEMONSQUEEZY_API_KEY` | Lemon Squeezy API key (server-side) |
-| `LEMONSQUEEZY_WEBHOOK_SECRET` | Lemon Squeezy webhook signing secret |
-| `LEMONSQUEEZY_SOLO_VARIANT_ID` | Lemon Squeezy variant ID for the Solo plan |
+| `STRIPE_SECRET_KEY` | Stripe secret key (server-side) |
+| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret |
+| `STRIPE_PRICE_ID_SOLO` | Stripe price ID for the Solo plan |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key (server-side API routes) |
 
 ---
@@ -88,6 +87,7 @@ python3 -c "import os, base64; print(base64.b64encode(os.urandom(32)).decode())"
    psql "$SUPABASE_DB_URL" < supabase/migrations/004_lemonsqueezy.sql
    psql "$SUPABASE_DB_URL" < supabase/migrations/005_waitlist.sql
    psql "$SUPABASE_DB_URL" < supabase/migrations/006_change_types.sql
+   psql "$SUPABASE_DB_URL" < supabase/migrations/007_stripe.sql
    ```
 4. Enable Row Level Security (RLS) on all tables — policies are defined in `supabase/schema.sql`.
 5. Copy your project URL and keys from **Project Settings → API**.
