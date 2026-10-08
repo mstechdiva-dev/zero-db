@@ -76,7 +76,7 @@ Keep `ENCRYPTION_KEY` somewhere safe. If it changes, every stored connection str
    | `SLACK_WEBHOOK_URL` | Optional | Default Slack hook for orgs that haven't set their own |
    | `PAGERDUTY_API_KEY` | Optional | Default PagerDuty Events v2 key, same idea |
    | `SMTP_HOST` `SMTP_PORT` `SMTP_USER` `SMTP_PASSWORD` | For email alerts | Any SMTP server. Port defaults to 587. With no `SMTP_HOST`, email alerts are skipped. |
-   | `EMAIL_FROM` | Optional | Sender address. Default `alerts@schemazero.com` |
+   | `EMAIL_FROM` | Optional | Sender address. Default `schemazero@xyzagents.ai` |
    | `ALLOW_PRIVATE_DB_HOSTS` | Never in production | `1` allows connecting to private addresses. Local development and tests only. |
 | `INTERNAL_API_URL` | Leave unset | Defaults to the backend's own port. Only set it if you split Scout and Zero into separate services. |
    | `PORT` | Automatic | Railway sets this |
