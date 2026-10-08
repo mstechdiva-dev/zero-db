@@ -177,7 +177,7 @@ interface HeroProps {
 
 export default function Hero({ onTabChange }: HeroProps) {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[calc(100vh-64px)]">
+    <div className="grid grid-cols-1 lg:grid-cols-2 lg:min-h-[560px]">
       {/* Left: copy */}
       <div className="flex flex-col justify-center px-5 sm:px-10 py-12 lg:py-16 lg:border-r border-white/[0.06]">
         {/* Badge */}

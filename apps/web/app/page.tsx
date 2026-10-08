@@ -4,10 +4,7 @@ import { useState } from "react";
 import Nav from "@/components/landing/Nav";
 import Hero from "@/components/landing/Hero";
 import LiveDemo from "@/components/landing/LiveDemo";
-import Value from "@/components/landing/Value";
-import Customer from "@/components/landing/Customer";
-import Market from "@/components/landing/Market";
-import Founder from "@/components/landing/Founder";
+import MoreInfo from "@/components/landing/MoreInfo";
 import Waitlist from "@/components/landing/Waitlist";
 import HowItWorks from "@/components/landing/HowItWorks";
 import Security from "@/components/landing/Security";
@@ -24,10 +21,7 @@ export default function LandingPage() {
         <>
           <Hero onTabChange={setActiveTab} />
           <LiveDemo />
-          <Value />
-          <Customer />
-          <Market />
-          <Founder />
+          <MoreInfo />
           <Waitlist id="waitlist" />
         </>
       )}
