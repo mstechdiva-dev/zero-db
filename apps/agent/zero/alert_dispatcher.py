@@ -74,6 +74,7 @@ class AlertDispatcher:
                 risk_level=risk_level,
                 change_type=change_type,
                 object_type=object_type,
+                object_name=object_name,
                 summary=summary,
                 next_action=next_action,
                 dashboard_url=dashboard_url,
