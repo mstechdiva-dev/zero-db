@@ -11,12 +11,12 @@ const RISK_STYLES: Record<string, string> = {
 
 const ENGINES = [
   { label: "Postgres", active: true },
-  { label: "Supabase", active: true },
-  { label: "Neon", active: true },
-  { label: "MySQL", active: true },
+  { label: "MySQL / MariaDB", active: true },
   { label: "MongoDB", active: true },
   { label: "Redis", active: true },
   { label: "CockroachDB", active: true },
+  { label: "Supabase", active: false, soon: true, note: "verifying" },
+  { label: "Neon", active: false, soon: true, note: "verifying" },
   { label: "SQL Server", active: false, soon: true },
   { label: "Snowflake", active: false, soon: true },
 ];
@@ -242,7 +242,7 @@ export default function Hero({ onTabChange }: HeroProps) {
         {/* Engines strip */}
         <div className="border-t border-white/[0.06] pt-7">
           <p className="font-mono text-[11px] text-white/22 uppercase tracking-[0.8px] mb-3.5">
-            Supported databases
+            Tested databases
           </p>
           <div className="flex flex-wrap gap-2">
             {ENGINES.map((e) => (
@@ -258,7 +258,7 @@ export default function Hero({ onTabChange }: HeroProps) {
                   className={`w-1.5 h-1.5 rounded-full ${e.active ? "bg-[#00e87a] opacity-50" : "bg-white/20"}`}
                 />
                 {e.label}
-                {e.soon && <span className="text-[9px] ml-0.5 opacity-60">soon</span>}
+                {e.soon && <span className="text-[9px] ml-0.5 opacity-60">{"note" in e ? e.note : "soon"}</span>}
               </span>
             ))}
           </div>
