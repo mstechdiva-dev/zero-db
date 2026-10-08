@@ -5,6 +5,8 @@ Update this file every time a migration is run.
 
 ---
 
+> **Schema consolidated (2026-10-08).** `supabase/schema.sql` is now the complete schema and already includes everything migrations 001 to 007 add, plus fixes found by checking the code against a real Postgres (live updates for the change feed, permission to pause and delete databases from the dashboard, no browser access to saved connection strings). A new or reset database needs only that one file. `supabase/reset.sql` clears an old or mismatched schema first. The migrations below are history for databases built from the earlier `schema.sql`; keep them only for reference.
+
 ## Migration History
 
 | # | File | Description | Status | Date |

@@ -18,20 +18,21 @@ The backend has to run on something that stays on all day (Railway). Vercel can'
 ## 1. Supabase
 
 1. Create a project at supabase.com.
-2. Open **SQL Editor** and run these files from this repo, **in this order**, one at a time:
+2. Open **SQL Editor** and run **one file**: `supabase/schema.sql`. It is the complete, final schema and already includes everything the older migration files added. A new project needs nothing else.
 
-   | # | File | What it does |
-   |---|---|---|
-   | 0 | `supabase/schema.sql` | Base tables, security rules, sign-up trigger |
-   | 1 | `supabase/migrations/001_cleanup.sql` | `webhook` alert channel, webhook URL, `next_action` (also renames the billing columns, which `007` later renames again) |
-   | 2 | `supabase/migrations/002_leads.sql` | Sales leads table (admin panel) |
-   | 3 | `supabase/migrations/003_agent_versions.sql` | Saved agent edits (admin panel) |
-   | 4 | `supabase/migrations/004_lemonsqueezy.sql` | Old billing column. Harmless: `007` removes it. |
-   | 5 | `supabase/migrations/005_waitlist.sql` | **Waitlist table. The "Join waitlist" form fails without it.** |
-   | 6 | `supabase/migrations/006_change_types.sql` | Change types Scout writes. **Without it, new tables and new indexes are never recorded.** |
-   | 7 | `supabase/migrations/007_stripe.sql` | Billing columns renamed to `stripe_*`. **Billing fails without it.** Keeps existing data. |
+   **Already have tables in this project?** For example from an older version, or you saw `type "change_type" does not exist`. Run `supabase/reset.sql` first, then `supabase/schema.sql`:
+   - `reset.sql` **deletes** SchemaZero's tables and data: organizations, users, connected databases and their saved connection strings, change events, alerts and logs.
+   - It **keeps** your login accounts, the waitlist, sales leads, and prompts saved in the admin panel.
+   - `schema.sql` then rebuilds everything and gives each existing login a fresh organization, so people can sign in again.
+   - If `schema.sql` says "SchemaZero tables already exist", the reset didn't run. Run it first.
 
-   Already set up before? Run only the ones you haven't. `002`, `004`, `005`, `006` and `007` are safe to run again. `000`, `001` and `003` are not: they fail with an "already exists" error if repeated. `docs/db_migrations.md` is the log of what has run.
+   Check it worked by running this. You should see 11 tables, including `change_events`, `connected_databases`, `waitlist`, and `organizations`:
+   ```sql
+   select table_name from information_schema.tables
+   where table_schema = 'public' order by table_name;
+   ```
+
+   The files in `supabase/migrations/` are history for databases built from the previous version of `schema.sql`. You don't need them. `docs/db_migrations.md` explains.
 3. **Project Settings → API**. Copy three values you'll need below:
    - Project URL → `NEXT_PUBLIC_SUPABASE_URL`
    - `anon` `public` key → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
@@ -130,13 +131,13 @@ If nothing shows up, look at the Railway logs:
 
 | You see | Meaning |
 |---|---|
-| `Failed to write change_event` | A database migration is missing. Run `006` (and check `001`). |
+| `Failed to write change_event` | The database doesn't match the code. Re-run the schema steps in section 1 (`reset.sql`, then `schema.sql`). |
 | `Failed to decrypt connection string` | `ENCRYPTION_KEY` differs from the one used when the database was connected |
 | `Zero agent prompt not loaded` | The image was built without the `agents/` folder. Redeploy from the repo root. |
 | `pg_notify setup failed ... falling back to polling` | The database user can't create event triggers. Changes arrive every 30 seconds. |
 | `Webhook send error` / `Slack send error` | The destination URL rejected the call. Check the URL in Settings. |
 | Secure box says "private network" | The host resolves to a private address. Use the database's public address. (`ALLOW_PRIVATE_DB_HOSTS=1` lifts this for local development only. Never set it in production.) |
-| `Heartbeat update failed` | Migration `000` didn't run fully. Re-check `supabase/schema.sql`. |
+| `Heartbeat update failed` | The database doesn't match the code. Re-run the schema steps in section 1. |
 
 Dashboard shows Scout offline: the backend hasn't written a heartbeat in 90 seconds. Check `/health` and the Railway logs.
 

@@ -136,7 +136,7 @@ export default function SettingsPage() {
         webhook_url: alertConfig.webhook_url || null,
         email_recipients: emails,
         notify_on: alertConfig.notify_on,
-      });
+      }, { onConflict: "org_id" });
 
       if (error) throw error;
       setSaved(true);

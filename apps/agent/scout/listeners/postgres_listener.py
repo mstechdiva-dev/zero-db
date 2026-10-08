@@ -307,7 +307,7 @@ class PostgresListener(BaseListener):
             try:
                 await self._subscribe_and_wait()
             except (
-                asyncpg.PostgresConnectionStatusError,
+                asyncpg.PostgresConnectionError,
                 asyncpg.ConnectionDoesNotExistError,
                 OSError,
             ) as exc:
@@ -369,7 +369,7 @@ class PostgresListener(BaseListener):
             try:
                 await self._handle_change()
             except (
-                asyncpg.PostgresConnectionStatusError,
+                asyncpg.PostgresConnectionError,
                 asyncpg.ConnectionDoesNotExistError,
                 OSError,
             ) as exc:

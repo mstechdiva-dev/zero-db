@@ -75,22 +75,8 @@ python3 -c "import os, base64; print(base64.b64encode(os.urandom(32)).decode())"
 ### 1. Supabase Setup
 
 1. Create a new Supabase project at [supabase.com](https://supabase.com).
-2. Run the base schema:
-   ```bash
-   psql "$SUPABASE_DB_URL" < docs/base_schema.sql
-   ```
-3. Run any pending migrations in order:
-   ```bash
-   psql "$SUPABASE_DB_URL" < supabase/migrations/001_cleanup.sql
-   psql "$SUPABASE_DB_URL" < supabase/migrations/002_leads.sql
-   psql "$SUPABASE_DB_URL" < supabase/migrations/003_agent_versions.sql
-   psql "$SUPABASE_DB_URL" < supabase/migrations/004_lemonsqueezy.sql
-   psql "$SUPABASE_DB_URL" < supabase/migrations/005_waitlist.sql
-   psql "$SUPABASE_DB_URL" < supabase/migrations/006_change_types.sql
-   psql "$SUPABASE_DB_URL" < supabase/migrations/007_stripe.sql
-   ```
-4. Enable Row Level Security (RLS) on all tables — policies are defined in `supabase/schema.sql`.
-5. Copy your project URL and keys from **Project Settings → API**.
+2. Run `supabase/schema.sql` in the SQL editor. It is the complete schema, so no migrations are needed. If the project already has older tables, run `supabase/reset.sql` first. See `SETUP.md`, section 1.
+3. Copy your project URL and keys from **Project Settings → API**.
 
 ### 2. Railway (Backend)
 

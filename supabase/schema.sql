@@ -1,5 +1,23 @@
--- SchemaZero — Supabase Database Schema
--- Run this in your Supabase SQL editor to initialize the database.
+-- SchemaZero — complete Supabase database schema (final state)
+--
+-- Run this ONE file in the Supabase SQL editor. It already includes everything
+-- that migrations 001 to 007 add, so a new database needs nothing else.
+--
+-- Not a blank database? If you already have tables from an older or different
+-- schema, run supabase/reset.sql first (it keeps the waitlist, sales leads and
+-- saved agent prompts), then this file.
+--
+-- The code reads and writes exactly these tables and columns. The test in
+-- apps/agent/tests/test_schema_matches_code.py checks that against a real
+-- Postgres, including who can see and change what.
+
+-- Stop early, with a clear message, if the tables are already there.
+do $$
+begin
+  if to_regclass('public.organizations') is not null then
+    raise exception 'SchemaZero tables already exist in this database. To start over, run supabase/reset.sql first, then this file.';
+  end if;
+end $$;
 
 -- ============================================================
 -- Extensions
@@ -55,7 +73,7 @@ create type change_type as enum (
   'ttl_policy_changed'
 );
 create type risk_level as enum ('low', 'medium', 'high', 'critical');
-create type alert_channel as enum ('slack', 'pagerduty', 'email');
+create type alert_channel as enum ('webhook', 'slack', 'pagerduty', 'email');
 create type notification_status as enum ('sent', 'failed', 'skipped');
 
 -- ============================================================
@@ -147,6 +165,7 @@ create table impact_analysis (
   affected_indexes jsonb not null default '[]',
   summary          text not null,
   recommendations  jsonb not null default '[]',
+  next_action      text,
   raw_claude_response text,
   created_at       timestamptz not null default now(),
   unique(change_event_id)
@@ -315,3 +334,109 @@ $$;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure handle_new_user();
+
+-- ============================================================
+-- Dashboard: pause and delete databases
+-- The dashboard pauses and deletes databases with the signed-in user's own
+-- login. Without these, those buttons would quietly do nothing.
+-- Adding a database is NOT allowed this way: it goes through the backend,
+-- which tests the connection first.
+-- ============================================================
+create policy "users_update_own_databases" on connected_databases
+  for update using (
+    org_id in (select org_id from users where auth_user_id = auth.uid())
+  )
+  with check (
+    org_id in (select org_id from users where auth_user_id = auth.uid())
+  );
+
+create policy "users_delete_own_databases" on connected_databases
+  for delete using (
+    org_id in (select org_id from users where auth_user_id = auth.uid())
+  );
+
+-- Column limits: signed-in users can never read the stored connection string
+-- (even their own) and can only change the name and the paused flag.
+-- The backend uses the service role, which is not affected.
+revoke select, update on connected_databases from anon, authenticated;
+grant select (id, org_id, engine, display_name, is_active, created_at)
+  on connected_databases to authenticated;
+grant update (display_name, is_active) on connected_databases to authenticated;
+
+-- ============================================================
+-- Leads (admin only): qualified sales leads captured by the Sal agent
+-- No policies on purpose: only the service role can read or write.
+-- ============================================================
+create table if not exists leads (
+  id           uuid        primary key default gen_random_uuid(),
+  org_id       uuid        references organizations(id) on delete set null,
+  user_email   text,
+  conversation jsonb       not null default '[]',
+  sal_summary  text,
+  created_at   timestamptz not null default now()
+);
+create index if not exists leads_org_id_idx on leads(org_id);
+create index if not exists leads_created_at_idx on leads(created_at desc);
+alter table leads enable row level security;
+
+-- ============================================================
+-- Agent skills (admin only): agent prompts edited in the admin panel.
+-- The backend reads these before falling back to the files in agents/.
+-- ============================================================
+create table if not exists agent_skills (
+  name       text primary key,
+  content    text not null,
+  saved_by   text,
+  updated_at timestamptz not null default now()
+);
+alter table agent_skills enable row level security;
+drop policy if exists "deny_all" on agent_skills;
+create policy "deny_all" on agent_skills
+  for all to authenticated, anon using (false);
+
+-- ============================================================
+-- Waitlist: the landing page "Join waitlist" form (service role only)
+-- ============================================================
+create table if not exists waitlist (
+  id         uuid primary key default gen_random_uuid(),
+  email      text not null unique,
+  created_at timestamptz not null default now()
+);
+alter table waitlist enable row level security;
+
+-- ============================================================
+-- Live updates: the dashboard change feed listens for new change events.
+-- (Supabase only sends live updates for tables in this publication.)
+-- ============================================================
+do $$
+begin
+  if exists (select 1 from pg_publication where pubname = 'supabase_realtime')
+     and not exists (select 1 from pg_publication_tables
+                     where pubname = 'supabase_realtime' and tablename = 'change_events') then
+    alter publication supabase_realtime add table change_events;
+  end if;
+end $$;
+
+-- ============================================================
+-- Existing accounts: give anyone who signed up before this schema existed
+-- an organization, a user record and alert settings, the same as a new
+-- signup gets. Does nothing on a new project. Safe to run again.
+-- ============================================================
+do $$
+declare
+  r record;
+  new_org_id uuid;
+begin
+  for r in
+    select u.id, u.email, u.raw_user_meta_data
+    from auth.users u
+    where not exists (select 1 from public.users x where x.auth_user_id = u.id)
+  loop
+    insert into organizations (name)
+      values (coalesce(r.raw_user_meta_data->>'org_name', split_part(r.email, '@', 1)))
+      returning id into new_org_id;
+    insert into users (auth_user_id, org_id, email, role)
+      values (r.id, new_org_id, coalesce(r.email, ''), 'owner');
+    insert into alert_configs (org_id) values (new_org_id);
+  end loop;
+end $$;
