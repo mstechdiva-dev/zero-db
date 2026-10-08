@@ -49,10 +49,20 @@ export async function POST(request: NextRequest) {
 
     case "customer.subscription.deleted": {
       const subscription = event.data.object as Stripe.Subscription;
-      await db.from("organizations").update({
-        plan: "trial",
-        stripe_subscription_id: null,
-      }).eq("stripe_customer_id", subscription.customer as string);
+      const { error } = await db
+        .from("organizations")
+        .update({
+          plan: "trial",
+          trial_converted: false,
+          trial_ends_at: new Date().toISOString(),
+          stripe_subscription_id: null,
+          stripe_customer_portal_url: null,
+        })
+        .eq("stripe_customer_id", subscription.customer as string);
+
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
       break;
     }
 
