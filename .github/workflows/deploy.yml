@@ -98,9 +98,7 @@ jobs:
       - name: Deploy to Railway
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        run: |
-          cd apps/agent
-          railway up --service schemazero-agent --detach
+        run: railway up --service schemazero-agent --detach
 
   # -------------------------------------------------------------------------
   # Deploy frontend to Vercel

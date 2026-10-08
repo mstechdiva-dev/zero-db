@@ -255,8 +255,7 @@ class AlertDispatcher:
                     "org_id": org_id,
                     "change_event_id": change_event_id,
                     "channel": channel,
-                    "success": success,
-                    "sent_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                    "status": "sent" if success else "failed",
                 }
             ).execute()
         except Exception as exc:

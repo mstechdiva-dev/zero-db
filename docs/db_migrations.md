@@ -11,7 +11,11 @@ Update this file every time a migration is run.
 |---|------|-------------|--------|------|
 | 000 | `supabase/schema.sql` | Base schema — enums, tables, RLS policies, triggers | ✅ Completed | 2026-04-12 |
 | 001 | `supabase/migrations/001_cleanup.sql` | Lemon Squeezy columns, webhook enum value, custom_webhook_url, next_action | ✅ Completed | 2026-04-12 |
-| 002 | `supabase/migrations/002_waitlist.sql` | Waitlist table for landing page email capture | ⏳ Pending | — |
+| 002 | `supabase/migrations/002_leads.sql` | Sales leads table (admin panel) | Check | — |
+| 003 | `supabase/migrations/003_agent_versions.sql` | Saved agent edits (admin panel) | Check | — |
+| 004 | `supabase/migrations/004_lemonsqueezy.sql` | Lemon Squeezy customer portal column | Check | — |
+| 005 | `supabase/migrations/005_waitlist.sql` | Waitlist table for landing page email capture | ⏳ Pending | — |
+| 006 | `supabase/migrations/006_change_types.sql` | `change_type` values Scout writes (`table_created`, `index_created`, `key_type_changed`, `ttl_policy_changed`) | ⏳ Pending | — |
 
 ---
 
@@ -42,17 +46,17 @@ Applies build.md updates to the existing schema:
 
 ---
 
-### 002 — Waitlist (`supabase/migrations/002_waitlist.sql`)
-**Status:** ⏳ Pending — run this in Supabase SQL Editor before launching the landing page
+### 005 — Waitlist (`supabase/migrations/005_waitlist.sql`)
+**Status:** ⏳ Pending. Run in the Supabase SQL Editor before launching the landing page.
 
-```sql
-create table waitlist (
-  email text primary key,
-  created_at timestamptz default now()
-);
-```
+Creates `waitlist (id, email unique, created_at)` with row-level security on and no policies. The `/api/waitlist` route uses the service role key, which bypasses it. If you already created a `waitlist` table with `email` as the key, this is skipped safely.
 
-No RLS needed — the `/api/waitlist` route uses the service role key which bypasses RLS.
+---
+
+### 006 — Change types (`supabase/migrations/006_change_types.sql`)
+**Status:** ⏳ Pending. Run before connecting databases.
+
+Adds `table_created`, `index_created`, `key_type_changed` and `ttl_policy_changed` to the `change_type` enum. Scout writes these names, and the database rejected them before, so those events were lost. Safe to run again.
 
 ---
 

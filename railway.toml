@@ -1,0 +1,9 @@
+# Railway builds the backend from the repo root with Dockerfile.agent.
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile.agent"
+
+[deploy]
+healthcheckPath = "/health"
+healthcheckTimeout = 300
+restartPolicyType = "always"

@@ -18,8 +18,16 @@ logger = logging.getLogger(__name__)
 INTERNAL_SECRET = os.environ.get("INTERNAL_API_SECRET", "")
 
 
-def _verify_internal(x_internal_secret: str = Header(default="")) -> None:
-    if INTERNAL_SECRET and x_internal_secret != INTERNAL_SECRET:
+LOOPBACK_HOSTS = {"127.0.0.1", "::1", "localhost"}
+
+
+def _verify_internal(request: Request, x_internal_secret: str = "") -> None:
+    """With INTERNAL_API_SECRET set, require it. Without it, only accept
+    calls from this machine (Scout runs in the same process)."""
+    if INTERNAL_SECRET:
+        if x_internal_secret != INTERNAL_SECRET:
+            raise HTTPException(status_code=403, detail="Forbidden")
+    elif not request.client or request.client.host not in LOOPBACK_HOSTS:
         raise HTTPException(status_code=403, detail="Forbidden")
 
 
@@ -33,7 +41,7 @@ async def analyze(
     request: Request,
     x_internal_secret: str = Header(default=""),
 ):
-    _verify_internal(x_internal_secret)
+    _verify_internal(request, x_internal_secret)
 
     from zero.zero_runner import ZeroRunner
 

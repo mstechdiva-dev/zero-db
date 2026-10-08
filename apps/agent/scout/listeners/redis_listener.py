@@ -5,7 +5,7 @@ from typing import Optional
 
 import aioredis
 
-from scout.listeners.base_listener import BaseListener
+from scout.listeners.base_listener import BaseListener, internal_api_url
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ class RedisListener(BaseListener):
         super().__init__(database_id, org_id, supabase_client)
         self._redis: Optional[aioredis.Redis] = None
         self._last_snapshot: Optional[dict] = None
-        self._internal_url = os.environ.get("INTERNAL_API_URL", "http://localhost:8000")
+        self._internal_url = internal_api_url()
 
     async def connect(self, connection_string: str) -> None:
         self._redis = await aioredis.from_url(connection_string, decode_responses=True)

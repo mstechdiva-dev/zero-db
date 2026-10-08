@@ -10,6 +10,11 @@ logger = logging.getLogger(__name__)
 HEARTBEAT_INTERVAL = 30  # seconds
 
 
+def internal_api_url() -> str:
+    """Where Scout reaches Zero: INTERNAL_API_URL, else this same app on its own port."""
+    return os.environ.get("INTERNAL_API_URL") or f"http://127.0.0.1:{os.environ.get('PORT', '8000')}"
+
+
 class BaseListener(ABC):
     """Abstract base class for all Scout database engine listeners.
 
@@ -51,20 +56,17 @@ class BaseListener(ABC):
 
     async def _heartbeat_loop(self) -> None:
         while self._running:
-            await self._update_heartbeat(status="active")
+            await self._update_heartbeat()
             await asyncio.sleep(HEARTBEAT_INTERVAL)
 
-    async def _update_heartbeat(self, status: str = "active") -> None:
+    async def _update_heartbeat(self) -> None:
         try:
             self.supabase.table("scout_heartbeat").upsert(
                 {
                     "database_id": self.database_id,
-                    "org_id": self.org_id,
-                    "status": status,
-                    "last_seen_at": time.strftime(
-                        "%Y-%m-%dT%H:%M:%SZ", time.gmtime()
-                    ),
-                }
+                    "last_seen": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                },
+                on_conflict="database_id",
             ).execute()
         except Exception as exc:
             logger.warning("Heartbeat update failed for %s: %s", self.database_id, exc)
@@ -81,7 +83,6 @@ class BaseListener(ABC):
                 await self._heartbeat_task
             except asyncio.CancelledError:
                 pass
-        await self._update_heartbeat(status="offline")
 
     # ------------------------------------------------------------------
     # Shared change event writer

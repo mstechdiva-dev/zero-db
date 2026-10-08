@@ -61,6 +61,8 @@ Teams is self-serve — no trial. Enterprise requires contact.
 
 ## Environment Variables
 
+Full step-by-step setup, with every setting explained, is in [`SETUP.md`](SETUP.md).
+
 ### Vercel (Frontend)
 
 ```env

@@ -114,8 +114,8 @@ function EngineDemoPanel() {
         {/* Results */}
         <div className={`transition-all duration-500 ${show(step, 4)}`}>
           <span className="text-white/35">→ </span>
-          <span className="text-[#00e87a]">2 queries</span>
-          <span className="text-white/50"> in api-gateway reference this index</span>
+          <span className="text-[#00e87a]">queries</span>
+          <span className="text-white/50"> that rely on this index are affected</span>
         </div>
         <div className={`transition-all duration-500 ${show(step, 4)}`}>
           <span className="text-white/35">→ </span>
@@ -159,9 +159,8 @@ function EngineDemoPanel() {
             <p className="font-mono text-[10px] text-white/35 mb-1.5">idx_sessions_token</p>
             <p className="text-[11px] text-white/50 leading-[1.55]">
               <span className="text-[#e85858] font-semibold">Do not deploy.</span>{" "}
-              This index covers 2 frequent queries in{" "}
-              <span className="font-mono text-white/65">api-gateway</span>.
-              Expect full sequential scans until rebuilt.
+              Queries that rely on this index will fall back to full
+              sequential scans until it is rebuilt.
             </p>
           </div>
         </div>
