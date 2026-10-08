@@ -256,7 +256,7 @@ function BeforeMerge({ tick }: { tick: number }) {
           <p className="font-mono text-[10px] text-white/25">#128 · migrations/003_cleanup.sql</p>
         </div>
         <span className="font-mono text-[10px] text-[#4a9eff] border border-[#4a9eff]/35 bg-[#4a9eff]/[0.08] px-2.5 py-0.5 rounded-full">
-          coming soon
+          beta
         </span>
       </Card>
       <Reveal tick={tick} at={0}>
@@ -288,6 +288,11 @@ function BeforeMerge({ tick }: { tick: number }) {
         <div className="px-4 py-2.5 rounded-lg border border-[#e83232]/35 text-[#e83232] text-[13px] font-semibold bg-[#141414]">
           🚫 Merging is blocked — fix the failing check
         </div>
+      </Reveal>
+      <Reveal tick={tick} at={4}>
+        <p className="font-mono text-[10px] text-white/30 px-1">
+          Live now: the migration check (reads your SQL, no database access). Coming soon: finding the code that still uses the column.
+        </p>
       </Reveal>
     </div>
   );
