@@ -191,9 +191,9 @@ export default function Hero({ onTabChange }: HeroProps) {
         </h1>
 
         <p className="text-base text-white/50 leading-[1.65] max-w-[400px] mb-3">
-          When your schema changes, SchemaZero tells your team exactly what it
-          affects, why it matters, and what to review, before it becomes a
-          production incident.
+          Within seconds of a schema change, SchemaZero tells your team exactly
+          what it affects, why it matters, and what to review, so it gets
+          fixed before it becomes a production incident.
         </p>
 
         <p className="text-[13px] text-[#00e87a] opacity-75 mb-3 max-w-[380px]">

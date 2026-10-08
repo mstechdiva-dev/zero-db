@@ -13,7 +13,7 @@ class EmailService:
         self.smtp_port = int(os.environ.get("SMTP_PORT", "587"))
         self.smtp_user = os.environ.get("SMTP_USER", "")
         self.smtp_password = os.environ.get("SMTP_PASSWORD", "")
-        self.from_address = os.environ.get("EMAIL_FROM", "alerts@schemazero.com")
+        self.from_address = os.environ.get("EMAIL_FROM", "schemazero@xyzagents.ai")
 
     async def send_alert(
         self,

@@ -275,8 +275,8 @@ export default function SettingsPage() {
             ) : (
               <p className="text-xs text-gray-600">
                 To manage your subscription, email{" "}
-                <a href="mailto:hello@schemazero.com" className="text-[#00e87a] hover:underline">
-                  hello@schemazero.com
+                <a href="mailto:schemazero@xyzagents.ai?subject=SchemaZero%3A%20Manage%20my%20subscription%20(Settings)" className="text-[#00e87a] hover:underline">
+                  schemazero@xyzagents.ai
                 </a>
               </p>
             )}
@@ -286,8 +286,8 @@ export default function SettingsPage() {
         {(isTeams || isEnterprise) && (
           <p className="text-sm text-gray-400">
             To make changes to your plan, email{" "}
-            <a href="mailto:hello@schemazero.com" className="text-[#00e87a] hover:underline">
-              hello@schemazero.com
+            <a href="mailto:schemazero@xyzagents.ai?subject=SchemaZero%3A%20Change%20my%20plan%20(Settings)" className="text-[#00e87a] hover:underline">
+              schemazero@xyzagents.ai
             </a>
           </p>
         )}

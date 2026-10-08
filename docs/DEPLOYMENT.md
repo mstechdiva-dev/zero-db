@@ -46,7 +46,7 @@
 | `SMTP_PORT` | SMTP server port |
 | `SMTP_USER` | SMTP username |
 | `SMTP_PASSWORD` | SMTP password |
-| `DASHBOARD_URL` | Base URL of the frontend, e.g. `https://app.schemazero.com` |
+| `DASHBOARD_URL` | Base URL of the frontend, e.g. `https://schemazero.com` |
 | `FRONTEND_URL` | Website address (allowed origin for browser calls) |
 | `INTERNAL_API_SECRET` | Protects the Scout-to-Zero call (recommended) |
 

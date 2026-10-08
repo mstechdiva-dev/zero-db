@@ -138,7 +138,7 @@ export default function Pricing({ onTabChange }: PricingProps) {
               </button>
             ) : (
               <a
-                href="mailto:invest@schemazero.com"
+                href={`mailto:schemazero@xyzagents.ai?subject=${encodeURIComponent(`SchemaZero: ${plan.name} plan inquiry (Pricing)`)}`}
                 className="block text-center text-[13px] font-semibold py-3 rounded-lg transition-opacity tracking-[-0.1px] border border-white/[0.12] text-white/60 hover:border-white/25 hover:text-white"
               >
                 {plan.cta}

@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import os
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
@@ -8,8 +9,11 @@ load_dotenv()
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+import config_check
 from routers import agent, databases, changes, alerts, health
 from routers.internal import router as internal_router
+
+logger = logging.getLogger("schemazero")
 
 AGENTS_DIR = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "..", "..", "agents")
@@ -35,21 +39,31 @@ async def lifespan(app: FastAPI):
     # Load all agent MD files
     app.state.agent_prompts = load_agent_prompts()
 
-    # Start Scout background runner
-    from scout.scout_runner import ScoutRunner
-    scout = ScoutRunner()
-    app.state.scout = scout
-    scout_task = asyncio.create_task(scout.run())
+    # Stay up even if settings are missing, so /health can say which ones.
+    # Scout only starts when everything it needs is present.
+    app.state.config_problems = config_check.problems()
+    scout = scout_task = None
+    if app.state.config_problems:
+        logger.error(
+            "Missing or invalid settings, Scout not started: %s",
+            ", ".join(app.state.config_problems),
+        )
+    else:
+        from scout.scout_runner import ScoutRunner
+        scout = ScoutRunner()
+        app.state.scout = scout
+        scout_task = asyncio.create_task(scout.run())
 
     yield
 
     # Shutdown: stop Scout cleanly
-    await scout.stop()
-    scout_task.cancel()
-    try:
-        await scout_task
-    except asyncio.CancelledError:
-        pass
+    if scout:
+        await scout.stop()
+        scout_task.cancel()
+        try:
+            await scout_task
+        except asyncio.CancelledError:
+            pass
 
 
 app = FastAPI(

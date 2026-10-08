@@ -1,7 +1,7 @@
 const USE_CASES = [
   {
     role: "Backend Engineer",
-    scenario: "Runs a migration before standup. SchemaZero fires a Slack briefing: which queries are affected, what the risk level is, and whether it's safe to deploy, before they touch production.",
+    scenario: "Runs a migration before standup. Seconds after it runs, SchemaZero fires a Slack briefing: which queries are affected, what the risk level is, and what to fix first.",
     tag: "Daily user",
   },
   {
@@ -32,7 +32,7 @@ export default function Customer() {
           <p className="text-base text-white/45 max-w-[520px] leading-[1.65]">
             The buyer is an engineering manager or CTO at a startup or scale-up running
             5–200 engineers. The user is the backend engineer or platform engineer who
-            touches the database. They pay because one prevented incident costs more than
+            touches the database. They pay because one incident caught early is worth more than
             a year of SchemaZero.
           </p>
         </div>

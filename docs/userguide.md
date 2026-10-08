@@ -625,7 +625,7 @@ SchemaZero fires your webhook first, before any other channel. Every request is 
   "summary": "The email column was dropped from the users table...",
   "next_action": "Do not deploy until this is resolved. Verify all queries referencing users.email.",
   "timestamp": 1712345678,
-  "dashboard_url": "https://app.schemazero.com/dashboard"
+  "dashboard_url": "https://schemazero.com/dashboard"
 }
 ```
 

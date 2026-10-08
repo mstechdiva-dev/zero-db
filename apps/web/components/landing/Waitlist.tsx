@@ -97,14 +97,14 @@ export default function Waitlist({ id }: { id?: string }) {
             </p>
             <div className="space-y-3">
               <a
-                href="mailto:invest@schemazero.com"
+                href="mailto:schemazero@xyzagents.ai?subject=SchemaZero%3A%20Investor%20deck%20request%20(Waitlist%20section)"
                 className="flex items-center justify-between w-full px-5 py-3.5 bg-[#00e87a] text-black text-sm font-semibold rounded-lg hover:opacity-85 transition-opacity"
               >
                 Request investor deck
                 <span className="text-base">→</span>
               </a>
               <a
-                href="mailto:invest@schemazero.com"
+                href="mailto:schemazero@xyzagents.ai?subject=SchemaZero%3A%20Request%20for%20a%2020-min%20call%20(Waitlist%20section)"
                 className="flex items-center justify-between w-full px-5 py-3.5 border border-white/[0.1] text-white/55 text-sm font-medium rounded-lg hover:text-white hover:border-white/22 transition-colors"
               >
                 Book a 20-min call
