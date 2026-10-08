@@ -14,10 +14,11 @@ const STEPS = [
     ),
     note: (
       <div className="text-[13px] text-white/22 bg-[#111] border border-white/[0.06] rounded-lg px-4 py-3 leading-[1.55] mt-3">
-        <strong className="text-white/45">Postgres / Supabase / Neon / CockroachDB:</strong>{" "}
-        within seconds via a small event trigger (checked every 30s if it can't be installed) &nbsp;·&nbsp;{" "}
-        <strong className="text-white/45">MySQL:</strong> polling every 60s &nbsp;·&nbsp;{" "}
-        <strong className="text-white/45">MongoDB:</strong> change streams &nbsp;·&nbsp;{" "}
+        <strong className="text-white/45">Postgres:</strong>{" "}
+        within seconds via a small event trigger (every 30s through a connection pooler, or if the account can&apos;t create it) &nbsp;·&nbsp;{" "}
+        <strong className="text-white/45">CockroachDB:</strong> polling every 30s &nbsp;·&nbsp;{" "}
+        <strong className="text-white/45">MySQL / MariaDB:</strong> polling every 60s &nbsp;·&nbsp;{" "}
+        <strong className="text-white/45">MongoDB:</strong> within seconds via change streams (replica set) &nbsp;·&nbsp;{" "}
         <strong className="text-white/45">Redis:</strong> polling every 30s &nbsp;·&nbsp;{" "}
         <span className="opacity-50">SQL Server / Snowflake: coming soon</span>
       </div>
