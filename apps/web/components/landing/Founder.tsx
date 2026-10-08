@@ -46,8 +46,8 @@ export default function Founder() {
               in trust, and in revenue.
             </p>
             <p className="text-[15px] text-white/55 leading-[1.75]">
-              SchemaZero is built on that experience. Postgres, MySQL, MongoDB, Redis,
-              CouchDB: databases I've run in production. The risk scoring, the impact
+              SchemaZero is built on that experience. Postgres, MySQL, MongoDB and Redis:
+              databases I've run in production. The risk scoring, the impact
               analysis, the alert routing: not designed from a spec. Designed from incidents.
               We are constantly expanding engine support, and it is not limited to what
               any one person has run.
