@@ -136,6 +136,29 @@ const org = () => db.organizations[0];
     const p1 = stripeCalls[0] && stripeCalls[0].form;
     check('portal: opens the Stripe portal for the org\'s customer', r.status === 200 && r.json.url === 'https://billing.stripe.test/p/abc' && p1.customer === 'cus_9' && p1.return_url === 'http://localhost:3201/dashboard/settings', JSON.stringify([r, p1]));
 
+    // ---------- dashboard gate: an expired, unpaid trial is cut off ----------
+    const page = async (path) => {
+      const res = await fetch(`http://localhost:3201${path}`, { headers: { cookie: sessionCookie() }, redirect: 'manual' });
+      await res.text();
+      return { status: res.status, location: res.headers.get('location') || '' };
+    };
+    const past = new Date(Date.now() - 2 * 86400000).toISOString();
+    const future = new Date(Date.now() + 5 * 86400000).toISOString();
+    Object.assign(org(), { plan: 'trial', trial_converted: false, trial_ends_at: past });
+    r = await page('/dashboard');
+    check('dashboard: an expired trial is redirected to Settings', r.status >= 300 && r.status < 400 && r.location.includes('/dashboard/settings') && r.location.includes('trial_expired=true'), JSON.stringify(r));
+    r = await page('/dashboard/settings?trial_expired=true');
+    check('dashboard: Settings stays open so they can upgrade (no redirect loop)', r.status === 200, JSON.stringify(r));
+    org().trial_ends_at = future;
+    r = await page('/dashboard');
+    check('dashboard: a trial still running gets in', r.status === 200, JSON.stringify(r));
+    Object.assign(org(), { plan: 'solo', trial_ends_at: past });
+    r = await page('/dashboard');
+    check('dashboard: a paying org gets in even after the trial date', r.status === 200, JSON.stringify(r));
+    Object.assign(org(), { plan: 'trial', trial_converted: false, trial_ends_at: future });
+    failReads = true; r = await page('/dashboard'); failReads = false;
+    check('dashboard: if the plan can\'t be checked, nobody gets in', r.status >= 300 && r.status < 400 && r.location.includes('plan_check_failed=true'), JSON.stringify(r));
+
     // ---------- not configured ----------
     const a = await post(3202, '/api/checkout', { headers: { cookie: sessionCookie() } });
     const b = await post(3202, '/api/billing/portal', { headers: { cookie: sessionCookie() } });

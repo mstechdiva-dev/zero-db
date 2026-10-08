@@ -8,14 +8,18 @@ up newly added databases and drops listeners for removed ones.
 import asyncio
 import logging
 import os
+import time
 from typing import Optional
 
 from services.encryption_service import EncryptionService
-from services.entitlement import orgs_with_access
+from services.email_service import EmailService
+from services.entitlement import EntitlementError, orgs_with_access
+from services.trial_reminders import send_due_reminders
 from services.supabase_service import get_supabase
 
 logger = logging.getLogger(__name__)
 
+REMINDER_INTERVAL = 3600  # seconds between trial reminder checks
 POLL_INTERVAL = 60  # seconds — how often to check for new/removed databases
 
 LISTENER_CLASSES = {
@@ -44,6 +48,7 @@ class ScoutRunner:
         self._listeners: dict[str, asyncio.Task] = {}  # database_id -> task
         self._enc = EncryptionService()
         self._running = False
+        self._last_reminders = float("-inf")
 
     async def run(self) -> None:
         """Main loop — polls Supabase for database list and reconciles listeners."""
@@ -55,6 +60,13 @@ class ScoutRunner:
                 await self._reconcile()
             except Exception as exc:
                 logger.error("ScoutRunner reconcile error: %s", exc)
+            # Trial reminder emails, checked about once an hour.
+            if time.monotonic() - self._last_reminders >= REMINDER_INTERVAL:
+                self._last_reminders = time.monotonic()
+                try:
+                    await send_due_reminders(get_supabase(), EmailService())
+                except Exception as exc:
+                    logger.warning("Trial reminders error: %s", type(exc).__name__)
             await asyncio.sleep(POLL_INTERVAL)
 
     async def stop(self) -> None:
@@ -80,7 +92,11 @@ class ScoutRunner:
         active_databases = result.data or []
         # Expired, unpaid trials are switched off here; they come back within
         # one poll once the org upgrades.
-        allowed = orgs_with_access(supabase, {db["org_id"] for db in active_databases})
+        try:
+            allowed = orgs_with_access(supabase, {db["org_id"] for db in active_databases})
+        except EntitlementError:
+            logger.warning("Couldn't check plans; leaving listeners as they are this round")
+            return
         active_databases = [db for db in active_databases if db["org_id"] in allowed]
         active_ids = {db["id"] for db in active_databases}
 

@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 from typing import Optional
 
 from services.anthropic_service import AnthropicService
+from services.entitlement import require_access
 from services.supabase_service import verify_jwt, get_supabase
 
 logger = logging.getLogger(__name__)
@@ -77,6 +78,9 @@ async def chat(
             detail="That looks like a connection string with a password in it. "
             "Don't paste it here. Use the secure box next to the chat.",
         )
+
+    # Chat costs us money: only paying orgs and orgs inside their trial.
+    require_access(get_supabase(), user["org_id"])
 
     # Try Supabase first so admin edits take effect immediately,
     # fall back to the prompts loaded from disk at startup.

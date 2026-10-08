@@ -12,6 +12,12 @@ const POINTS = [
       "Connection strings are encrypted with AES-256 and stored separately from application data. Decrypted only when Scout needs to connect, never logged.",
   },
   {
+    icon: "✅",
+    title: "Plans enforced on our servers",
+    description:
+      "Your plan and trial are checked on our servers before anything runs for your account, and they can't be changed from the browser. When a trial ends, monitoring and alerts stop until you upgrade.",
+  },
+  {
     icon: "🛡️",
     title: "SOC 2 Type II in progress",
     description:

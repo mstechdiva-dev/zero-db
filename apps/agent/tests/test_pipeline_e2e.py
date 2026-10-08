@@ -24,6 +24,13 @@ import pytest
 PG_DSN = os.environ.get("ZERO_TEST_PG_DSN")
 pytestmark = pytest.mark.skipif(not PG_DSN, reason="ZERO_TEST_PG_DSN not set")
 
+PLAN_ROWS = [
+    {"name": "trial", "is_paid": False, "max_databases": 2, "max_seats": 1},
+    {"name": "solo", "is_paid": True, "max_databases": 2, "max_seats": 1},
+    {"name": "teams", "is_paid": True, "max_databases": 10, "max_seats": 10},
+    {"name": "enterprise", "is_paid": True, "max_databases": None, "max_seats": None},
+]
+
 AGENTS_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "..", "agents")
 SECRET = "test-signing-secret"
 
@@ -106,12 +113,16 @@ class _Query:
         self.filters.append((col, val))
         return self
 
+    def in_(self, col, vals):
+        self.filters.append((col, vals))
+        return self
+
     def single(self):
         self.one = True
         return self
 
     def _match(self):
-        return [r for r in self.rows if all(r.get(c) == v for c, v in self.filters)]
+        return [r for r in self.rows if all((r.get(c) in v) if isinstance(v, (list, tuple)) else r.get(c) == v for c, v in self.filters)]
 
     def execute(self):
         if self.mode in ("insert", "update", "upsert"):
@@ -177,6 +188,9 @@ async def test_column_drop_reaches_signed_webhook(monkeypatch):
     org_id, db_id = "org-1", "db-1"
 
     fake = FakeSupabase()
+    fake.tables["plans"] = PLAN_ROWS
+    fake.tables["organizations"] = [{"id": org_id, "plan": "solo", "trial_converted": False,
+                                     "trial_ends_at": "2030-01-01T00:00:00+00:00"}]
     fake.tables["alert_configs"] = [
         {
             "org_id": org_id,

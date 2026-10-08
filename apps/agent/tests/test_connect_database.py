@@ -5,7 +5,7 @@ import base64
 import os
 
 import pytest
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.testclient import TestClient
 
 import routers.agent as agent_router
@@ -114,8 +114,13 @@ def test_bad_password_message():
 
 # ---- POST /databases/ -------------------------------------------------------
 
+SOLO = {"id": "org-1", "plan": "solo", "plan_info": {"max_databases": 2}}
+
 class FakeService:
     stored: list[dict] = []
+
+    async def get_connected_databases(self, org_id):
+        return [r for r in FakeService.stored if r["org_id"] == org_id]
 
     async def create_connected_database(self, org_id, engine, display_name, encrypted_connection_string):
         row = {
@@ -133,7 +138,7 @@ def client(monkeypatch):
     monkeypatch.setenv("ENCRYPTION_KEY", base64.b64encode(os.urandom(32)).decode())
     FakeService.stored = []
     monkeypatch.setattr(databases_router, "SupabaseService", FakeService)
-    monkeypatch.setattr(databases_router, "orgs_with_access", lambda sb, ids: set(ids))
+    monkeypatch.setattr(databases_router, "require_access", lambda sb, oid: SOLO)
     monkeypatch.setattr(databases_router, "get_supabase", lambda: None)
     app = FastAPI()
     app.include_router(databases_router.router, prefix="/databases")
@@ -186,6 +191,8 @@ def chat_client(monkeypatch):
         raise AssertionError("Claude was called with a credential-bearing message")
 
     monkeypatch.setattr(agent_router, "AnthropicService", boom)
+    monkeypatch.setattr(agent_router, "require_access", lambda sb, oid: SOLO)
+    monkeypatch.setattr(agent_router, "get_supabase", lambda: None)
     app = FastAPI()
     app.state.agent_prompts = {"obi": "x"}
     app.include_router(agent_router.router, prefix="/agent")
@@ -210,8 +217,53 @@ def test_chat_rejects_credentials_already_in_history(chat_client):
 
 
 def test_expired_trial_cannot_add_a_database(client, monkeypatch):
-    monkeypatch.setattr(databases_router, "orgs_with_access", lambda sb, ids: set())
+    def deny(sb, oid):
+        raise HTTPException(status_code=402, detail="Your free trial has ended. Upgrade in Settings to continue.")
+
+    monkeypatch.setattr(databases_router, "require_access", deny)
     r = client.post("/databases/", json=_body())
     assert r.status_code == 402
     assert "trial has ended" in r.json()["detail"]
     assert FakeService.stored == []
+
+
+def _connects(monkeypatch):
+    async def ok(engine, conn):
+        return None
+
+    monkeypatch.setattr(databases_router, "test_connection", ok)
+
+
+def test_solo_plan_stops_at_two_databases(client, monkeypatch):
+    _connects(monkeypatch)
+    for _ in range(2):
+        assert client.post("/databases/", json=_body()).status_code == 201
+    r = client.post("/databases/", json=_body())
+    assert r.status_code == 403
+    assert "2 database connections" in r.json()["detail"]
+    assert len(FakeService.stored) == 2
+
+
+def test_enterprise_has_no_database_limit(client, monkeypatch):
+    _connects(monkeypatch)
+    monkeypatch.setattr(databases_router, "require_access",
+                        lambda sb, oid: {"plan": "enterprise", "plan_info": {"max_databases": None}})
+    for _ in range(4):
+        assert client.post("/databases/", json=_body()).status_code == 201
+
+
+def test_chat_is_closed_to_an_expired_trial(monkeypatch):
+    called = []
+    monkeypatch.setattr(agent_router, "AnthropicService", lambda *a, **k: called.append(1))
+
+    def deny(sb, oid):
+        raise HTTPException(status_code=402, detail="Your free trial has ended. Upgrade in Settings to continue.")
+
+    monkeypatch.setattr(agent_router, "require_access", deny)
+    monkeypatch.setattr(agent_router, "get_supabase", lambda: None)
+    app = FastAPI()
+    app.state.agent_prompts = {"obi": "x"}
+    app.include_router(agent_router.router, prefix="/agent")
+    app.dependency_overrides[verify_jwt] = lambda: {"org_id": "org-1", "user_id": "u", "email": "e"}
+    r = TestClient(app).post("/agent/chat", json={"agent": "obi", "message": "hi", "history": []})
+    assert r.status_code == 402 and called == []

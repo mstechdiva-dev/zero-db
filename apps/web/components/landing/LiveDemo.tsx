@@ -101,11 +101,11 @@ function Connect({ tick }: { tick: number }) {
       <Window title="/onboarding">
         <Reveal tick={tick} at={0}><span className="text-[#00e87a]">Obi</span> <span className="text-white/22">›</span> Which database are we connecting?</Reveal>
         <Reveal tick={tick} at={1}><span className="text-[#4a9eff]">you</span> <span className="text-white/22">›</span> Supabase</Reveal>
-        <Reveal tick={tick} at={2}><span className="text-[#00e87a]">Obi</span> <span className="text-white/22">›</span> Paste your connection string.</Reveal>
+        <Reveal tick={tick} at={2}><span className="text-[#00e87a]">Obi</span> <span className="text-white/22">›</span> Use the secure box. Your password never goes through this chat.</Reveal>
         <div className="min-h-[1.9em] break-all">
           {tick >= 3 && (
             <>
-              <span className="text-[#4a9eff]">you</span> <span className="text-white/22">›</span>{" "}
+              <span className="text-[#00e87a]">🔒 secure box</span> <span className="text-white/22">›</span>{" "}
               <Typed text="postgresql://postgres:••••@db.acme.supabase.co:5432/postgres" className="text-white/70" />
             </>
           )}
@@ -113,6 +113,7 @@ function Connect({ tick }: { tick: number }) {
       </Window>
       <div className="flex flex-col gap-2.5">
         {[
+          ["Plan check", "valid · 14-day trial"],
           ["Reachability", "connected"],
           ["Detection mode", "real-time · port 5432"],
           ["DDL event trigger", "installed"],

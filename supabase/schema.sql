@@ -79,15 +79,41 @@ create type alert_channel as enum ('webhook', 'slack', 'pagerduty', 'email');
 create type notification_status as enum ('sent', 'failed', 'skipped');
 
 -- ============================================================
+-- Plans: the single source of truth for what each plan includes.
+-- The backend checks an org's plan against this table before it runs anything
+-- for that org, and refuses to run if a plan is missing from it. Only the
+-- service role can change it. Edit a limit here and it applies everywhere.
+-- ============================================================
+create table plans (
+  name           plan_type primary key,
+  display_name   text    not null,
+  is_paid        boolean not null,
+  max_databases  integer,   -- null = unlimited
+  max_seats      integer,   -- null = unlimited
+  price_cents    integer    -- null = custom pricing
+);
+
+insert into plans (name, display_name, is_paid, max_databases, max_seats, price_cents) values
+  ('trial',      'Free trial', false, 2,    1,    0),
+  ('solo',       'Solo',       true,  2,    1,    1900),
+  ('teams',      'Teams',      true,  10,   10,   7900),
+  ('enterprise', 'Enterprise', true,  null, null, null);
+
+alter table plans enable row level security;
+create policy "anyone_can_read_plans" on plans for select using (true);
+revoke insert, update, delete on plans from anon, authenticated;
+
+-- ============================================================
 -- Organizations
 -- ============================================================
 create table organizations (
   id                    uuid primary key default uuid_generate_v4(),
   name                  text not null,
-  plan                  plan_type not null default 'trial',
+  plan                  plan_type not null default 'trial' references plans(name),
   trial_starts_at       timestamptz not null default now(),
   trial_ends_at         timestamptz not null default (now() + interval '14 days'),
   trial_converted       boolean not null default false,
+  trial_reminder_stage  smallint not null default 0,  -- 0 none sent, 1 "3 days left" sent, 2 "trial ended" sent
   stripe_customer_id    text,
   stripe_subscription_id text,
   created_at            timestamptz not null default now()
