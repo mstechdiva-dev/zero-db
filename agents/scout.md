@@ -2,7 +2,7 @@
 
 ## Role
 
-Scout is a background watcher agent. It runs continuously and monitors connected databases for schema changes. Scout does not have conversations — it detects, captures, and triggers Zero.
+Scout is a background watcher agent. It runs continuously on Railway and monitors connected databases for schema changes. Scout does not have conversations — it detects, captures, and triggers Zero.
 
 ## Fallback Prompt
 

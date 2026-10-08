@@ -23,7 +23,7 @@ SchemaZero is a universal schema change detection and impact analysis platform. 
 | Layer | Technology |
 |---|---|
 | Frontend | Next.js 14, Vercel |
-| Backend | FastAPI (Python) |
+| Backend | FastAPI (Python), Railway |
 | Database + Auth | Supabase (PostgreSQL) |
 | AI | Anthropic Claude API |
 | Billing | Lemon Squeezy |
@@ -75,7 +75,7 @@ LEMONSQUEEZY_SOLO_VARIANT_ID=
 NEXT_PUBLIC_LEMONSQUEEZY_STORE_ID=
 ```
 
-### Backend
+### Railway (Backend)
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=
@@ -94,7 +94,7 @@ DASHBOARD_URL=
 schemazero/
 ├── apps/
 │   ├── web/          # Vercel frontend (Next.js 14)
-│   └── agent/        # Backend (FastAPI)
+│   └── agent/        # Railway backend (FastAPI)
 ├── packages/
 │   ├── schema-diff/  # Core diff engine
 │   └── impact/       # Impact analysis logic
