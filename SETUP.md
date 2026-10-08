@@ -176,6 +176,20 @@ ZERO_TEST_PG_DSN=postgresql://postgres@127.0.0.1:5432/scratch pytest tests/test_
 
 ---
 
+## Pre-merge schema check (optional)
+
+`apps/agent/premerge_check.py` reads SQL migration files and flags risky changes (dropped columns or tables, renames, NOT NULL, dropped keys) using the same risk levels as Zero. It reads the SQL text only: no database connection and no Claude call.
+
+```
+cd apps/agent
+python premerge_check.py ../../supabase/migrations/009_cleanup.sql
+python premerge_check.py --fail-on critical file.sql
+```
+
+It exits with 1 when anything is at or above `--fail-on` (default `high`). The workflow `.github/workflows/premerge-check.yml` runs it on the SQL files changed since a branch you pick. It is manual-only like the other workflow; the file explains how to run it on every pull request and make it a required check so it blocks merging.
+
+It cannot see the old column type, so a type change shows as medium ("review"). It also does not look for the code that still uses a dropped column; that part is not built.
+
 ## Known limits
 
 - **Private-network blocking has one gap.** The connection form refuses private and local addresses, including the servers a `mongodb+srv` name points to. But the check looks the name up once and the database driver looks it up again when it connects, so a DNS server that answers differently the second time could slip past. Rare, and it needs a signed-in user, but it's why new sign-ups are best kept to people you invited.

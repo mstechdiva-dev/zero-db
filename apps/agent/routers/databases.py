@@ -4,6 +4,9 @@ from models.database import ConnectedDatabase, CreateDatabaseRequest
 from services.supabase_service import SupabaseService, verify_jwt
 from services.encryption_service import EncryptionService
 from services.connection_test import ConnectionTestError, test_connection
+from scout.listeners.postgres_listener import remove_ddl_trigger
+
+POSTGRES_ENGINES = {"postgresql", "supabase", "neon", "cockroachdb"}
 
 router = APIRouter()
 
@@ -43,6 +46,22 @@ async def add_database(body: CreateDatabaseRequest, user=Depends(verify_jwt)):
 @router.delete("/{database_id}", status_code=204)
 async def remove_database(database_id: str, user=Depends(verify_jwt)):
     svc = SupabaseService()
+    # Take our trigger back out of their database first (best effort), while
+    # we still hold the connection string.
+    row = (
+        svc.client.table("connected_databases")
+        .select("engine, encrypted_connection_string")
+        .eq("id", database_id)
+        .eq("org_id", user["org_id"])
+        .execute()
+        .data
+    )
+    if row and row[0]["engine"] in POSTGRES_ENGINES:
+        try:
+            conn_string = EncryptionService().decrypt(row[0]["encrypted_connection_string"])
+            await remove_ddl_trigger(conn_string)
+        except Exception:
+            pass  # never block the delete on cleanup
     await svc.delete_connected_database(
         database_id=database_id, org_id=user["org_id"]
     )

@@ -1,0 +1,46 @@
+name: Schema check (pre-merge)
+
+# Manual only for now, like the rest of CI. Run it from the Actions tab and give
+# the branch to compare against (usually main).
+#
+# To make it run on every pull request, replace the `on:` block with:
+#   on:
+#     pull_request:
+#       paths: ["**/*.sql"]
+# and add it to the branch protection "required checks" so a failure blocks merging.
+on:
+  workflow_dispatch:
+    inputs:
+      base:
+        description: "Branch to compare against"
+        default: main
+      fail_on:
+        description: "Fail if any change is at or above this level (low, medium, high, critical)"
+        default: high
+
+jobs:
+  schema-check:
+    name: Schema check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Check SQL files changed since the base branch
+        env:
+          BASE: ${{ inputs.base }}
+          FAIL_ON: ${{ inputs.fail_on }}
+        run: |
+          files=$(git diff --name-only --diff-filter=AM "origin/$BASE"...HEAD -- '*.sql')
+          if [ -z "$files" ]; then
+            echo "No SQL files changed."
+            exit 0
+          fi
+          echo "$files"
+          cd apps/agent
+          python premerge_check.py --fail-on "$FAIL_ON" $(echo "$files" | sed 's|^|../../|')

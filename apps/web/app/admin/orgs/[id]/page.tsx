@@ -45,10 +45,10 @@ function trialStatus(org: {
 export default async function OrgDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
   const db = adminDb();
-  const { id } = params;
+  const { id } = await params;
 
   const [
     { data: org },
