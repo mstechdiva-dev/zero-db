@@ -15,8 +15,8 @@ const ENGINES = [
   { label: "MongoDB", active: true },
   { label: "Redis", active: true },
   { label: "CockroachDB", active: true },
-  { label: "Supabase", active: false, soon: true, note: "verifying" },
-  { label: "Neon", active: false, soon: true, note: "verifying" },
+  { label: "Supabase", active: false, soon: true, note: "testing" },
+  { label: "Neon", active: false, soon: true, note: "testing" },
   { label: "SQL Server", active: false, soon: true },
   { label: "Snowflake", active: false, soon: true },
 ];
