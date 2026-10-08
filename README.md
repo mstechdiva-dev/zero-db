@@ -1,15 +1,16 @@
 # SchemaZero
 
-> Your database schema changed. Know what it means before it breaks production.
+> Your database schema changed. Know what it means within seconds, before it hurts production.
 
-SchemaZero is a universal schema change detection and impact analysis platform. It watches connected databases for structural changes, analyzes what they affect, scores the risk, and tells your team exactly what to do — before anything breaks.
+SchemaZero is a universal schema change detection and impact analysis platform. It watches connected databases for structural changes, analyzes what they affect, scores the risk, and tells your team exactly what to do, within seconds of the change, so it can be fixed before it hurts users.
 
 ---
 
 ## What It Does
 
-- Detects schema changes in real time across PostgreSQL, MySQL, MongoDB, Redis, and more
+- Detects schema changes across PostgreSQL, MySQL, MongoDB, Redis, and more: within seconds on Postgres and MongoDB, up to a minute on engines that are checked on a schedule
 - Analyzes impact — which queries, indexes, and services are affected
+- Alerts **after** a change runs. It does not stop the change. A separate pre-merge check (beta) reads SQL migration files before they ship.
 - Scores risk — LOW, MEDIUM, HIGH, CRITICAL
 - Fires alerts to your custom webhook, Slack, PagerDuty, or email
 - Explains everything in plain English — not log output

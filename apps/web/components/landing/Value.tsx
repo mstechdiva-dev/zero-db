@@ -107,7 +107,7 @@ export default function Value() {
         <div className="bg-[#111] border border-white/[0.06] rounded-2xl p-8 flex flex-col sm:flex-row items-start sm:items-center gap-6">
           <div className="flex-1">
             <p className="text-[15px] text-white/75 leading-[1.6] mb-2">
-              "One prevented incident pays for{" "}
+              "One incident caught early pays for{" "}
               <span className="text-white font-medium">months</span> of SchemaZero.
               The question isn't whether schema changes will cause problems.
               It's whether you'll know about them first."

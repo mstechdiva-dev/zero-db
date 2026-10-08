@@ -37,7 +37,7 @@ const STEPS = [
     lit: true,
     title: "Agent Zero explains what it means",
     description:
-      "This is where SchemaZero is different. Agent Zero doesn't just log the event. It reasons about it. What changed. What it touches. What your team needs to review before deploying. Risk scored, explained in plain English, no jargon.",
+      "This is where SchemaZero is different. Agent Zero doesn't just log the event. It reasons about it. What changed. What it touches. What your team needs to review before deploying anything else. Risk scored, explained in plain English, no jargon.",
     codeBlock: (
       <div className="bg-[#0d0d0d] border border-white/[0.06] rounded-lg px-4 py-3 font-mono text-[11px] leading-[1.8] text-white/45 mt-1">
         <span className="text-[#e83232]">HIGH </span> idx_sessions_token dropped —{" "}
@@ -114,6 +114,11 @@ export default function HowItWorks() {
         Most tools stop at detection. SchemaZero goes further. It explains what changed,
         connects the dots to what it affects, and tells your team exactly what to review.
         No digging. No guessing.
+      </p>
+      <p className="text-[13px] text-white/45 max-w-[560px] leading-[1.65] mb-14 -mt-8 border-l-2 border-[#00e87a]/40 pl-4">
+        Live monitoring alerts after a change runs, within seconds on Postgres and MongoDB
+        and up to a minute on engines that are checked on a schedule. A separate pre-merge
+        check (beta) reads your SQL migration files before they ship.
       </p>
 
       {/* Steps */}

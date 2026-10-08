@@ -10,6 +10,8 @@ This document lists what is actually built today.
 
 ## Real-time schema change detection
 
+Timing: Scout finds out **after** a change has run, not before. It alerts within seconds (Postgres, MongoDB) or within the polling interval (MySQL, MariaDB, Redis, CockroachDB), so the team can fix it fast. It cannot block a change. The separate pre-merge check (beta, `apps/agent/premerge_check.py`) reads SQL migration files before they ship.
+
 Scout watches every connected database continuously and captures a before/after snapshot the moment a structural change happens. Detection quality depends on what the engine exposes — the table below is honest about which engines give us sub-second events and which fall back to polling.
 
 ### Tier 1 — Real-time, native event triggers

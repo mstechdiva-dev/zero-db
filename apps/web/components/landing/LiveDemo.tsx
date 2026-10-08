@@ -291,7 +291,7 @@ function BeforeMerge({ tick }: { tick: number }) {
       </Reveal>
       <Reveal tick={tick} at={4}>
         <p className="font-mono text-[10px] text-white/30 px-1">
-          Live now: the migration check (reads your SQL, no database access). Coming soon: finding the code that still uses the column.
+          Beta, separate from live monitoring: reads your SQL migration files before they ship, with no database access. Coming soon: finding the code that still uses the column.
         </p>
       </Reveal>
     </div>
