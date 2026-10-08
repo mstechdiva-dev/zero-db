@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SchemaZero Status Ticker Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --green: #00e87a;
+    --green-dim: rgba(0,232,122,0.08);
+    --green-border: rgba(0,232,122,0.2);
+    --bg: #0a0a0a;
+    --bg-2: #111111;
+    --bg-3: #141414;
+    --border: rgba(255,255,255,0.06);
+    --border-2: rgba(255,255,255,0.1);
+    --text: #f0f0f0;
+    --text-muted: rgba(255,255,255,0.45);
+    --text-dim: rgba(255,255,255,0.22);
+    --amber: #ffb200;
+    --font: 'DM Sans', sans-serif;
+    --mono: 'Space Mono', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font); }
+
+  /* Mockup chrome (not part of the design) */
+  .note { max-width: 960px; margin: 0 auto; padding: 28px 20px 8px; font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+  .note b { color: var(--text); }
+  .label { max-width: 960px; margin: 24px auto 8px; padding: 0 20px; font-family: var(--mono); font-size: 10px; letter-spacing: .8px; text-transform: uppercase; color: var(--text-dim); }
+
+  /* Fake nav so you can see where the tape sits */
+  .fake-nav { height: 52px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 28px; }
+  .fake-nav .logo { font-weight: 600; letter-spacing: -.3px; }
+  .fake-nav .cta { font-size: 12px; font-weight: 600; background: var(--green); color: #000; padding: 7px 14px; border-radius: 8px; }
+  .fake-hero { padding: 54px 28px; }
+  .fake-hero h1 { font-size: 34px; font-weight: 600; letter-spacing: -1.2px; line-height: 1.15; }
+  .fake-hero h1 span { color: var(--green); }
+
+  /* ---------- The ticker ---------- */
+  .ticker {
+    position: relative;
+    overflow: hidden;
+    background: var(--bg-2);
+    border-bottom: 1px solid var(--border);
+    height: 36px;
+    display: flex;
+    align-items: center;
+    mask-image: linear-gradient(90deg, transparent, #000 40px, #000 calc(100% - 40px), transparent);
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 40px, #000 calc(100% - 40px), transparent);
+  }
+  .ticker-track {
+    display: flex;
+    flex-shrink: 0;
+    white-space: nowrap;
+    animation: scroll 38s linear infinite;
+  }
+  .ticker:hover .ticker-track { animation-play-state: paused; }
+  @keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+  .item { display: inline-flex; align-items: center; gap: 8px; padding: 0 22px; font-family: var(--mono); font-size: 11px; color: var(--text-muted); border-right: 1px solid var(--border); height: 36px; }
+  .item b { color: var(--text); font-weight: 400; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .live .dot { background: var(--green); box-shadow: 0 0 6px rgba(0,232,122,.6); }
+  .testing .dot { background: var(--amber); }
+  .planned .dot { background: transparent; border: 1px solid var(--text-dim); }
+  .tag { font-size: 9px; text-transform: uppercase; letter-spacing: .6px; padding: 1px 6px; border-radius: 99px; border: 1px solid var(--border-2); color: var(--text-dim); }
+  .live .tag { color: var(--green); border-color: var(--green-border); background: var(--green-dim); }
+  .testing .tag { color: var(--amber); border-color: rgba(255,178,0,.25); background: rgba(255,178,0,.08); }
+
+  /* Respect reduced motion: stop scrolling, let it wrap as a static row */
+  @media (prefers-reduced-motion: reduce) {
+    .ticker { height: auto; mask-image: none; -webkit-mask-image: none; }
+    .ticker-track { animation: none; flex-wrap: wrap; white-space: normal; }
+    .ticker-track[aria-hidden="true"] { display: none; }
+  }
+  @media (max-width: 600px) { .item { padding: 0 16px; font-size: 10px; } }
+</style>
+</head>
+<body>
+
+<div class="note">
+  <b>Status ticker, mockup for sign-off.</b> A slim tape that scrolls across the page. To update it you edit one short list in code, so the page never grows into a long table.
+  <br /><br />
+  <b>Rules in this mockup:</b> an item is <b>live</b> only if it passed a real test. <b>testing</b> and <b>planned</b> are labelled as such. No engine appears that has not been tested or listed as planned.
+  <br />
+  <b>Behaviour:</b> pauses on hover. If the visitor's device is set to reduce motion, it stops scrolling and shows as a static wrapped row.
+</div>
+
+<div class="label">Option A: top of page, directly under the nav (recommended)</div>
+<div style="border:1px solid var(--border);max-width:960px;margin:0 auto;border-radius:12px;overflow:hidden;background:var(--bg)">
+  <div class="fake-nav"><span class="logo">SchemaZero</span><span class="cta">Join waitlist</span></div>
+
+  <div class="ticker" role="region" aria-label="Engine and feature status">
+    <div class="ticker-track">
+      <span class="item live"><span class="dot"></span><b>Postgres</b><span class="tag">live</span></span>
+      <span class="item live"><span class="dot"></span><b>MySQL / MariaDB</b><span class="tag">live</span></span>
+      <span class="item live"><span class="dot"></span><b>MongoDB</b><span class="tag">live</span></span>
+      <span class="item live"><span class="dot"></span><b>Redis</b><span class="tag">live</span></span>
+      <span class="item live"><span class="dot"></span><b>CockroachDB</b><span class="tag">live</span></span>
+      <span class="item testing"><span class="dot"></span><b>Supabase</b><span class="tag">testing</span></span>
+      <span class="item testing"><span class="dot"></span><b>Neon</b><span class="tag">testing</span></span>
+      <span class="item testing"><span class="dot"></span><b>Pre-merge check</b><span class="tag">beta</span></span>
+      <span class="item planned"><span class="dot"></span><b>SQL Server</b><span class="tag">planned</span></span>
+      <span class="item planned"><span class="dot"></span><b>Snowflake</b><span class="tag">planned</span></span>
+      <span class="item planned"><span class="dot"></span><b>SOC 2</b><span class="tag">planned</span></span>
+    </div>
+    <!-- Same list repeated so the loop has no gap -->
+    <div class="ticker-track" aria-hidden="true">
+      <span class="item live"><span class="dot"></span><b>Postgres</b><span class="tag">live</span></span>
+      <span class="item live"><span class="dot"></span><b>MySQL / MariaDB</b><span class="tag">live</span></span>
+      <span class="item live"><span class="dot"></span><b>MongoDB</b><span class="tag">live</span></span>
+      <span class="item live"><span class="dot"></span><b>Redis</b><span class="tag">live</span></span>
+      <span class="item live"><span class="dot"></span><b>CockroachDB</b><span class="tag">live</span></span>
+      <span class="item testing"><span class="dot"></span><b>Supabase</b><span class="tag">testing</span></span>
+      <span class="item testing"><span class="dot"></span><b>Neon</b><span class="tag">testing</span></span>
+      <span class="item testing"><span class="dot"></span><b>Pre-merge check</b><span class="tag">beta</span></span>
+      <span class="item planned"><span class="dot"></span><b>SQL Server</b><span class="tag">planned</span></span>
+      <span class="item planned"><span class="dot"></span><b>Snowflake</b><span class="tag">planned</span></span>
+      <span class="item planned"><span class="dot"></span><b>SOC 2</b><span class="tag">planned</span></span>
+    </div>
+  </div>
+
+  <div class="fake-hero">
+    <h1>Stop investigating.<br /><span>Within seconds of a schema change.</span></h1>
+  </div>
+</div>
+
+<div class="note" style="padding-top:20px">
+  <b>Key:</b>
+  <span style="color:var(--green)">● live</span> passed a real test &nbsp;·&nbsp;
+  <span style="color:var(--amber)">● testing / beta</span> in progress &nbsp;·&nbsp;
+  <span style="color:var(--text-dim)">○ planned</span> not built yet.
+  <br /><br />
+  <b>Open choices:</b> (1) engine status only, or also feature news like the pre-merge check; (2) top under the nav, or above the footer; (3) scroll speed (this is 38 seconds per loop).
+  <br /><br />
+  <b>Not shown on purpose:</b> Redshift, Bigtable, Azure, RDS and the other clouds. They stay off until a person has tested them.
+</div>
+
+</body>
+</html>
