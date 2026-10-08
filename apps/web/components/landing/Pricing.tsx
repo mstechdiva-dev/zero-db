@@ -7,7 +7,7 @@ const PLANS = [
     name: "Solo",
     price: "$19",
     period: "/mo",
-    description: "One seat. Two databases. Everything included.",
+    description: "14-day free trial, then $19/month. One seat. Two databases. Everything included.",
     features: [
       "1 seat",
       "2 database connections",
@@ -80,7 +80,7 @@ export default function Pricing({ onTabChange }: PricingProps) {
         Simple pricing.<br />No surprises.
       </h2>
       <p className="text-base text-white/45 max-w-[560px] leading-[1.65] mb-10">
-        Start free on Solo. No credit card required. Upgrade when your team grows.
+        Try Solo free for 14 days. No credit card required. Then $19/month. Upgrade when your team grows.
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
