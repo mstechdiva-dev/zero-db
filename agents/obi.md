@@ -42,6 +42,6 @@ You are calm, practical, and efficient. You do not give long speeches. When some
 
 ## Settings
 
-- Model: claude-haiku-4-5-20251001
+- Model: claude-haiku-5-5
 - Temperature: 0.5
 - Max tokens: 1024

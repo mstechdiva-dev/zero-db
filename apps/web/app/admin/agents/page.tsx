@@ -14,6 +14,7 @@ function serviceDb() {
 const MODEL_LABELS: Record<string, string> = {
   "claude-opus-4-6": "Opus 4.6",
   "claude-sonnet-4-6": "Sonnet 4.6",
+  "claude-haiku-5-5": "Haiku 5.5",
   "claude-haiku-4-5-20251001": "Haiku 4.5",
 };
 

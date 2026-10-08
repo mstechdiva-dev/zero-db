@@ -7,7 +7,7 @@ MODEL_PATTERN = re.compile(r"Model:\s*(\S+)", re.IGNORECASE)
 TEMPERATURE_PATTERN = re.compile(r"Temperature:\s*([\d.]+)", re.IGNORECASE)
 MAX_TOKENS_PATTERN = re.compile(r"Max tokens:\s*(\d+)", re.IGNORECASE)
 
-DEFAULT_MODEL = "claude-haiku-4-5-20251001"
+DEFAULT_MODEL = "claude-haiku-5-5"
 DEFAULT_TEMPERATURE = 0.7
 DEFAULT_MAX_TOKENS = 1024
 
