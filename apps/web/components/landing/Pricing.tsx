@@ -12,7 +12,7 @@ const PLANS = [
       "1 seat",
       "2 database connections",
       "All supported engines",
-      "Real-time schema monitoring",
+      "Schema monitoring, within seconds on Postgres",
       "Full impact analysis",
       "Custom webhook + Slack + PagerDuty alerts",
       "Email notifications",
@@ -31,9 +31,8 @@ const PLANS = [
       "Up to 10 seats",
       "Up to 10 database connections",
       "All supported engines",
-      "Team alert routing",
-      "Role-based access",
-      "Priority support",
+      "Planned: team alert routing",
+      "Planned: role-based access",
     ],
     cta: "Join waitlist",
     type: "waitlist" as const,
@@ -47,11 +46,11 @@ const PLANS = [
     features: [
       "Everything in Teams",
       "Unlimited databases",
-      "VPC peering",
-      "SSO / SAML",
-      "SOC 2 report access",
-      "Custom data retention",
-      "Dedicated SLA",
+      "Planned: VPC peering",
+      "Planned: SSO / SAML",
+      "Planned: SOC 2 report",
+      "Planned: custom data retention",
+      "Planned: dedicated SLA",
     ],
     cta: "Talk to us",
     type: "enterprise" as const,
@@ -149,7 +148,7 @@ export default function Pricing({ onTabChange }: PricingProps) {
       </div>
 
       <p className="mt-8 text-center text-[13px] text-white/22">
-        All plans include real-time monitoring, full impact analysis, and multi-channel alerts.
+        All plans include schema monitoring, full impact analysis, and multi-channel alerts.
         Solo includes a 14-day free trial. No credit card required.
       </p>
     </div>

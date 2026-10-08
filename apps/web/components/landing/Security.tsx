@@ -1,9 +1,9 @@
 const POINTS = [
   {
     icon: "🔒",
-    title: "Read-only credentials",
+    title: "Structure only, never your rows",
     description:
-      "Minimum required permissions only. SchemaZero accesses information_schema and system catalogs, never your table data, never your application rows.",
+      "SchemaZero reads information_schema and system catalogs. It never reads your table data or application rows. For instant Postgres alerts it adds one small event trigger, and removes it when you disconnect the database.",
   },
   {
     icon: "🔐",
@@ -19,15 +19,9 @@ const POINTS = [
   },
   {
     icon: "🛡️",
-    title: "SOC 2 Type II in progress",
+    title: "Planned: SOC 2 and enterprise networking",
     description:
-      "We're completing our SOC 2 Type II audit. Reports are available for Enterprise prospects on request.",
-  },
-  {
-    icon: "🌐",
-    title: "VPC peering on Enterprise",
-    description:
-      "Enterprise plans support direct VPC peering so your connection string never leaves your network perimeter. SSO / SAML included.",
+      "Not available yet. On the roadmap: a SOC 2 audit, VPC peering and SSO / SAML for Enterprise.",
   },
 ];
 
@@ -38,11 +32,11 @@ export default function Security() {
         Security
       </p>
       <h2 className="text-[36px] font-semibold text-white leading-[1.15] tracking-[-1.2px] mb-3.5">
-        Read-only by design
+        Structure only, by design
       </h2>
       <p className="text-base text-white/45 max-w-[560px] leading-[1.65] mb-14">
-        SchemaZero never writes to your database. It reads schema metadata only, never
-        your row-level data, never your application secrets.
+        SchemaZero reads schema metadata only, never your row-level data. On Postgres it adds a
+        single event trigger so it can alert you instantly, and removes it when you disconnect.
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

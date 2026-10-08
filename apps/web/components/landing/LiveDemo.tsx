@@ -115,7 +115,7 @@ function Connect({ tick }: { tick: number }) {
         {[
           ["Plan check", "valid · 14-day trial"],
           ["Reachability", "connected"],
-          ["Detection mode", "real-time · port 5432"],
+          ["Detection mode", "event trigger · port 5432"],
           ["DDL event trigger", "installed"],
           ["Scout", "watching"],
         ].map(([label, status], i) => (
@@ -333,7 +333,7 @@ function Dashboard({ tick }: { tick: number }) {
 const CAPTIONS = [
   "Obi walks you through connecting a database. You add the connection string in a secure box, never in the chat. It checks it works and Scout starts watching.",
   "An engineer writes a cleanup migration. One line looks harmless.",
-  "Scout catches the change the moment it runs, with a before/after snapshot. No row data is ever read.",
+  "Scout catches the change within seconds, with a before/after snapshot. No row data is ever read.",
   "Agent Zero scores the risk and flags what likely depends on it, in plain English.",
   "Alerts fire in order, so the right people know within seconds of the change.",
   "In beta: a separate check reads the migration file on the pull request and flags it before the merge.",

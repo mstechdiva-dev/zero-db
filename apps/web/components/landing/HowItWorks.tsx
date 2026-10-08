@@ -2,9 +2,9 @@ const STEPS = [
   {
     number: "01",
     lit: true,
-    title: "Connect any database",
+    title: "Connect your database",
     description:
-      "Paste a read-only connection string. SchemaZero reads your entire schema automatically: every table, column, index, and constraint. Nothing to declare, nothing to configure. It just knows.",
+      "Paste a connection string. SchemaZero reads your schema automatically: every table, column, index, and constraint. Nothing to declare, nothing to configure.",
     codeBlock: (
       <div className="bg-[#0d0d0d] border border-white/[0.06] rounded-lg px-4 py-3 font-mono text-[11px] leading-[1.8] text-white/45 mt-1">
         <span className="text-[#00e87a]">GRANT</span> SELECT{" "}
@@ -15,10 +15,10 @@ const STEPS = [
     note: (
       <div className="text-[13px] text-white/22 bg-[#111] border border-white/[0.06] rounded-lg px-4 py-3 leading-[1.55] mt-3">
         <strong className="text-white/45">Postgres / Supabase / Neon / CockroachDB:</strong>{" "}
-        real-time via pg_notify &nbsp;·&nbsp;{" "}
+        within seconds via a small event trigger (checked every 30s if it can't be installed) &nbsp;·&nbsp;{" "}
         <strong className="text-white/45">MySQL:</strong> polling every 60s &nbsp;·&nbsp;{" "}
         <strong className="text-white/45">MongoDB:</strong> change streams &nbsp;·&nbsp;{" "}
-        <strong className="text-white/45">Redis:</strong> keyspace notifications &nbsp;·&nbsp;{" "}
+        <strong className="text-white/45">Redis:</strong> polling every 30s &nbsp;·&nbsp;{" "}
         <span className="opacity-50">SQL Server / Snowflake: coming soon</span>
       </div>
     ),
@@ -28,7 +28,7 @@ const STEPS = [
     lit: true,
     title: "Scout watches continuously",
     description:
-      "Scout runs always-on in the background. The moment a DDL event lands (migration script, manual ALTER TABLE, Supabase Studio, anything), Scout captures the before and after. Your team doesn't have to be watching.",
+      "Scout runs always-on in the background. When a DDL change lands (migration script, manual ALTER TABLE, Supabase Studio, anything), Scout captures the before and after, within seconds on Postgres and MongoDB. Your team doesn't have to be watching.",
     codeBlock: null,
     note: null,
   },
