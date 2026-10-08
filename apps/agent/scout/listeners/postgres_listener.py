@@ -100,6 +100,12 @@ $$;
 """
 
 
+REMOVE_TRIGGER_SQL = """
+DROP EVENT TRIGGER IF EXISTS schemazero_ddl_watcher;
+DROP FUNCTION IF EXISTS schemazero_notify_ddl();
+"""
+
+
 @dataclasses.dataclass(frozen=True)
 class _ConnConfig:
     dsn: str
@@ -602,3 +608,27 @@ def _diff_snapshots(before: dict, after: dict) -> list[dict]:
             )
 
     return changes
+
+
+async def remove_ddl_trigger(connection_string: str) -> bool:
+    """Remove the trigger and function SchemaZero installed in a customer's database.
+
+    Best effort: returns False (and logs why) if it can't connect or lacks
+    permission, so disconnecting never fails because of cleanup.
+    """
+    try:
+        cfg = _parse_connection(connection_string)
+        kwargs: dict = {"timeout": 15}
+        if cfg.ssl_arg is not None:
+            kwargs["ssl"] = cfg.ssl_arg
+        if cfg.is_pooler:
+            kwargs["statement_cache_size"] = 0
+        conn = await asyncpg.connect(cfg.dsn, **kwargs)
+        try:
+            await conn.execute(REMOVE_TRIGGER_SQL)
+        finally:
+            await conn.close()
+        return True
+    except Exception as exc:
+        logger.warning("Could not remove SchemaZero trigger: %s", type(exc).__name__)
+        return False
