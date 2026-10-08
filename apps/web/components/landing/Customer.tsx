@@ -6,12 +6,12 @@ const USE_CASES = [
   },
   {
     role: "Engineering Manager",
-    scenario: "Gets a PagerDuty alert for every HIGH or CRITICAL schema change. Knows within seconds whether to hold a deploy, not after a 2am incident.",
+    scenario: "Can route HIGH and CRITICAL schema changes to PagerDuty. Knows within seconds whether to hold a deploy, instead of finding out hours later.",
     tag: "Buyer",
   },
   {
     role: "Platform / DBA",
-    scenario: "Owns 8 databases across three engines. One dashboard. Every DDL event caught, scored, and explained, without writing a single monitor or query.",
+    scenario: "Owns several databases across different engines. One dashboard. Every DDL event caught, scored, and explained, without writing a single monitor or query.",
     tag: "Power user",
   },
 ];

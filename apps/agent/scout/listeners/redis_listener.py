@@ -15,7 +15,7 @@ POLL_INTERVAL = 30  # seconds
 class RedisListener(BaseListener):
     """Scout listener for Redis.
 
-    Enables keyspace notifications and monitors key pattern changes at
+    Monitors key pattern changes at
     namespace level (not individual keys). Polls every POLL_INTERVAL seconds
     using SCAN with pattern matching to detect new or dropped key namespaces
     and type changes.
@@ -29,15 +29,6 @@ class RedisListener(BaseListener):
 
     async def connect(self, connection_string: str) -> None:
         self._redis = aioredis.from_url(connection_string, decode_responses=True)
-        # Enable keyspace notifications (KEA = Keyspace + Keyevent + All events)
-        try:
-            await self._redis.config_set("notify-keyspace-events", "KEA")
-        except Exception as exc:
-            logger.warning(
-                "Could not enable keyspace notifications for db=%s: %s",
-                self.database_id,
-                exc,
-            )
         logger.info("RedisListener connected to database_id=%s", self.database_id)
 
     async def capture_snapshot(self) -> dict:

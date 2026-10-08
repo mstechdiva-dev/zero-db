@@ -45,7 +45,7 @@ export default function Waitlist({ id }: { id?: string }) {
               <span className="text-[#00e87a]">Be first in line.</span>
             </h2>
             <p className="text-base text-white/45 leading-[1.65] mb-8 max-w-[420px]">
-              Join the waitlist for early access and founding member pricing.
+              Join the waitlist for early access.
               No credit card. No commitment.
             </p>
 

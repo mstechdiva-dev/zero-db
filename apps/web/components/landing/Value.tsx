@@ -13,7 +13,7 @@ export default function Value() {
             <span className="text-[#00e87a]">Hours of cleanup.</span>
           </h2>
           <p className="text-base text-white/45 max-w-[520px] leading-[1.65]">
-            Schema incidents are silent until they aren't. Engineers spend 2–4 hours
+            Schema incidents are silent until they aren't. Engineers can lose hours
             diagnosing what changed, what broke, and whether it's safe to roll back.
             SchemaZero closes that gap in seconds.
           </p>
@@ -33,7 +33,7 @@ export default function Value() {
                 "Dig through migration history and git blame",
                 "Manually trace which queries touch that table",
                 "Best-guess decision: deploy or roll back?",
-                "2–4 hours later, the call gets made",
+                "Hours later, the call gets made",
               ].map((item) => (
                 <li key={item} className="flex items-start gap-3 text-[13px] text-white/40 leading-[1.5]">
                   <span className="mt-[3px] w-4 h-4 flex-shrink-0 rounded-full bg-[rgba(232,88,88,0.12)] border border-[rgba(232,88,88,0.2)] flex items-center justify-center">
@@ -52,7 +52,7 @@ export default function Value() {
             </p>
             <ul className="space-y-4">
               {[
-                "Scout catches every DDL event as it happens",
+                "Scout catches DDL changes within seconds (Postgres, MongoDB) or about a minute (polled engines)",
                 "Agent Zero analyzes impact in seconds",
                 "Risk scored: LOW, MEDIUM, HIGH, CRITICAL",
                 "Plain-English briefing lands in Slack or PagerDuty",
@@ -74,8 +74,8 @@ export default function Value() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-14">
           {[
             {
-              before: "2–4 hrs",
-              after: "< 60 sec",
+              before: "Hours of digging",
+              after: "Seconds",
               label: "Time to understand a schema change",
             },
             {
@@ -84,7 +84,7 @@ export default function Value() {
               label: "How your team gets the answer",
             },
             {
-              before: "~1 hr engineer time",
+              before: "Engineer time",
               after: "$19 / mo",
               label: "Cost of SchemaZero Solo",
             },

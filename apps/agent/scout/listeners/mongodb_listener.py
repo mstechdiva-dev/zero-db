@@ -14,8 +14,8 @@ class MongoDBListener(BaseListener):
     """Scout listener for MongoDB.
 
     Uses change streams on the admin database to detect collection and index
-    changes. Watches for: createCollection, dropCollection, createIndexes,
-    dropIndexes.
+    changes. Watches for: create, drop, createIndexes, dropIndexes.
+    Needs MongoDB 6.0+ running as a replica set (change streams require one).
     """
 
     def __init__(self, database_id: str, org_id: str, supabase_client):
@@ -63,8 +63,8 @@ class MongoDBListener(BaseListener):
                 "$match": {
                     "operationType": {
                         "$in": [
-                            "createCollection",
-                            "dropCollection",
+                            "create",
+                            "drop",
                             "createIndexes",
                             "dropIndexes",
                         ]
@@ -75,7 +75,9 @@ class MongoDBListener(BaseListener):
 
         self._running = True
         db = self._client[self._db_name]
-        async with db.watch(pipeline) as stream:
+        # MongoDB 6.0+ only sends DDL events when showExpandedEvents is on,
+        # and names them create/drop (not createCollection/dropCollection).
+        async with db.watch(pipeline, show_expanded_events=True) as stream:
             while self._running:
                 try:
                     change = await asyncio.wait_for(stream.next(), timeout=5.0)
@@ -95,13 +97,13 @@ class MongoDBListener(BaseListener):
         after = await self.capture_snapshot()
 
         change_type_map = {
-            "createCollection": "collection_created",
-            "dropCollection": "collection_dropped",
+            "create": "collection_created",
+            "drop": "collection_dropped",
             "createIndexes": "index_created",
             "dropIndexes": "index_dropped",
         }
         change_type = change_type_map.get(op, "schema_change")
-        object_type = "collection" if "Collection" in op else "index"
+        object_type = "collection" if op in ("create", "drop") else "index"
 
         # For index operations, use the actual index name(s) rather than the collection name
         if op in ("createIndexes", "dropIndexes"):

@@ -101,11 +101,11 @@ function Connect({ tick }: { tick: number }) {
       <Window title="/onboarding">
         <Reveal tick={tick} at={0}><span className="text-[#00e87a]">Obi</span> <span className="text-white/22">›</span> Which database are we connecting?</Reveal>
         <Reveal tick={tick} at={1}><span className="text-[#4a9eff]">you</span> <span className="text-white/22">›</span> Supabase</Reveal>
-        <Reveal tick={tick} at={2}><span className="text-[#00e87a]">Obi</span> <span className="text-white/22">›</span> Paste your connection string.</Reveal>
+        <Reveal tick={tick} at={2}><span className="text-[#00e87a]">Obi</span> <span className="text-white/22">›</span> Use the secure box. Your password never goes through this chat.</Reveal>
         <div className="min-h-[1.9em] break-all">
           {tick >= 3 && (
             <>
-              <span className="text-[#4a9eff]">you</span> <span className="text-white/22">›</span>{" "}
+              <span className="text-[#00e87a]">🔒 secure box</span> <span className="text-white/22">›</span>{" "}
               <Typed text="postgresql://postgres:••••@db.acme.supabase.co:5432/postgres" className="text-white/70" />
             </>
           )}
@@ -113,8 +113,9 @@ function Connect({ tick }: { tick: number }) {
       </Window>
       <div className="flex flex-col gap-2.5">
         {[
+          ["Plan check", "valid · 14-day trial"],
           ["Reachability", "connected"],
-          ["Detection mode", "real-time · port 5432"],
+          ["Detection mode", "event trigger · port 5432"],
           ["DDL event trigger", "installed"],
           ["Scout", "watching"],
         ].map(([label, status], i) => (
@@ -330,12 +331,12 @@ function Dashboard({ tick }: { tick: number }) {
 }
 
 const CAPTIONS = [
-  "Obi walks you through connecting a database. Paste a connection string, it checks it works, Scout starts watching.",
+  "Obi walks you through connecting a database. You add the connection string in a secure box, never in the chat. It checks it works and Scout starts watching.",
   "An engineer writes a cleanup migration. One line looks harmless.",
-  "Scout catches the change the moment it runs, with a before/after snapshot. No row data is ever read.",
+  "Scout catches the change within seconds, with a before/after snapshot. No row data is ever read.",
   "Agent Zero scores the risk and flags what likely depends on it, in plain English.",
-  "Alerts fire in order, so the right people know before anyone ships.",
-  "The same check on the pull request shows the error before the merge, not after.",
+  "Alerts fire in order, so the right people know within seconds of the change.",
+  "In beta: a separate check reads the migration file on the pull request and flags it before the merge.",
   "Everything lands in the dashboard. New changes slide in live.",
 ];
 
@@ -378,7 +379,7 @@ export default function LiveDemo() {
           </p>
           <h2 className="text-3xl font-semibold text-white tracking-[-1px] leading-[1.15] mb-4">
             Watch a bad migration get caught.<br />
-            <span className="text-[#00e87a]">Before it ships.</span>
+            <span className="text-[#00e87a]">Within seconds.</span>
           </h2>
           <p className="text-base text-white/45 max-w-[560px] leading-[1.65]">
             One walkthrough of everything SchemaZero does, from connecting a database to the
