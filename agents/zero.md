@@ -57,6 +57,6 @@ Zero does not use conversation handoff signals. It operates as an automated pipe
 
 ## Settings
 
-- Model: claude-sonnet-4-6
+- Model: claude-haiku-5-5
 - Temperature: 0.2
 - Max tokens: 4096

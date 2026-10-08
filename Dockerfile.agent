@@ -1,0 +1,15 @@
+# SchemaZero backend (Scout + Zero + agent API).
+# Built from the repo root so the image holds both apps/agent and agents/
+# (the backend loads its agent prompts from ../../agents).
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY apps/agent/requirements.txt ./apps/agent/requirements.txt
+RUN pip install --no-cache-dir -r apps/agent/requirements.txt
+
+COPY apps/agent ./apps/agent
+COPY agents ./agents
+
+WORKDIR /app/apps/agent
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"]

@@ -5,7 +5,7 @@ from typing import Optional
 
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from scout.listeners.base_listener import BaseListener
+from scout.listeners.base_listener import BaseListener, internal_api_url
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ class MongoDBListener(BaseListener):
         super().__init__(database_id, org_id, supabase_client)
         self._client: Optional[AsyncIOMotorClient] = None
         self._db_name: Optional[str] = None
-        self._internal_url = os.environ.get("INTERNAL_API_URL", "http://localhost:8000")
+        self._internal_url = internal_api_url()
 
     async def connect(self, connection_string: str) -> None:
         from urllib.parse import urlparse

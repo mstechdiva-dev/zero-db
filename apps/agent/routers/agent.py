@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import re
 
 from fastapi import APIRouter, Request, HTTPException, Depends
 from pydantic import BaseModel, Field
@@ -35,6 +36,13 @@ def _load_prompt(agent_name: str, fallback: dict[str, str]) -> str:
     return fallback.get(agent_name, "")
 
 SUPPORTED_AGENTS = {"obi", "sully", "sal"}
+
+# scheme://user:password@host — a connection string with credentials in it.
+CREDENTIAL_URI = re.compile(r"[a-z][a-z0-9+.\-]*://[^\s/@:]*:[^\s/@]+@", re.IGNORECASE)
+
+
+def _contains_credentials(text: str) -> bool:
+    return bool(CREDENTIAL_URI.search(text or ""))
 HANDOFF_SIGNALS = ["HANDOFF:", "CREATE_TICKET", "CREATE_LEAD"]
 
 
@@ -58,6 +66,17 @@ async def chat(
 ):
     if body.agent not in SUPPORTED_AGENTS:
         raise HTTPException(status_code=400, detail=f"Unknown agent: {body.agent}")
+
+    # Passwords must never reach Claude. Connection strings go through the
+    # secure form (POST /databases/), not the chat.
+    if _contains_credentials(body.message) or any(
+        _contains_credentials(str(m.get("content", ""))) for m in body.history
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="That looks like a connection string with a password in it. "
+            "Don't paste it here. Use the secure box next to the chat.",
+        )
 
     # Try Supabase first so admin edits take effect immediately,
     # fall back to the prompts loaded from disk at startup.

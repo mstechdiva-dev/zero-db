@@ -219,3 +219,10 @@ class TestNextAction:
         result = next_action("unknown_level")
         assert isinstance(result, str)
         assert len(result) > 0
+
+
+def test_new_collection_is_low_and_unknown_types_are_medium():
+    from zero.risk_scorer import score
+
+    assert score("collection_created", "collection", None, None) == "low"
+    assert score("schema_change", "collection", None, None) == "medium"

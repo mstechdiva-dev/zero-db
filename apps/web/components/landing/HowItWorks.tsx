@@ -41,14 +41,13 @@ const STEPS = [
     codeBlock: (
       <div className="bg-[#0d0d0d] border border-white/[0.06] rounded-lg px-4 py-3 font-mono text-[11px] leading-[1.8] text-white/45 mt-1">
         <span className="text-[#e83232]">HIGH </span> idx_sessions_token dropped —{" "}
-        <span className="text-white/22">2 queries in</span> api-gateway{" "}
-        <span className="text-white/22">will full-scan. Review before deploying.</span>
+        <span className="text-white/22">queries that use it will full-scan. Review before deploying.</span>
         <br />
         <span className="text-[#00e87a]">LOW  </span> verified_at added nullable —{" "}
         <span className="text-white/22">additive change, safe to deploy</span>
         <br />
         <span className="text-[#ffb200]">MED  </span> status widened varchar(20)→(50) —{" "}
-        <span className="text-white/22">check enum serializers in</span> orders-service
+        <span className="text-white/22">check any code that serializes this column</span>
       </div>
     ),
     note: null,

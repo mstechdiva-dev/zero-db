@@ -144,7 +144,10 @@ class SupabaseService:
     async def update_alert_config(self, org_id: str, config) -> dict:
         result = (
             self.client.table("alert_configs")
-            .upsert({"org_id": org_id, **config.model_dump(exclude_unset=True)})
+            .upsert(
+                {"org_id": org_id, **config.model_dump(exclude_unset=True)},
+                on_conflict="org_id",
+            )
             .execute()
         )
         if getattr(result, "error", None):

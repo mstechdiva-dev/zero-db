@@ -3,9 +3,9 @@ import logging
 import os
 from typing import Optional
 
-import aioredis
+import redis.asyncio as aioredis
 
-from scout.listeners.base_listener import BaseListener
+from scout.listeners.base_listener import BaseListener, internal_api_url
 
 logger = logging.getLogger(__name__)
 
@@ -25,10 +25,10 @@ class RedisListener(BaseListener):
         super().__init__(database_id, org_id, supabase_client)
         self._redis: Optional[aioredis.Redis] = None
         self._last_snapshot: Optional[dict] = None
-        self._internal_url = os.environ.get("INTERNAL_API_URL", "http://localhost:8000")
+        self._internal_url = internal_api_url()
 
     async def connect(self, connection_string: str) -> None:
-        self._redis = await aioredis.from_url(connection_string, decode_responses=True)
+        self._redis = aioredis.from_url(connection_string, decode_responses=True)
         # Enable keyspace notifications (KEA = Keyspace + Keyevent + All events)
         try:
             await self._redis.config_set("notify-keyspace-events", "KEA")
@@ -102,7 +102,7 @@ class RedisListener(BaseListener):
         await self.stop_heartbeat()
         self._running = False
         if self._redis:
-            await self._redis.close()
+            await self._redis.aclose()
             self._redis = None
         logger.info("RedisListener disconnected from db=%s", self.database_id)
 

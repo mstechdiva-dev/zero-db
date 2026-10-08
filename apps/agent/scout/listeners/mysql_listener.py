@@ -5,7 +5,7 @@ from typing import Optional
 
 import aiomysql
 
-from scout.listeners.base_listener import BaseListener
+from scout.listeners.base_listener import BaseListener, internal_api_url
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ class MySQLListener(BaseListener):
         super().__init__(database_id, org_id, supabase_client)
         self._conn: Optional[aiomysql.Connection] = None
         self._last_snapshot: Optional[dict] = None
-        self._internal_url = os.environ.get("INTERNAL_API_URL", "http://localhost:8000")
+        self._internal_url = internal_api_url()
 
     async def connect(self, connection_string: str) -> None:
         """Parse a mysql://user:password@host:port/dbname URI and connect."""

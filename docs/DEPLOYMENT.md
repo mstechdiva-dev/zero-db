@@ -1,5 +1,7 @@
 # SchemaZero Deployment Guide
 
+> **The current step-by-step guide is [`SETUP.md`](../SETUP.md) at the repo root.** It lists every setting and the exact order. Where this document differs, `SETUP.md` is right. The sections below on adding listeners, agents, alert channels and tests are still current.
+
 ## Table of Contents
 
 1. [Prerequisites](#prerequisites)
@@ -40,13 +42,13 @@
 | `SCHEMAZERO_WEBHOOK_SIGNING_SECRET` | Shared secret for signing outbound webhook payloads |
 | `SLACK_WEBHOOK_URL` | Default Slack webhook URL (orgs can override in alert_configs) |
 | `PAGERDUTY_API_KEY` | PagerDuty Events API v2 key |
-| `RESEND_API_KEY` | Resend API key for email alerts (or configure SMTP vars) |
-| `SMTP_HOST` | SMTP server hostname (if using SMTP instead of Resend) |
+| `SMTP_HOST` | SMTP server hostname (email alerts use SMTP only) |
 | `SMTP_PORT` | SMTP server port |
 | `SMTP_USER` | SMTP username |
 | `SMTP_PASSWORD` | SMTP password |
 | `DASHBOARD_URL` | Base URL of the frontend, e.g. `https://app.schemazero.com` |
-| `RAILWAY_API_URL` | Internal Railway service URL (set automatically by Railway) |
+| `FRONTEND_URL` | Website address (allowed origin for browser calls) |
+| `INTERNAL_API_SECRET` | Protects the Scout-to-Zero call (recommended) |
 
 Generate a valid `ENCRYPTION_KEY`:
 
@@ -60,11 +62,10 @@ python3 -c "import os, base64; print(base64.b64encode(os.urandom(32)).decode())"
 |---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL (public) |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key (public) |
-| `NEXT_PUBLIC_LEMONSQUEEZY_STORE_ID` | Lemon Squeezy store ID |
 | `RAILWAY_API_URL` | Backend URL on Railway (server-side only) |
-| `LEMONSQUEEZY_API_KEY` | Lemon Squeezy API key (server-side) |
-| `LEMONSQUEEZY_WEBHOOK_SECRET` | Lemon Squeezy webhook signing secret |
-| `LEMONSQUEEZY_SOLO_VARIANT_ID` | Lemon Squeezy variant ID for the Solo plan |
+| `STRIPE_SECRET_KEY` | Stripe secret key (server-side) |
+| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret |
+| `STRIPE_PRICE_ID_SOLO` | Stripe price ID for the Solo plan |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key (server-side API routes) |
 
 ---
@@ -74,19 +75,8 @@ python3 -c "import os, base64; print(base64.b64encode(os.urandom(32)).decode())"
 ### 1. Supabase Setup
 
 1. Create a new Supabase project at [supabase.com](https://supabase.com).
-2. Run the base schema:
-   ```bash
-   psql "$SUPABASE_DB_URL" < docs/base_schema.sql
-   ```
-3. Run any pending migrations in order:
-   ```bash
-   psql "$SUPABASE_DB_URL" < supabase/migrations/001_cleanup.sql
-   psql "$SUPABASE_DB_URL" < supabase/migrations/002_leads.sql
-   psql "$SUPABASE_DB_URL" < supabase/migrations/003_agent_versions.sql
-   psql "$SUPABASE_DB_URL" < supabase/migrations/004_lemonsqueezy.sql
-   ```
-4. Enable Row Level Security (RLS) on all tables — policies are defined in `supabase/schema.sql`.
-5. Copy your project URL and keys from **Project Settings → API**.
+2. Run `supabase/schema.sql` in the SQL editor. It is the complete schema, so no migrations are needed. If the project already has older tables, run `supabase/reset.sql` first. See `SETUP.md`, section 1.
+3. Copy your project URL and keys from **Project Settings → API**.
 
 ### 2. Railway (Backend)
 
@@ -97,8 +87,7 @@ python3 -c "import os, base64; print(base64.b64encode(os.urandom(32)).decode())"
    ```
 2. Create a new Railway project and link it:
    ```bash
-   cd apps/agent
-   railway init
+   railway init   # run from the repo root
    ```
 3. Set all backend environment variables:
    ```bash
@@ -118,11 +107,7 @@ python3 -c "import os, base64; print(base64.b64encode(os.urandom(32)).decode())"
    # Expected: {"status":"ok","version":"..."}
    ```
 
-The Railway config (`apps/agent/railway.toml`) is already set with:
-- Build: `pip install -r requirements.txt`
-- Start: `uvicorn main:app --host 0.0.0.0 --port $PORT`
-- Health check: `/health`
-- Restart policy: `always`
+The Railway config is the root `railway.toml`, which builds `Dockerfile.agent` from the repo root so the backend image holds both `apps/agent` and the `agents/` prompt files. Health check: `/health`. Restart policy: `always`. Deploy from the repo root, not from `apps/agent`.
 
 ### 3. Vercel (Frontend)
 

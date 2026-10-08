@@ -6,7 +6,7 @@ engine type and returns a list of DiffResult objects.
 
 from typing import Literal
 
-from .models import DiffResult
+from .diff_models import DiffResult
 
 Engine = Literal[
     "postgresql",

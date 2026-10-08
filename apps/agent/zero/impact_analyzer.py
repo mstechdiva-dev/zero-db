@@ -12,6 +12,8 @@ from services.anthropic_service import AnthropicService
 logger = logging.getLogger(__name__)
 
 ZERO_AGENT_NAME = "zero"
+STRONG_MODEL = "claude-sonnet-5-5"
+STRONG_MODEL_RISKS = {"high", "critical"}
 
 
 class ImpactAnalyzer:
@@ -47,12 +49,26 @@ class ImpactAnalyzer:
         """
         prompt = self._build_prompt(change_event, risk_level)
 
-        try:
-            raw = await self._service.chat(message=prompt, history=[])
-            return self._parse_response(raw, risk_level, change_event)
-        except Exception as exc:
-            logger.error("Impact analysis failed for event %s: %s", change_event.get("id"), exc)
-            return self._fallback_result(risk_level, change_event)
+        # High/critical changes go straight to the stronger model; everything
+        # else starts on the agent's own (Haiku) model. If the first call
+        # fails, the other model gets one try before the canned result.
+        default = self._service.model
+        if risk_level in STRONG_MODEL_RISKS:
+            order = [STRONG_MODEL, default]
+        else:
+            order = [default, STRONG_MODEL]
+        order = list(dict.fromkeys(order))  # drop duplicates, keep order
+
+        for model in order:
+            try:
+                raw = await self._service.chat(message=prompt, history=[], model=model)
+                return self._parse_response(raw, risk_level, change_event)
+            except Exception as exc:
+                logger.error(
+                    "Impact analysis failed for event %s on %s: %s",
+                    change_event.get("id"), model, exc,
+                )
+        return self._fallback_result(risk_level, change_event)
 
     def _build_prompt(self, change_event: dict, risk_level: str) -> str:
         change_type = change_event.get("change_type", "unknown")

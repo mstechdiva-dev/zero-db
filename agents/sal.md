@@ -54,6 +54,6 @@ You are Sal, SchemaZero's sales agent. You handle inbound interest from teams an
 
 ## Settings
 
-- Model: claude-sonnet-4-6
+- Model: claude-haiku-5-5
 - Temperature: 0.6
 - Max tokens: 2048

@@ -15,7 +15,7 @@ interface OrgBilling {
   plan: string;
   trial_ends_at: string;
   trial_converted: boolean;
-  lemonsqueezy_customer_portal_url: string | null;
+  stripe_customer_id: string | null;
 }
 
 const ALL_RISK_LEVELS = ["low", "medium", "high", "critical"];
@@ -37,6 +37,18 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [checkingOut, setCheckingOut] = useState(false);
+  const [billingError, setBillingError] = useState<string | null>(null);
+  const [billingNotice, setBillingNotice] = useState<string | null>(null);
+
+  // Stripe sends people back here after checkout.
+  useEffect(() => {
+    const result = new URLSearchParams(window.location.search).get("billing");
+    if (result === "success") {
+      setBillingNotice("Thanks! Your plan updates within a few seconds. Refresh if it still says trial.");
+    } else if (result === "cancelled") {
+      setBillingNotice("Checkout cancelled. You haven't been charged.");
+    }
+  }, []);
   const [urlErrors, setUrlErrors] = useState<Record<string, string>>({});
   const [testing, setTesting] = useState(false);
   const [testResults, setTestResults] = useState<Record<string, { ok: boolean; status?: number; error?: string }> | null>(null);
@@ -57,7 +69,7 @@ export default function SettingsPage() {
       supabase.from("alert_configs").select("*").eq("org_id", userData.org_id).single(),
       supabase
         .from("organizations")
-        .select("plan, trial_ends_at, trial_converted, lemonsqueezy_customer_portal_url")
+        .select("plan, trial_ends_at, trial_converted, stripe_customer_id")
         .eq("id", userData.org_id)
         .single(),
     ]);
@@ -124,7 +136,7 @@ export default function SettingsPage() {
         webhook_url: alertConfig.webhook_url || null,
         email_recipients: emails,
         notify_on: alertConfig.notify_on,
-      });
+      }, { onConflict: "org_id" });
 
       if (error) throw error;
       setSaved(true);
@@ -136,18 +148,26 @@ export default function SettingsPage() {
     }
   }
 
-  async function handleUpgrade() {
+  async function goToStripe(path: string) {
     setCheckingOut(true);
+    setBillingError(null);
     try {
-      const res = await fetch("/api/checkout", { method: "POST" });
-      const data = await res.json();
-      if (data.url) window.location.href = data.url;
-    } catch (err) {
-      console.error("Checkout failed:", err);
+      const res = await fetch(path, { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (data.url) {
+        window.location.href = data.url;
+        return;
+      }
+      setBillingError(data.error ?? "Something went wrong. Please try again.");
+    } catch {
+      setBillingError("Couldn't reach billing. Check your connection and try again.");
     } finally {
       setCheckingOut(false);
     }
   }
+
+  const handleUpgrade = () => goToStripe("/api/checkout");
+  const handleManage = () => goToStripe("/api/billing/portal");
 
   async function sendTest() {
     setTesting(true);
@@ -223,6 +243,9 @@ export default function SettingsPage() {
           </div>
         )}
 
+        {billingNotice && <p className="text-sm text-[#00e87a]">{billingNotice}</p>}
+        {billingError && <p className="text-sm text-red-400">{billingError}</p>}
+
         {isTrialActive && (
           <div className="space-y-3">
             <p className="text-sm text-gray-400">
@@ -241,18 +264,20 @@ export default function SettingsPage() {
         {isSolo && (
           <div className="space-y-3">
             <p className="text-sm text-gray-400">Solo plan · 2 databases · 1 seat</p>
-            {billing?.lemonsqueezy_customer_portal_url ? (
-              <a
-                href={billing.lemonsqueezy_customer_portal_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block px-4 py-2 border border-gray-700 text-gray-300 hover:text-white hover:border-gray-500 rounded-lg transition-colors text-sm"
+            {billing?.stripe_customer_id ? (
+              <button
+                onClick={handleManage}
+                disabled={checkingOut}
+                className="inline-block px-4 py-2 border border-gray-700 text-gray-300 hover:text-white hover:border-gray-500 rounded-lg transition-colors text-sm disabled:opacity-50"
               >
-                Manage subscription
-              </a>
+                {checkingOut ? "Opening…" : "Manage subscription"}
+              </button>
             ) : (
               <p className="text-xs text-gray-600">
-                To manage your subscription, visit your Lemon Squeezy account.
+                To manage your subscription, email{" "}
+                <a href="mailto:hello@schemazero.com" className="text-[#00e87a] hover:underline">
+                  hello@schemazero.com
+                </a>
               </p>
             )}
           </div>

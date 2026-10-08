@@ -33,6 +33,7 @@ LOW_CHANGE_TYPES = {
     "column_added",
     "index_created",
     "table_created",
+    "collection_created",
     "constraint_added",
     "key_pattern_added",
     "ttl_policy_changed",

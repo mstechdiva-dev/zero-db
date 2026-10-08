@@ -8,7 +8,7 @@ from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 
 import asyncpg
 
-from scout.listeners.base_listener import BaseListener
+from scout.listeners.base_listener import BaseListener, internal_api_url
 
 logger = logging.getLogger(__name__)
 
@@ -223,7 +223,7 @@ class PostgresListener(BaseListener):
         self._cfg: Optional[_ConnConfig] = None
         self._connection_string: str = ""
         self._last_snapshot: Optional[dict] = None
-        self._internal_url = os.environ.get("INTERNAL_API_URL", "http://localhost:8000")
+        self._internal_url = internal_api_url()
         self._use_notify = True
 
     async def connect(self, connection_string: str) -> None:
@@ -307,7 +307,7 @@ class PostgresListener(BaseListener):
             try:
                 await self._subscribe_and_wait()
             except (
-                asyncpg.PostgresConnectionStatusError,
+                asyncpg.PostgresConnectionError,
                 asyncpg.ConnectionDoesNotExistError,
                 OSError,
             ) as exc:
@@ -369,7 +369,7 @@ class PostgresListener(BaseListener):
             try:
                 await self._handle_change()
             except (
-                asyncpg.PostgresConnectionStatusError,
+                asyncpg.PostgresConnectionError,
                 asyncpg.ConnectionDoesNotExistError,
                 OSError,
             ) as exc:

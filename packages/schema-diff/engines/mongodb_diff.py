@@ -14,7 +14,7 @@ if _pkg_root not in sys.path:
     sys.path.insert(0, _pkg_root)
 
 from engines.base_diff import BaseDiff  # noqa: E402
-from models import DiffResult  # noqa: E402
+from diff_models import DiffResult  # noqa: E402
 
 
 class MongoDBDiff(BaseDiff):

@@ -44,6 +44,6 @@ Scout does not use conversation handoff signals. It operates silently in the bac
 
 ## Settings
 
-- Model: claude-haiku-4-5-20251001
+- Model: claude-haiku-5-5
 - Temperature: 0.0
 - Max tokens: 512

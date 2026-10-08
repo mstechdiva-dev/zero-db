@@ -20,7 +20,7 @@ sys.path.insert(0, _schema_diff_root)
 
 import pytest
 from engines.postgres_diff import PostgresDiff
-from models import DiffResult
+from diff_models import DiffResult
 
 
 # ---------------------------------------------------------------------------

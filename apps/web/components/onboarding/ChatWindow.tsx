@@ -9,15 +9,17 @@ interface Message {
 
 interface ChatWindowProps {
   agentName: string;
-  onComplete?: () => void;
 }
 
-export default function ChatWindow({ agentName, onComplete }: ChatWindowProps) {
+// scheme://user:password@host, i.e. a connection string with a password in it
+const HAS_CREDENTIALS = /[a-z][a-z0-9+.\-]*:\/\/[^\s/@:]*:[^\s/@]+@/i;
+
+export default function ChatWindow({ agentName }: ChatWindowProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
       content:
-        "Hi! I'm Obi. I'll help you connect your first database to SchemaZero. What type of database are you using?",
+        "Hi! I'm Obi. I'll help you connect your first database to SchemaZero. What type of database are you using? When you have your connection string, paste it into the secure box next to this chat, not here.",
     },
   ]);
   const [input, setInput] = useState("");
@@ -32,6 +34,18 @@ export default function ChatWindow({ agentName, onComplete }: ChatWindowProps) {
     if (!input.trim() || loading) return;
 
     const userMessage = input.trim();
+    if (HAS_CREDENTIALS.test(userMessage)) {
+      // Keep it in the box so the person can move it, but never send it.
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content:
+            "That looks like a connection string with a password in it. I haven't sent it anywhere. Please clear it from here and paste it into the secure box next to this chat instead.",
+        },
+      ]);
+      return;
+    }
     setInput("");
     setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
     setLoading(true);
@@ -55,15 +69,6 @@ export default function ChatWindow({ agentName, onComplete }: ChatWindowProps) {
         ...prev,
         { role: "assistant", content: data.response },
       ]);
-
-      // Trigger onComplete when the backend signals done (preferred) or
-      // falls back to the legacy phrase check for older agent versions.
-      if (
-        data.completed === true ||
-        (data.handoff === null && data.response.toLowerCase().includes("scout is now watching"))
-      ) {
-        setTimeout(() => onComplete?.(), 1500);
-      }
     } catch {
       setMessages((prev) => [
         ...prev,

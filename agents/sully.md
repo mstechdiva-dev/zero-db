@@ -48,6 +48,6 @@ You are Sully, SchemaZero's support agent. You answer questions about how Schema
 
 ## Settings
 
-- Model: claude-haiku-4-5-20251001
+- Model: claude-haiku-5-5
 - Temperature: 0.7
 - Max tokens: 1024

@@ -114,8 +114,8 @@ function EngineDemoPanel() {
         {/* Results */}
         <div className={`transition-all duration-500 ${show(step, 4)}`}>
           <span className="text-white/35">→ </span>
-          <span className="text-[#00e87a]">2 queries</span>
-          <span className="text-white/50"> in api-gateway reference this index</span>
+          <span className="text-[#00e87a]">queries</span>
+          <span className="text-white/50"> that rely on this index are affected</span>
         </div>
         <div className={`transition-all duration-500 ${show(step, 4)}`}>
           <span className="text-white/35">→ </span>
@@ -159,9 +159,8 @@ function EngineDemoPanel() {
             <p className="font-mono text-[10px] text-white/35 mb-1.5">idx_sessions_token</p>
             <p className="text-[11px] text-white/50 leading-[1.55]">
               <span className="text-[#e85858] font-semibold">Do not deploy.</span>{" "}
-              This index covers 2 frequent queries in{" "}
-              <span className="font-mono text-white/65">api-gateway</span>.
-              Expect full sequential scans until rebuilt.
+              Queries that rely on this index will fall back to full
+              sequential scans until it is rebuilt.
             </p>
           </div>
         </div>
@@ -177,7 +176,7 @@ interface HeroProps {
 
 export default function Hero({ onTabChange }: HeroProps) {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[calc(100vh-64px)]">
+    <div className="grid grid-cols-1 lg:grid-cols-2 lg:min-h-[560px]">
       {/* Left: copy */}
       <div className="flex flex-col justify-center px-5 sm:px-10 py-12 lg:py-16 lg:border-r border-white/[0.06]">
         {/* Badge */}
@@ -222,6 +221,15 @@ export default function Hero({ onTabChange }: HeroProps) {
           >
             Join waitlist
           </a>
+          <button
+            type="button"
+            onClick={() =>
+              document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" })
+            }
+            className="px-6 py-3 border border-[rgba(0,232,122,0.2)] text-[#00e87a] text-sm font-medium rounded-lg hover:bg-[rgba(0,232,122,0.08)] transition-colors"
+          >
+            Watch the demo ↓
+          </button>
           <button
             type="button"
             onClick={() => onTabChange("how")}

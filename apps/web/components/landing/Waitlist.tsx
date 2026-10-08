@@ -41,7 +41,7 @@ export default function Waitlist({ id }: { id?: string }) {
               Early access
             </p>
             <h2 className="text-3xl font-semibold text-white tracking-[-1px] leading-[1.15] mb-4">
-              Launching 2026.<br />
+              Launching 2027.<br />
               <span className="text-[#00e87a]">Be first in line.</span>
             </h2>
             <p className="text-base text-white/45 leading-[1.65] mb-8 max-w-[420px]">

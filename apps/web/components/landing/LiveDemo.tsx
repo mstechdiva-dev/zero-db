@@ -188,12 +188,12 @@ function Analyze({ tick }: { tick: number }) {
         <p className="font-mono text-[10px] text-white/25 mb-1.5">IMPACT</p>
         <div className="text-[13px] text-white/55 leading-[1.6] min-h-[84px]">
           {tick >= 2 && (
-            <Typed text="The legacy_email column was dropped from users. 2 queries in api-gateway still select it and will start failing." />
+            <Typed text="The legacy_email column was dropped from users. Any query that still selects it will start failing." />
           )}
         </div>
-        <p className="font-mono text-[10px] text-white/25 mt-3 mb-1">AFFECTED</p>
-        <Reveal tick={tick} at={5} className="font-mono text-[11px]"><span className="text-[#c8bfff]">api-gateway</span>/auth.ts:84 <span className="text-white/30">SELECT legacy_email</span></Reveal>
-        <Reveal tick={tick} at={6} className="font-mono text-[11px]"><span className="text-[#c8bfff]">api-gateway</span>/billing.ts:41 <span className="text-white/30">WHERE legacy_email</span></Reveal>
+        <p className="font-mono text-[10px] text-white/25 mt-3 mb-1">LIKELY AFFECTED · SEARCH YOUR CODE FOR</p>
+        <Reveal tick={tick} at={5} className="font-mono text-[11px]"><span className="text-[#c8bfff]">SELECT</span> … legacy_email <span className="text-white/30">FROM users</span></Reveal>
+        <Reveal tick={tick} at={6} className="font-mono text-[11px]"><span className="text-[#c8bfff]">WHERE</span> legacy_email <span className="text-white/30">= …</span></Reveal>
         <p className="font-mono text-[10px] text-white/25 mt-3 mb-1.5">NEXT ACTION</p>
         <Reveal tick={tick} at={7}><Pill kind="CRITICAL">Do not deploy until verified</Pill></Reveal>
       </Card>
@@ -235,7 +235,7 @@ function Alert({ tick }: { tick: number }) {
             <p className="text-[11px] text-white/45 mb-2">prod-postgres · users · column dropped</p>
             <p className="text-[12px] text-white/60 leading-[1.5] mb-2">
               <span className="text-[#e85858] font-semibold">Do not deploy.</span>{" "}
-              2 queries in api-gateway still select users.legacy_email.
+              Queries that still select users.legacy_email will fail.
             </p>
             <span className="inline-block font-mono text-[9px] text-[#00e87a] bg-[rgba(0,232,122,0.08)] border border-[rgba(0,232,122,0.2)] px-2 py-0.5 rounded">
               View in Dashboard →
@@ -328,7 +328,7 @@ const CAPTIONS = [
   "Obi walks you through connecting a database. Paste a connection string, it checks it works, Scout starts watching.",
   "An engineer writes a cleanup migration. One line looks harmless.",
   "Scout catches the change the moment it runs, with a before/after snapshot. No row data is ever read.",
-  "Agent Zero scores the risk and traces what depends on it, in plain English.",
+  "Agent Zero scores the risk and flags what likely depends on it, in plain English.",
   "Alerts fire in order, so the right people know before anyone ships.",
   "The same check on the pull request shows the error before the merge, not after.",
   "Everything lands in the dashboard. New changes slide in live.",
@@ -364,7 +364,7 @@ export default function LiveDemo() {
   const View = SCENE_VIEWS[scene];
 
   return (
-    <section className="bg-[#0a0a0a] border-t border-white/[0.06] px-5 sm:px-10 py-20">
+    <section id="demo" className="scroll-mt-28 md:scroll-mt-16 bg-[#0a0a0a] border-t border-white/[0.06] px-5 sm:px-10 py-20">
       <div className="max-w-[1100px] mx-auto">
 
         <div className="mb-8">

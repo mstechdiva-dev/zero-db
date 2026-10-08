@@ -15,6 +15,16 @@ interface NavProps {
 }
 
 export default function Nav({ activeTab, onTabChange }: NavProps) {
+  function pick(id: Tab) {
+    onTabChange(id);
+    if (id === "demo") {
+      setTimeout(
+        () => document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" }),
+        50
+      );
+    }
+  }
+
   return (
     <nav className="sticky top-0 z-50 bg-[#0a0a0a]/90 backdrop-blur border-b border-gray-900">
       <div className="max-w-7xl mx-auto px-5 sm:px-6 flex items-center justify-between h-16">
@@ -26,7 +36,7 @@ export default function Nav({ activeTab, onTabChange }: NavProps) {
           {TABS.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => onTabChange(tab.id)}
+              onClick={() => pick(tab.id)}
               className={`px-4 py-2 text-sm rounded-lg transition-colors font-medium ${
                 activeTab === tab.id
                   ? "bg-[#00e87a]/10 text-[#00e87a]"
@@ -59,7 +69,7 @@ export default function Nav({ activeTab, onTabChange }: NavProps) {
         {TABS.map((tab) => (
           <button
             key={tab.id}
-            onClick={() => onTabChange(tab.id)}
+            onClick={() => pick(tab.id)}
             className={`flex-shrink-0 px-3 py-1.5 text-xs rounded-lg transition-colors font-medium ${
               activeTab === tab.id
                 ? "bg-[#00e87a]/10 text-[#00e87a]"
