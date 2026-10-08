@@ -64,65 +64,77 @@ class AlertDispatcher:
 
         # 1. Custom webhook — always first
         webhook_url = alert_config.get("webhook_url")
-        await self._fire_webhook(
-            org_id=org_id,
-            event_id=event_id,
-            webhook_url=webhook_url,
-            database_name=database_name,
-            engine=engine,
-            risk_level=risk_level,
-            change_type=change_type,
-            object_type=object_type,
-            summary=summary,
-            next_action=next_action,
-            dashboard_url=dashboard_url,
-        )
+        try:
+            await self._fire_webhook(
+                org_id=org_id,
+                event_id=event_id,
+                webhook_url=webhook_url,
+                database_name=database_name,
+                engine=engine,
+                risk_level=risk_level,
+                change_type=change_type,
+                object_type=object_type,
+                summary=summary,
+                next_action=next_action,
+                dashboard_url=dashboard_url,
+            )
+        except Exception as exc:
+            logger.error("webhook alert failed: %s", exc)
 
         # 2. Slack — HIGH and CRITICAL
         if risk_level.lower() in ("high", "critical"):
             slack_url = alert_config.get("slack_webhook_url")
-            await self._fire_slack(
-                org_id=org_id,
-                event_id=event_id,
-                slack_url=slack_url,
-                risk_level=risk_level,
-                database_name=database_name,
-                engine=engine,
-                change_type=change_type,
-                object_type=object_type,
-                object_name=object_name,
-                summary=summary,
-                next_action=next_action,
-                dashboard_url=dashboard_url,
-            )
+            try:
+                await self._fire_slack(
+                    org_id=org_id,
+                    event_id=event_id,
+                    slack_url=slack_url,
+                    risk_level=risk_level,
+                    database_name=database_name,
+                    engine=engine,
+                    change_type=change_type,
+                    object_type=object_type,
+                    object_name=object_name,
+                    summary=summary,
+                    next_action=next_action,
+                    dashboard_url=dashboard_url,
+                )
+            except Exception as exc:
+                logger.error("slack alert failed: %s", exc)
 
         # 3. PagerDuty — CRITICAL only
         if risk_level.lower() == "critical":
             pd_key = alert_config.get("pagerduty_api_key")
-            await self._fire_pagerduty(
-                org_id=org_id,
-                event_id=event_id,
-                api_key=pd_key,
-                database_name=database_name,
-                summary=summary,
-                next_action=next_action,
-            )
+            try:
+                await self._fire_pagerduty(
+                    org_id=org_id,
+                    event_id=event_id,
+                    api_key=pd_key,
+                    database_name=database_name,
+                    summary=summary,
+                    next_action=next_action,
+                )
+            except Exception as exc:
+                logger.error("pagerduty alert failed: %s", exc)
 
         # 4. Email — based on notify_on config
         email_recipients: list[str] = alert_config.get("email_recipients", [])
         if email_recipients:
-            await self._fire_email(
-                org_id=org_id,
-                event_id=event_id,
-                recipients=email_recipients,
-                risk_level=risk_level,
-                database_name=database_name,
-                engine=engine,
-                change_type=change_type,
-                summary=summary,
-                next_action=next_action,
-                dashboard_url=dashboard_url,
-            )
+            try:
+                await self._fire_email(
+                    org_id=org_id,
+                    event_id=event_id,
+                    recipients=email_recipients,
+                    risk_level=risk_level,
+                    database_name=database_name,
+                    engine=engine,
+                    change_type=change_type,
+                    summary=summary,
+                    next_action=next_action,
+                    dashboard_url=dashboard_url,
+                )
+            except Exception as exc:
+                logger.error("email alert failed: %s", exc)
 
     # ------------------------------------------------------------------
     # Individual channel fire methods
