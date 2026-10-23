@@ -42,6 +42,13 @@ async def lifespan(app: FastAPI):
     # Stay up even if settings are missing, so /health can say which ones.
     # Scout only starts when everything it needs is present.
     app.state.config_problems = config_check.problems()
+    if not app.state.config_problems:
+        # Plans must be in the database and complete before anything runs.
+        from services.entitlement import plans_problem
+        from services.supabase_service import get_supabase
+        problem = plans_problem(get_supabase())
+        if problem:
+            app.state.config_problems = [problem]
     scout = scout_task = None
     if app.state.config_problems:
         logger.error(

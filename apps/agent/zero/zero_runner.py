@@ -8,6 +8,7 @@ on the change event, and fires alerts.
 
 import logging
 
+from services.entitlement import EntitlementError, orgs_with_access
 from services.supabase_service import get_supabase
 from zero.risk_scorer import score as score_risk, next_action
 from zero.impact_analyzer import ImpactAnalyzer
@@ -46,6 +47,16 @@ class ZeroRunner:
 
         change_event = result.data
         org_id = change_event["org_id"]
+
+        # Defense in depth: no analysis, Claude calls or alerts for an org that
+        # isn't paying or inside its trial (Scout also stops watching them).
+        try:
+            allowed = org_id in orgs_with_access(supabase, {org_id})
+        except EntitlementError:
+            allowed = False
+        if not allowed:
+            logger.info("Skipping analysis for event %s: org has no active plan", change_event_id)
+            return {"error": "no active plan"}
 
         # 2. Score risk
         risk_level = score_risk(

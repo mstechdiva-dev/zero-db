@@ -16,7 +16,7 @@ const spaceMono = Space_Mono({
 export const metadata: Metadata = {
   title: "SchemaZero — Schema Change Detection",
   description:
-    "SchemaZero watches your database schema. The moment something changes, it analyzes impact, scores risk, and notifies your team — before anything breaks.",
+    "SchemaZero watches your database schema. Within seconds of a change, it analyzes impact, scores risk, and notifies your team.",
 };
 
 export default function RootLayout({

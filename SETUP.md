@@ -32,7 +32,7 @@ The backend has to run on something that stays on all day (Railway). Vercel can'
    where table_schema = 'public' order by table_name;
    ```
 
-   **Already ran an earlier copy of `schema.sql`?** Also run `supabase/migrations/008_mongo_change_types.sql`. It adds two change types the MongoDB listener writes (`collection_created`, `schema_change`) that the first version of the file left out. It's two lines and safe to run again. A database created from the current `schema.sql` already has them.
+   **Already ran an earlier copy of `schema.sql`?** Also run `supabase/migrations/008_mongo_change_types.sql`. It adds two change types the MongoDB listener writes (`collection_created`, `schema_change`) that the first version of the file left out. It's two lines and safe to run again. A database created from the current `schema.sql` already has them. Also run `supabase/migrations/009_trial_reminders.sql` (one column, safe to run again) so trial reminder emails can remember what they sent. And `supabase/migrations/010_plans_table.sql` (the plans table; the backend won't start watching without it).
 
    The other files in `supabase/migrations/` are history for databases built from earlier versions of `schema.sql`. You don't need them. `docs/db_migrations.md` explains.
 3. **Project Settings → API**. Copy three values you'll need below:

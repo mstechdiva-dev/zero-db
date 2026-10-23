@@ -24,6 +24,7 @@ drop table if exists alert_configs      cascade;
 drop table if exists connected_databases cascade;
 drop table if exists users              cascade;
 drop table if exists organizations      cascade;
+drop table if exists plans              cascade;
 
 drop function if exists handle_new_user() cascade;
 drop function if exists set_updated_at() cascade;

@@ -1,4 +1,4 @@
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createServerClient } from "@supabase/ssr";
 import Sidebar from "@/components/dashboard/Sidebar";
@@ -30,7 +30,11 @@ export default async function DashboardLayout({
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (user) {
+  // Settings must stay reachable when blocked, so people can upgrade (no redirect loop).
+  const onSettings = ((await headers()).get("x-pathname") ?? "").startsWith("/dashboard/settings");
+
+  if (user && !onSettings) {
+    let blocked: "expired" | "check_failed" | null = null;
     try {
       const { data: userData } = await supabase
         .from("users")
@@ -45,19 +49,27 @@ export default async function DashboardLayout({
           .eq("id", userData.org_id)
           .single();
 
-        if (
-          org &&
+        if (!org) {
+          blocked = "check_failed";
+        } else if (
           org.plan === "trial" &&
           !org.trial_converted &&
-          org.trial_ends_at &&
-          new Date(org.trial_ends_at) < new Date()
+          (!org.trial_ends_at || new Date(org.trial_ends_at) < new Date())
         ) {
-          redirect("/dashboard/settings?trial_expired=true");
+          blocked = "expired";
         }
+      } else {
+        blocked = "check_failed";
       }
-    } catch {
-      // If trial check fails, let them through — don't block on a DB error
+    } catch (err) {
+      // We couldn't prove the plan, so don't let them through.
+      console.error("Plan check failed", err);
+      blocked = "check_failed";
     }
+    // redirect() works by throwing, so it must stay outside the try/catch above
+    // (inside it, the catch swallowed the redirect and nobody was ever cut off).
+    if (blocked === "expired") redirect("/dashboard/settings?trial_expired=true");
+    if (blocked === "check_failed") redirect("/dashboard/settings?plan_check_failed=true");
   }
 
   return (

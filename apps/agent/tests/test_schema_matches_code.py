@@ -147,7 +147,15 @@ class _PgQuery:
         return self
 
     def eq(self, col, val):
-        self.filters.append((col, val))
+        self.filters.append(("eq", col, val))
+        return self
+
+    def lt(self, col, val):
+        self.filters.append(("lt", col, val))
+        return self
+
+    def in_(self, col, vals):
+        self.filters.append(("in", col, list(vals)))
         return self
 
     def single(self):
@@ -162,8 +170,9 @@ class _PgQuery:
         cur = self.sb.conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         where, args = "", []
         if self.filters:
-            where = " where " + " and ".join(f'"{c}" = %s' for c, _ in self.filters)
-            args = [v for _, v in self.filters]
+            ops = {"eq": '"{c}" = %s', "lt": '"{c}" < %s', "in": '"{c}"::text = any(%s)'}
+            where = " where " + " and ".join(ops[op].format(c=c) for op, c, _ in self.filters)
+            args = [v for _, _, v in self.filters]
         t = f'public."{self.name}"'
         if self.mode == "insert":
             d = self._vals(self.payload)
@@ -211,7 +220,7 @@ async def test_backend_code_works_against_the_real_schema(db, monkeypatch):
                            "summary": "A column was dropped.", "next_action": "x", "recommendations": ["r"]})
 
     monkeypatch.setattr(AnthropicService, "chat", canned_chat)
-    for mod in (scout_runner, zero_runner, supabase_service):
+    for mod in (scout_runner, zero_runner, supabase_service, databases_router):
         monkeypatch.setattr(mod, "get_supabase", lambda: pg)
 
     received: list = []
@@ -507,3 +516,87 @@ async def test_reset_keeps_waitlist_leads_and_prompts_and_backfills_logins(db):
     assert await conn.fetchval("select count(*) from waitlist") == 1
     await _signup(conn, "after@example.com")  # the signup trigger is back
     assert await conn.fetchval("select count(*) from users") == 2
+
+
+# ---- 5. trial cutoff and reminders against the real tables -----------------------
+
+@pytest.mark.asyncio
+async def test_trial_cutoff_and_reminders_against_the_real_schema(db):
+    from datetime import datetime, timezone
+    from services.entitlement import orgs_with_access, plans_problem, require_access
+    from services.trial_reminders import send_due_reminders
+
+    conn, dsn = db
+    _, active = await _signup(conn, "active@example.com")
+    _, expired = await _signup(conn, "expired@example.com")
+    _, paid = await _signup(conn, "paid@example.com")
+    await conn.execute("update organizations set trial_ends_at = now() + interval '2 days' where id = $1", uuid.UUID(active))
+    await conn.execute("update organizations set trial_ends_at = now() - interval '2 days' where id = $1", uuid.UUID(expired))
+    await conn.execute("update organizations set plan = 'solo', trial_ends_at = now() - interval '30 days' where id = $1", uuid.UUID(paid))
+
+    pg = PgSupabase(dsn)
+    assert orgs_with_access(pg, {active, expired, paid}) == {active, paid}
+    assert plans_problem(pg) is None  # the four plans are seeded by schema.sql
+    assert require_access(pg, paid)["plan_info"]["max_databases"] == 2
+    from fastapi import HTTPException
+    with pytest.raises(HTTPException) as denied:
+        require_access(pg, expired)
+    assert denied.value.status_code == 402
+
+    class Mail:
+        smtp_host = "smtp.example.com"
+        sent: list = []
+
+        async def send_alert(self, recipients, subject, html):
+            Mail.sent.append((list(recipients), subject))
+            return True
+
+    assert await send_due_reminders(pg, Mail(), datetime.now(timezone.utc)) == 2
+    stages = {str(r["id"]): r["trial_reminder_stage"] for r in await conn.fetch("select id, trial_reminder_stage from organizations")}
+    assert stages == {active: 1, expired: 2, paid: 0}
+    assert {tuple(m[0]) for m in Mail.sent} == {("active@example.com",), ("expired@example.com",)}
+    assert await send_due_reminders(pg, Mail(), datetime.now(timezone.utc)) == 0  # sent once only
+
+
+@pytest.mark.asyncio
+async def test_users_cannot_change_plans_or_their_own_trial(db):
+    """The free-time backdoors: a signed-in user editing the plan, the trial, or the plans table."""
+    conn, _ = db
+    ua, oa = await _signup(conn, "a@example.com")
+    ub, ob = await _signup(conn, "b@example.com")
+    org_before = dict(await conn.fetchrow("select * from organizations where id = $1", uuid.UUID(oa)))
+    plans_before = [tuple(r) for r in await conn.fetch("select * from plans order by name")]
+    paid_org = uuid.UUID(ob)
+    await conn.execute("update organizations set plan = 'solo' where id = $1", paid_org)
+
+    attempts = (
+        ("update organizations set plan = 'enterprise' where id = $1", (uuid.UUID(oa),)),
+        ("update organizations set trial_ends_at = now() + interval '10 years' where id = $1", (uuid.UUID(oa),)),
+        ("update organizations set trial_converted = true where id = $1", (uuid.UUID(oa),)),
+        ("update organizations set trial_reminder_stage = 2 where id = $1", (uuid.UUID(oa),)),
+        ("update users set org_id = $2 where auth_user_id = $1", (uuid.UUID(ua), paid_org)),
+        ("update plans set max_databases = 999", ()),
+        ("delete from plans where name = 'trial'", ()),
+        ("insert into plans (name, display_name, is_paid) values ('solo', 'x', true) on conflict (name) do update set is_paid = true", ()),
+        ("insert into organizations (name, plan) values ('mine', 'enterprise')", ()),
+    )
+    for sql, args in attempts:
+        try:
+            async with conn.transaction():
+                await _as_user(conn, ua)
+                await conn.execute(sql, *args)
+        except asyncpg.exceptions.PostgresError:
+            pass  # refused outright: good
+    assert dict(await conn.fetchrow("select * from organizations where id = $1", uuid.UUID(oa))) == org_before
+    assert [tuple(r) for r in await conn.fetch("select * from plans order by name")] == plans_before
+    assert await conn.fetchval("select org_id from users where auth_user_id = $1", uuid.UUID(ua)) == uuid.UUID(oa)
+    assert await conn.fetchval("select count(*) from organizations where name = 'mine'") == 0
+
+
+@pytest.mark.asyncio
+async def test_an_org_cannot_have_a_plan_that_isnt_in_the_plans_table(db):
+    conn, _ = db
+    _, oa = await _signup(conn, "a@example.com")
+    await conn.execute("alter type plan_type add value if not exists 'platinum'")
+    with pytest.raises(asyncpg.exceptions.ForeignKeyViolationError):
+        await conn.execute("update organizations set plan = 'platinum' where id = $1", uuid.UUID(oa))

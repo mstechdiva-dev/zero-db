@@ -10,6 +10,8 @@ This document lists what is actually built today.
 
 ## Real-time schema change detection
 
+Plans and trials: every plan and its limits live in the `plans` table in the database, and an org may run only if its plan exists there and it is paying or inside its 14-day trial. The backend checks this before it starts watching a database, before it analyses a change or sends an alert, before it answers a chat, and before it saves a new database. Startup refuses to run if the plans table is missing or incomplete (`/health` says so). When a trial ends unpaid, watching and alerts stop within about a minute, the dashboard sends the customer to Settings to upgrade, and new databases are refused (HTTP 402). Going over the plan's database limit is refused (HTTP 403). Upgrading turns everything back on within one poll. If we can't check a plan, nothing runs for that org. Trial reminder emails go out at 3 days left and when the trial ends (needs SMTP set up). Limits not enforced yet: seats (Teams: up to 10).
+
 Timing: Scout finds out **after** a change has run, not before. It alerts within seconds (Postgres, MongoDB) or within the polling interval (MySQL, MariaDB, Redis, CockroachDB), so the team can fix it fast. It cannot block a change. The separate pre-merge check (beta, `apps/agent/premerge_check.py`) reads SQL migration files before they ship.
 
 Scout watches every connected database continuously and captures a before/after snapshot the moment a structural change happens. Detection quality depends on what the engine exposes — the table below is honest about which engines give us sub-second events and which fall back to polling.

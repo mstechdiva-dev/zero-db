@@ -18,7 +18,7 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from tests.test_pipeline_e2e import AGENTS_DIR, FakeSupabase, PG_DSN, _webhook_server
+from tests.test_pipeline_e2e import AGENTS_DIR, FakeSupabase, PG_DSN, PLAN_ROWS, _webhook_server
 
 pytestmark = pytest.mark.skipif(not PG_DSN, reason="ZERO_TEST_PG_DSN not set")
 SECRET = "flow-signing-secret"
@@ -49,11 +49,17 @@ async def test_connect_then_watch_then_alert(monkeypatch):
     server = _webhook_server(received)
     org_id = "org-1"
     fake = FakeSupabase()
+    fake.tables["plans"] = PLAN_ROWS
+    fake.tables["organizations"] = [{"id": "org-1", "plan": "solo", "trial_converted": False,
+                                     "trial_ends_at": "2030-01-01T00:00:00+00:00"}]
     fake.tables["alert_configs"] = [{"org_id": org_id, "notify_on": ["high", "critical"],
                                      "webhook_url": f"http://127.0.0.1:{server.server_port}/hook",
                                      "email_recipients": []}]
 
     class Service:
+        async def get_connected_databases(self, org_id):
+            return []
+
         async def create_connected_database(self, org_id, engine, display_name, encrypted_connection_string):
             return fake.table("connected_databases").insert({
                 "org_id": org_id, "engine": engine, "display_name": display_name,
@@ -62,6 +68,7 @@ async def test_connect_then_watch_then_alert(monkeypatch):
 
     monkeypatch.setattr(databases_router, "SupabaseService", Service)
     monkeypatch.setattr(databases_router, "test_connection", real_test_connection)
+    monkeypatch.setattr(databases_router, "get_supabase", lambda: fake)
     monkeypatch.setattr(scout_runner, "get_supabase", lambda: fake)
     monkeypatch.setattr(zero_runner, "get_supabase", lambda: fake)
 

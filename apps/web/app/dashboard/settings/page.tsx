@@ -42,8 +42,13 @@ export default function SettingsPage() {
 
   // Stripe sends people back here after checkout.
   useEffect(() => {
-    const result = new URLSearchParams(window.location.search).get("billing");
-    if (result === "success") {
+    const params = new URLSearchParams(window.location.search);
+    const result = params.get("billing");
+    if (params.get("trial_expired")) {
+      setBillingError("Your free trial has ended. Upgrade below to keep monitoring and alerts running.");
+    } else if (params.get("plan_check_failed")) {
+      setBillingError("We couldn't check your plan just now. Refresh in a minute.");
+    } else if (result === "success") {
       setBillingNotice("Thanks! Your plan updates within a few seconds. Refresh if it still says trial.");
     } else if (result === "cancelled") {
       setBillingNotice("Checkout cancelled. You haven't been charged.");

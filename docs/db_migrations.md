@@ -20,6 +20,8 @@ Update this file every time a migration is run.
 | 006 | `supabase/migrations/006_change_types.sql` | `change_type` values Scout writes (`table_created`, `index_created`, `key_type_changed`, `ttl_policy_changed`) | ⏳ Pending | — |
 | 007 | `supabase/migrations/007_stripe.sql` | Billing columns renamed to `stripe_*`, Lemon Squeezy portal column dropped | ⏳ Pending | — |
 | 008 | `supabase/migrations/008_mongo_change_types.sql` | `collection_created` and `schema_change` change types (MongoDB listener) | ⏳ Pending if you ran `schema.sql` before it was added | — |
+| 009 | `supabase/migrations/009_trial_reminders.sql` | `organizations.trial_reminder_stage` (which trial reminder email was sent) | ⏳ Pending if you ran `schema.sql` before it was added | — |
+| 010 | `supabase/migrations/010_plans_table.sql` | `plans` table (limits per plan) and `organizations.plan` must exist in it | ⏳ Pending if you ran `schema.sql` before it was added | — |
 
 ---
 
